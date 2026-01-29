@@ -90,7 +90,7 @@ const MOCK_SKILLS = [
   {
     id: "create-prd",
     name: "*CAST: CREATE_PRD*",
-    description: "Generate comprehensive PRD with test scenarios and acceptance criteria ⚡",
+    description: "Generate comprehensive PRD with test scenarios and acceptance criteria",
     category: "workflow",
     icon: Zap,
     enabled: true,
@@ -101,7 +101,7 @@ const MOCK_SKILLS = [
   {
     id: "generate-tasks",
     name: "*CAST: GENERATE_TASKS*",
-    description: "Break down PRD into actionable tasks with test plans 🎯",
+    description: "Break down PRD into actionable tasks with test plans",
     category: "workflow", 
     icon: Settings,
     enabled: true,
@@ -112,7 +112,7 @@ const MOCK_SKILLS = [
   {
     id: "setup-branch",
     name: "*CAST: SETUP_BRANCH*",
-    description: "Git workflow automation + draft PR creation 🌿",
+    description: "Git workflow automation + draft PR creation",
     category: "workflow",
     icon: Code,
     enabled: true,
@@ -123,7 +123,7 @@ const MOCK_SKILLS = [
   {
     id: "generate-tests",
     name: "*CAST: GENERATE_TESTS*",
-    description: "Playwright tests from acceptance criteria - test-first development 🧪",
+    description: "Playwright tests from acceptance criteria - test-first development",
     category: "workflow",
     icon: CheckCircle,
     enabled: true,
@@ -134,7 +134,7 @@ const MOCK_SKILLS = [
   {
     id: "implement-feature",
     name: "*CAST: IMPLEMENT_FEATURE*",
-    description: "Parallel coding agent orchestration for backend + frontend ⚔️",
+    description: "Parallel coding agent orchestration for backend + frontend",
     category: "workflow",
     icon: Code,
     enabled: true,
@@ -145,7 +145,7 @@ const MOCK_SKILLS = [
   {
     id: "validate-deploy",
     name: "*CAST: VALIDATE_DEPLOY*",
-    description: "Quality gates + production deployment pipeline 🛡️",
+    description: "Quality gates + production deployment pipeline",
     category: "workflow",
     icon: CheckCircle,
     enabled: true,
