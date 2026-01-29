@@ -128,7 +128,7 @@ function getPriorityBadge(priority: string | null) {
 
 export function TasksView({ tasks, projects }: TasksViewProps) {
   const router = useRouter();
-  const [view, setView] = useState<"list" | "calendar">("list");
+  const [view, setView] = useState<"list" | "calendar">("calendar");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -254,18 +254,6 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
           {/* View Toggle */}
           <div className="flex items-center bg-[#111] rounded-lg p-0.5 border border-[#1a1a1a]">
             <button
-              onClick={() => setView("list")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors",
-                view === "list"
-                  ? "bg-[#1c1c1c] text-[#f5f5f5]"
-                  : "text-[#525252] hover:text-[#737373]"
-              )}
-            >
-              <List size={14} />
-              List
-            </button>
-            <button
               onClick={() => setView("calendar")}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors",
@@ -276,6 +264,18 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
             >
               <Calendar size={14} />
               Calendar
+            </button>
+            <button
+              onClick={() => setView("list")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors",
+                view === "list"
+                  ? "bg-[#1c1c1c] text-[#f5f5f5]"
+                  : "text-[#525252] hover:text-[#737373]"
+              )}
+            >
+              <List size={14} />
+              List
             </button>
           </div>
 
