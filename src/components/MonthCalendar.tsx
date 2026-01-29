@@ -76,6 +76,22 @@ function getStatusColor(status: string) {
   }
 }
 
+// Get readable status label
+function getStatusLabel(status: string) {
+  switch (status) {
+    case "done":
+      return "Done";
+    case "in_progress":
+      return "In Progress";
+    case "waiting":
+      return "Waiting";
+    case "todo":
+      return "To Do";
+    default:
+      return status;
+  }
+}
+
 // Enhanced draggable task component with status indicators
 const TaskItem = memo(function TaskItem({
   task,
@@ -121,6 +137,9 @@ const TaskItem = memo(function TaskItem({
             {task.dueTime.substring(0, 5)}
           </span>
         )}
+      </div>
+      <div className={cn("text-[8px] pl-3", getStatusColor(task.status))}>
+        {getStatusLabel(task.status)}
       </div>
     </div>
   );
