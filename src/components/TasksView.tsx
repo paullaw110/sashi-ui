@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TaskSidePanel } from "./TaskSidePanel";
 import { MonthCalendar } from "./MonthCalendar";
@@ -134,14 +134,27 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
+      // Status filter
       if (filterStatus && task.status !== filterStatus) return false;
+      
+      // Priority filter
       if (filterPriority && task.priority !== filterPriority) return false;
+      
+      // Search filter - search in both name and description
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesName = task.name.toLowerCase().includes(query);
+        const matchesDescription = task.description?.toLowerCase().includes(query) || false;
+        if (!matchesName && !matchesDescription) return false;
+      }
+      
       return true;
     });
-  }, [tasks, filterStatus, filterPriority]);
+  }, [tasks, filterStatus, filterPriority, searchQuery]);
 
   const handleTaskClick = useCallback((task: Task) => {
     setSelectedTask(task);
@@ -225,6 +238,14 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
     router.refresh();
   }, [router]);
 
+  const clearAllFilters = useCallback(() => {
+    setSearchQuery("");
+    setFilterStatus(null);
+    setFilterPriority(null);
+  }, []);
+
+  const hasActiveFilters = searchQuery || filterStatus || filterPriority;
+
   return (
     <div className={cn("flex flex-col", view === "calendar" && "h-[calc(100vh-180px)]")}>
       {/* Header with view toggle and filters */}
@@ -258,11 +279,23 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
             </button>
           </div>
 
+          {/* Search Input */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#404040]" />
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="text-[11px] text-[#e5e5e5] bg-[#111] border border-[#222] pl-9 pr-3 py-1.5 rounded hover:border-[#333] focus:border-[#404040] focus:outline-none transition-colors w-48"
+            />
+          </div>
+
           {/* Filters */}
           <select
             value={filterStatus || ""}
             onChange={(e) => setFilterStatus(e.target.value || null)}
-            className="text-[11px] text-[#525252] bg-transparent border border-[#222] px-2 py-1.5 rounded hover:border-[#333] focus:outline-none transition-colors"
+            className="text-[11px] text-[#525252] bg-[#111] border border-[#222] px-2 py-1.5 rounded hover:border-[#333] focus:outline-none transition-colors"
           >
             <option value="">All Status</option>
             <option value="not_started">Todo</option>
@@ -273,7 +306,7 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
           <select
             value={filterPriority || ""}
             onChange={(e) => setFilterPriority(e.target.value || null)}
-            className="text-[11px] text-[#525252] bg-transparent border border-[#222] px-2 py-1.5 rounded hover:border-[#333] focus:outline-none transition-colors"
+            className="text-[11px] text-[#525252] bg-[#111] border border-[#222] px-2 py-1.5 rounded hover:border-[#333] focus:outline-none transition-colors"
           >
             <option value="">All Priority</option>
             <option value="non-negotiable">Non-Negotiable</option>
@@ -282,6 +315,17 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
             <option value="medium">Medium</option>
             <option value="low">Low</option>
           </select>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <button
+              onClick={clearAllFilters}
+              className="flex items-center gap-1.5 text-[11px] text-[#525252] hover:text-[#737373] border border-[#222] hover:border-[#333] px-2 py-1.5 rounded transition-colors"
+            >
+              <X size={12} />
+              Clear
+            </button>
+          )}
         </div>
 
         <button 
