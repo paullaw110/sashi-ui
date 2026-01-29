@@ -1,0 +1,32 @@
+// Mu's clawdbot.json configuration
+// Copy this to clawdbot.json on the EC2 instance after running clawdbot setup
+
+{
+  // Gemini API key - get from aistudio.google.com
+  env: {
+    GEMINI_API_KEY: "your-gemini-api-key-here"
+  },
+
+  agents: {
+    defaults: {
+      model: {
+        // Gemini for visual concepting + image generation
+        primary: "google/gemini-2.5-pro"
+      }
+    }
+  },
+
+  // Channel config - add your preferred channel
+  // Example for Telegram:
+  // telegram: {
+  //   botToken: "your-telegram-bot-token",
+  //   allowedUsers: ["your-telegram-user-id"]
+  // }
+
+  // Example for Slack:
+  // slack: {
+  //   botToken: "xoxb-your-slack-bot-token",
+  //   appToken: "xapp-your-slack-app-token",
+  //   channels: ["mu-design"]
+  // }
+}
