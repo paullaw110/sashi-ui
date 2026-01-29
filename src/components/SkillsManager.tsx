@@ -85,11 +85,79 @@ const MOCK_SKILLS = [
     lastUsed: "2024-01-15T08:30:00Z",
     usageCount: 12,
     status: "active"
+  },
+  // Feature Development Workflow Skills
+  {
+    id: "create-prd",
+    name: "*CAST: CREATE_PRD*",
+    description: "Generate comprehensive PRD with test scenarios and acceptance criteria ⚡",
+    category: "workflow",
+    icon: Zap,
+    enabled: true,
+    lastUsed: "2024-01-15T14:20:00Z",
+    usageCount: 5,
+    status: "active"
+  },
+  {
+    id: "generate-tasks",
+    name: "*CAST: GENERATE_TASKS*",
+    description: "Break down PRD into actionable tasks with test plans 🎯",
+    category: "workflow", 
+    icon: Settings,
+    enabled: true,
+    lastUsed: "2024-01-15T14:25:00Z",
+    usageCount: 4,
+    status: "active"
+  },
+  {
+    id: "setup-branch",
+    name: "*CAST: SETUP_BRANCH*",
+    description: "Git workflow automation + draft PR creation 🌿",
+    category: "workflow",
+    icon: Code,
+    enabled: true,
+    lastUsed: "2024-01-15T14:30:00Z",
+    usageCount: 3,
+    status: "active"
+  },
+  {
+    id: "generate-tests",
+    name: "*CAST: GENERATE_TESTS*",
+    description: "Playwright tests from acceptance criteria - test-first development 🧪",
+    category: "workflow",
+    icon: CheckCircle,
+    enabled: true,
+    lastUsed: "2024-01-15T14:35:00Z",
+    usageCount: 3,
+    status: "active"
+  },
+  {
+    id: "implement-feature",
+    name: "*CAST: IMPLEMENT_FEATURE*",
+    description: "Parallel coding agent orchestration for backend + frontend ⚔️",
+    category: "workflow",
+    icon: Code,
+    enabled: true,
+    lastUsed: "2024-01-15T14:40:00Z",
+    usageCount: 2,
+    status: "active"
+  },
+  {
+    id: "validate-deploy",
+    name: "*CAST: VALIDATE_DEPLOY*",
+    description: "Quality gates + production deployment pipeline 🛡️",
+    category: "workflow",
+    icon: CheckCircle,
+    enabled: true,
+    lastUsed: "2024-01-15T14:45:00Z",
+    usageCount: 2,
+    status: "active"
   }
 ];
 
 const CATEGORIES = [
   { id: "all", name: "All Skills", count: MOCK_SKILLS.length },
+  { id: "workflow", name: "Workflow", count: MOCK_SKILLS.filter(s => s.category === "workflow").length },
   { id: "research", name: "Research", count: MOCK_SKILLS.filter(s => s.category === "research").length },
   { id: "communication", name: "Communication", count: MOCK_SKILLS.filter(s => s.category === "communication").length },
   { id: "media", name: "Media", count: MOCK_SKILLS.filter(s => s.category === "media").length },
