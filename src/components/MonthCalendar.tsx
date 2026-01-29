@@ -78,31 +78,28 @@ function getStatusColor(status: string) {
 }
 
 // Enhanced draggable task component with status indicators
-function TaskItem({ 
-  task, 
+function TaskItem({
+  task,
   onClick,
-}: { 
-  task: Task; 
+}: {
+  task: Task;
   onClick?: () => void;
 }) {
   const {
     attributes,
     listeners,
     setNodeRef,
-    transform,
     isDragging,
   } = useDraggable({
     id: task.id,
   });
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
+  // Note: We don't apply transform here because DragOverlay handles the visual drag.
+  // The original item stays in place and becomes transparent while dragging.
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
       {...listeners}
       {...attributes}
       onClick={(e) => {
@@ -115,7 +112,7 @@ function TaskItem({
         task.priority === "critical" && "border-l-2 border-l-red-500/50",
         task.priority === "high" && "border-l-2 border-l-amber-500/50",
         task.priority === "medium" && "border-l-2 border-l-blue-500/50",
-        isDragging && "opacity-50 z-50"
+        isDragging && "opacity-30"
       )}
     >
       <div className="flex items-center gap-1">

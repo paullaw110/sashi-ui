@@ -146,14 +146,18 @@ function getDurationHeight(duration: number | null): number {
 }
 
 // Draggable Task Item for time grid with resize
-function TimeGridTask({ 
-  task, 
+function TimeGridTask({
+  task,
   onClick,
   onResize,
-}: { 
-  task: Task; 
+  isSelected,
+  registerRef,
+}: {
+  task: Task;
   onClick: () => void;
   onResize?: (taskId: string, newDuration: number) => void;
+  isSelected?: boolean;
+  registerRef?: (taskId: string, element: HTMLElement | null) => void;
 }) {
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStartY, setResizeStartY] = useState(0);
@@ -236,10 +240,12 @@ function TimeGridTask({
       ref={(node) => {
         setNodeRef(node);
         (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        registerRef?.(task.id, node);
       }}
       style={style}
       {...attributes}
       {...(isResizing ? {} : listeners)}
+      data-task-item
       onClick={(e) => {
         if (!isResizing && !justResizedRef.current) {
           e.stopPropagation();
@@ -250,6 +256,7 @@ function TimeGridTask({
         "absolute left-1 right-1 px-2 py-1 rounded text-[10px] cursor-grab active:cursor-grabbing transition-colors overflow-hidden border-l-2 group",
         isDragging ? "bg-[#222] z-50" : "bg-[#1f1f1f] hover:bg-[#262626]",
         isResizing && "z-50 ring-2 ring-blue-500/50",
+        isSelected && !isResizing && "ring-2 ring-blue-500/50 bg-blue-500/20",
         task.status === "done" && "opacity-50",
         task.priority === "critical" && "border-l-red-500/70",
         task.priority === "high" && "border-l-amber-500/70",
@@ -278,12 +285,16 @@ function TimeGridTask({
 }
 
 // Untimed task item (top of day)
-function UntimedTask({ 
-  task, 
-  onClick 
-}: { 
-  task: Task; 
+function UntimedTask({
+  task,
+  onClick,
+  isSelected,
+  registerRef,
+}: {
+  task: Task;
   onClick: () => void;
+  isSelected?: boolean;
+  registerRef?: (taskId: string, element: HTMLElement | null) => void;
 }) {
   const {
     attributes,
@@ -302,10 +313,14 @@ function UntimedTask({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        registerRef?.(task.id, node);
+      }}
       style={style}
       {...attributes}
       {...listeners}
+      data-task-item
       onClick={(e) => {
         e.stopPropagation();
         onClick();
@@ -313,6 +328,7 @@ function UntimedTask({
       className={cn(
         "flex items-center gap-1.5 px-1.5 py-1 rounded text-[10px] cursor-grab hover:bg-[#1a1a1a] truncate group",
         isDragging && "opacity-50 bg-[#1a1a1a]",
+        isSelected && "ring-2 ring-blue-500/50 bg-blue-500/10",
       )}
     >
       <div className={cn(
@@ -366,6 +382,8 @@ function TimeBlockDay({
   onTaskClick,
   onDayClick,
   onResize,
+  selectedTaskIds,
+  registerRef,
 }: {
   day: Date;
   timedTasks: Task[];
@@ -374,6 +392,8 @@ function TimeBlockDay({
   onTaskClick: (task: Task) => void;
   onDayClick: (date: Date) => void;
   onResize: (taskId: string, duration: number) => void;
+  selectedTaskIds: Set<string>;
+  registerRef: (taskId: string, element: HTMLElement | null) => void;
 }) {
   const dateKey = format(day, "yyyy-MM-dd");
   const { setNodeRef: setDayRef, isOver: isDayOver } = useDroppable({
@@ -417,6 +437,8 @@ function TimeBlockDay({
                 key={task.id}
                 task={task}
                 onClick={() => onTaskClick(task)}
+                isSelected={selectedTaskIds.has(task.id)}
+                registerRef={registerRef}
               />
             ))}
           </SortableContext>
@@ -482,6 +504,8 @@ function TimeBlockDay({
                   task={task}
                   onClick={() => onTaskClick(task)}
                   onResize={onResize}
+                  isSelected={selectedTaskIds.has(task.id)}
+                  registerRef={registerRef}
                 />
               </div>
             );
@@ -824,6 +848,37 @@ function TaskSidePanel({
   );
 }
 
+// Selection box component
+function SelectionBox({
+  start,
+  end,
+  containerRef
+}: {
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  if (!containerRef.current) return null;
+
+  const rect = containerRef.current.getBoundingClientRect();
+  const left = Math.min(start.x, end.x) - rect.left;
+  const top = Math.min(start.y, end.y) - rect.top;
+  const width = Math.abs(end.x - start.x);
+  const height = Math.abs(end.y - start.y);
+
+  return (
+    <div
+      className="absolute pointer-events-none border-2 border-blue-500/50 bg-blue-500/10 z-50"
+      style={{
+        left: `${left}px`,
+        top: `${top}px`,
+        width: `${width}px`,
+        height: `${height}px`,
+      }}
+    />
+  );
+}
+
 // Main Calendar View
 export function CalendarView({ tasks, projects }: CalendarViewProps) {
   const router = useRouter();
@@ -833,7 +888,15 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [createDate, setCreateDate] = useState<Date | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  
+
+  // Marquee selection state
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
+  const [selectionEnd, setSelectionEnd] = useState<{ x: number; y: number } | null>(null);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const calendarContainerRef = useRef<HTMLDivElement>(null);
+  const taskElementsRef = useRef<Map<string, HTMLElement>>(new Map());
+
   // Optimistic updates: track moved tasks locally until server syncs
   const [optimisticMoves, setOptimisticMoves] = useState<Map<string, { date: string; time: string | null }>>(new Map());
 
@@ -854,10 +917,120 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
     useSensor(KeyboardSensor)
   );
 
-  // Clear optimistic moves when tasks prop changes (server synced)
+  // Clear optimistic moves and selection when tasks prop changes (server synced)
   useEffect(() => {
     setOptimisticMoves(new Map());
+    setSelectedTaskIds(new Set());
   }, [tasks]);
+
+  // Register task element for intersection detection
+  const registerTaskElement = useCallback((taskId: string, element: HTMLElement | null) => {
+    if (element) {
+      taskElementsRef.current.set(taskId, element);
+    } else {
+      taskElementsRef.current.delete(taskId);
+    }
+  }, []);
+
+  // Check if a rect intersects with the selection box
+  const rectsIntersect = useCallback((
+    selStart: { x: number; y: number },
+    selEnd: { x: number; y: number },
+    elementRect: DOMRect
+  ) => {
+    const selLeft = Math.min(selStart.x, selEnd.x);
+    const selRight = Math.max(selStart.x, selEnd.x);
+    const selTop = Math.min(selStart.y, selEnd.y);
+    const selBottom = Math.max(selStart.y, selEnd.y);
+
+    return !(
+      elementRect.right < selLeft ||
+      elementRect.left > selRight ||
+      elementRect.bottom < selTop ||
+      elementRect.top > selBottom
+    );
+  }, []);
+
+  // Calculate which tasks are inside the selection box
+  const updateSelection = useCallback((start: { x: number; y: number }, end: { x: number; y: number }) => {
+    const newSelected = new Set<string>();
+
+    taskElementsRef.current.forEach((element, taskId) => {
+      const rect = element.getBoundingClientRect();
+      if (rectsIntersect(start, end, rect)) {
+        newSelected.add(taskId);
+      }
+    });
+
+    setSelectedTaskIds(newSelected);
+  }, [rectsIntersect]);
+
+  // Marquee selection mouse handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only start selection on left click on empty space
+    if (e.button !== 0) return;
+
+    // Check if clicking on a task or interactive element
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('[data-task-item]') ||
+      target.closest('button') ||
+      target.closest('[data-no-select]')
+    ) {
+      return;
+    }
+
+    // Start selection
+    setIsSelecting(true);
+    setSelectionStart({ x: e.clientX, y: e.clientY });
+    setSelectionEnd({ x: e.clientX, y: e.clientY });
+    setSelectedTaskIds(new Set());
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isSelecting || !selectionStart) return;
+
+    const newEnd = { x: e.clientX, y: e.clientY };
+    setSelectionEnd(newEnd);
+    updateSelection(selectionStart, newEnd);
+  }, [isSelecting, selectionStart, updateSelection]);
+
+  const handleMouseUp = useCallback(() => {
+    if (isSelecting) {
+      setIsSelecting(false);
+      setSelectionStart(null);
+      setSelectionEnd(null);
+    }
+  }, [isSelecting]);
+
+  // Global mouse up listener to handle mouse up outside the container
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isSelecting) {
+        setIsSelecting(false);
+        setSelectionStart(null);
+        setSelectionEnd(null);
+      }
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, [isSelecting]);
+
+  // Clear selection on escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedTaskIds(new Set());
+        setIsSelecting(false);
+        setSelectionStart(null);
+        setSelectionEnd(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Group tasks by date, with optimistic overrides applied
   const tasksByDate = useMemo(() => {
@@ -935,7 +1108,12 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
     const { active } = event;
     const task = tasks.find(t => t.id === active.id);
     setActiveTask(task || null);
-  }, [tasks]);
+
+    // If dragging a non-selected task, clear selection and only drag that one
+    if (task && !selectedTaskIds.has(task.id)) {
+      setSelectedTaskIds(new Set([task.id]));
+    }
+  }, [tasks, selectedTaskIds]);
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -944,12 +1122,17 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
     if (!over) return; // Dropped outside valid area
 
     const dropTarget = over.id as string;
-    const task = tasks.find(t => t.id === active.id);
-    
-    if (!task) return;
+    const draggedTask = tasks.find(t => t.id === active.id);
+
+    if (!draggedTask) return;
+
+    // Get all tasks to move (either selected tasks or just the dragged one)
+    const taskIdsToMove = selectedTaskIds.has(draggedTask.id)
+      ? Array.from(selectedTaskIds)
+      : [draggedTask.id];
 
     // Parse drop target to determine new date/time
-    const parseDropTarget = (target: string) => {
+    const parseDropTarget = (target: string, forTask: Task) => {
       // Hour slot format: YYYY-MM-DD-HH
       const hourSlotMatch = target.match(/^(\d{4}-\d{2}-\d{2})-(\d{2})$/);
       if (hourSlotMatch) {
@@ -958,70 +1141,81 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
         const time = `${hour.toString().padStart(2, "0")}:00`;
         return { date, time };
       }
-      
+
       // Day column format: YYYY-MM-DD (removes time - makes it untimed)
       if (/^\d{4}-\d{2}-\d{2}$/.test(target)) {
         return { date: target, time: null };
       }
-      
+
       // Task-to-task drops: find the date of the target task
       for (const [dateKey, dayData] of tasksByDate.entries()) {
         const allTasks = [...dayData.timed, ...dayData.allDay];
         if (allTasks.some(t => t.id === target)) {
           // Preserve the original task's time when dropping on another task
-          return { date: dateKey, time: task.dueTime };
+          return { date: dateKey, time: forTask.dueTime };
         }
       }
-      
+
       return null;
     };
 
-    const result = parseDropTarget(dropTarget);
+    const result = parseDropTarget(dropTarget, draggedTask);
     if (!result) return;
 
     const { date: targetDate, time: targetTime } = result;
-    const currentDateKey = task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd") : null;
-    const dateChanged = currentDateKey !== targetDate;
-    const timeChanged = task.dueTime !== targetTime;
-    
-    // Only update if something actually changed
-    if (dateChanged || timeChanged) {
-      // Apply optimistic update immediately for responsive UI
-      setOptimisticMoves(prev => new Map(prev).set(task.id, { 
-        date: targetDate, 
-        time: targetTime 
-      }));
-      
-      // Prepare update payload
-      const updateData: { dueDate?: string; dueTime?: string | null } = {};
-      
-      if (dateChanged) {
-        // Set to noon to avoid timezone issues
-        updateData.dueDate = new Date(targetDate + "T12:00:00").toISOString();
-      }
-      if (timeChanged) {
-        updateData.dueTime = targetTime;
-      }
-      
-      // Update server in background (fire and forget for responsiveness)
-      fetch(`/api/tasks/${task.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData),
-      })
-      .then(response => {
-        if (!response.ok) {
-          console.error('Failed to update task:', response.statusText);
-          // Could add error handling/rollback here
+
+    // Move all selected tasks
+    const updates: Promise<Response>[] = [];
+
+    for (const taskId of taskIdsToMove) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) continue;
+
+      const currentDateKey = task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd") : null;
+      const dateChanged = currentDateKey !== targetDate;
+      const timeChanged = task.dueTime !== targetTime;
+
+      if (dateChanged || timeChanged) {
+        // Apply optimistic update
+        setOptimisticMoves(prev => new Map(prev).set(task.id, {
+          date: targetDate,
+          time: targetTime
+        }));
+
+        // Prepare update payload
+        const updateData: { dueDate?: string; dueTime?: string | null } = {};
+
+        if (dateChanged) {
+          updateData.dueDate = new Date(targetDate + "T12:00:00").toISOString();
         }
-        return router.refresh();
-      })
-      .catch(error => {
-        console.error('Error updating task:', error);
-        // Could add error handling/rollback here
-      });
+        if (timeChanged) {
+          updateData.dueTime = targetTime;
+        }
+
+        // Queue the update
+        updates.push(
+          fetch(`/api/tasks/${task.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updateData),
+          })
+        );
+      }
     }
-  }, [tasks, tasksByDate, router]);
+
+    // Execute all updates and refresh
+    if (updates.length > 0) {
+      Promise.all(updates)
+        .then(() => router.refresh())
+        .catch(error => {
+          console.error('Error updating tasks:', error);
+          router.refresh();
+        });
+    }
+
+    // Clear selection after move
+    setSelectedTaskIds(new Set());
+  }, [tasks, tasksByDate, selectedTaskIds, router]);
 
   const handleResize = useCallback((taskId: string, duration: number) => {
     // Fire and forget - UI already updates via the component's local state
@@ -1107,11 +1301,17 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
             </div>
 
             {/* Days */}
-            <div className="flex-1 flex overflow-x-auto overflow-y-auto">
+            <div
+              ref={calendarContainerRef}
+              className="flex-1 flex overflow-x-auto overflow-y-auto relative"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+            >
               {weekDays.map((day) => {
                 const dayData = tasksByDate.get(format(day, "yyyy-MM-dd")) || { timed: [], allDay: [] };
                 const isCurrentDay = isToday(day);
-                
+
                 return (
                   <TimeBlockDay
                     key={day.toISOString()}
@@ -1122,9 +1322,20 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
                     onTaskClick={handleTaskClick}
                     onDayClick={handleDayClick}
                     onResize={handleResize}
+                    selectedTaskIds={selectedTaskIds}
+                    registerRef={registerTaskElement}
                   />
                 );
               })}
+
+              {/* Selection Box */}
+              {isSelecting && selectionStart && selectionEnd && (
+                <SelectionBox
+                  start={selectionStart}
+                  end={selectionEnd}
+                  containerRef={calendarContainerRef}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -1132,11 +1343,18 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
         {/* Enhanced Drag Overlay with smooth cursor following */}
         <DragOverlay>
           {activeTask ? (
-            <div className="text-[11px] px-3 py-2 rounded-lg bg-[#222] text-[#f5f5f5] shadow-2xl border border-[#444] cursor-grabbing transform rotate-2 scale-105 transition-transform">
-              <div className="font-medium">{activeTask.name}</div>
-              {activeTask.dueTime && (
-                <div className="text-[9px] text-[#999] mt-0.5">
-                  {formatTime12h(activeTask.dueTime)}
+            <div className="relative">
+              <div className="text-[11px] px-3 py-2 rounded-lg bg-[#222] text-[#f5f5f5] shadow-2xl border border-[#444] cursor-grabbing transform rotate-2 scale-105 transition-transform">
+                <div className="font-medium">{activeTask.name}</div>
+                {activeTask.dueTime && (
+                  <div className="text-[9px] text-[#999] mt-0.5">
+                    {formatTime12h(activeTask.dueTime)}
+                  </div>
+                )}
+              </div>
+              {selectedTaskIds.size > 1 && (
+                <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium">
+                  {selectedTaskIds.size}
                 </div>
               )}
             </div>

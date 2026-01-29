@@ -2,6 +2,7 @@ import { db, schema } from "@/lib/db";
 import { Dashboard } from "@/components/Dashboard";
 import { AppLayout } from "@/components/AppLayout";
 import { eq, and, gte, lte, not } from "drizzle-orm";
+import { startOfWeek, endOfWeek } from "date-fns";
 
 export const metadata = { title: "Dashboard" };
 
@@ -67,23 +68,18 @@ async function getTasks() {
   const todayTasks = sortTasks(todayTasksRaw);
   const nextTasks = sortTasks(nextTasksRaw);
 
-  // Calendar tasks: ONLY show tasks that appear in Today/Next sections for data consistency
-  // This ensures the calendar and sidebar show the exact same tasks
-  const weekTasks = [...todayTasksRaw, ...nextTasksRaw].sort((a, b) => {
-    // Sort by date first, then time
-    const dateA = new Date(a.dueDate!);
-    const dateB = new Date(b.dueDate!);
-    if (dateA.getTime() !== dateB.getTime()) {
-      return dateA.getTime() - dateB.getTime();
-    }
-    // Then by time (null times first)
-    if (!a.dueTime && !b.dueTime) return 0;
-    if (!a.dueTime) return -1;
-    if (!b.dueTime) return 1;
-    return a.dueTime.localeCompare(b.dueTime);
+  // Calendar tasks: Fetch the entire week (Sunday-Saturday) so drag-and-drop works
+  const weekStart = startOfWeek(now, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(now, { weekStartsOn: 0 });
+  const weekTasksRaw = await db.query.tasks.findMany({
+    where: and(
+      gte(schema.tasks.dueDate, weekStart),
+      lte(schema.tasks.dueDate, weekEnd)
+    ),
+    orderBy: (tasks, { asc }) => [asc(tasks.dueDate), asc(tasks.dueTime)],
   });
 
-  return { todayTasks, weekTasks, nextTasks };
+  return { todayTasks, weekTasks: weekTasksRaw, nextTasks };
 }
 
 async function getProjects() {

@@ -165,6 +165,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects }: Dashbo
         projects={projects}
         isOpen={isPanelOpen}
         isCreating={isCreating}
+        defaultDate={new Date()}
         onClose={handleClosePanel}
         onSave={handleSave}
         onDelete={handleDelete}
