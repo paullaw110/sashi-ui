@@ -86,7 +86,7 @@ const MOCK_SKILLS = [
     usageCount: 12,
     status: "active"
   },
-  // Feature Development Workflow Skills
+  // Feature Development Workflow Skills - CAST Commands
   {
     id: "create-prd",
     name: "*CAST: CREATE_PRD*",
