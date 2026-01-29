@@ -155,21 +155,24 @@ const MOCK_SKILLS = [
   }
 ];
 
-const CATEGORIES = [
-  { id: "all", name: "All Skills", count: MOCK_SKILLS.length },
-  { id: "workflow", name: "Workflow", count: MOCK_SKILLS.filter(s => s.category === "workflow").length },
-  { id: "research", name: "Research", count: MOCK_SKILLS.filter(s => s.category === "research").length },
-  { id: "communication", name: "Communication", count: MOCK_SKILLS.filter(s => s.category === "communication").length },
-  { id: "media", name: "Media", count: MOCK_SKILLS.filter(s => s.category === "media").length },
-  { id: "audio", name: "Audio", count: MOCK_SKILLS.filter(s => s.category === "audio").length },
-  { id: "development", name: "Development", count: MOCK_SKILLS.filter(s => s.category === "development").length },
-  { id: "ai", name: "AI", count: MOCK_SKILLS.filter(s => s.category === "ai").length },
-];
+// Categories will be calculated dynamically in the component
 
 export function SkillsManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [skills, setSkills] = useState(MOCK_SKILLS);
+
+  // Calculate categories dynamically 
+  const CATEGORIES = [
+    { id: "all", name: "All Skills", count: skills.length },
+    { id: "workflow", name: "Workflow", count: skills.filter(s => s.category === "workflow").length },
+    { id: "research", name: "Research", count: skills.filter(s => s.category === "research").length },
+    { id: "communication", name: "Communication", count: skills.filter(s => s.category === "communication").length },
+    { id: "media", name: "Media", count: skills.filter(s => s.category === "media").length },
+    { id: "audio", name: "Audio", count: skills.filter(s => s.category === "audio").length },
+    { id: "development", name: "Development", count: skills.filter(s => s.category === "development").length },
+    { id: "ai", name: "AI", count: skills.filter(s => s.category === "ai").length },
+  ];
 
   const toggleSkill = (skillId: string) => {
     setSkills(prev => prev.map(skill => 
