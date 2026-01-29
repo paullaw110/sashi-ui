@@ -15,6 +15,7 @@ import {
   X,
   Code2,
   Zap,
+  PanelLeftClose,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusIndicator } from "./StatusIndicator";
@@ -34,15 +35,27 @@ const NAV_ITEMS = [
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  isMobile?: boolean;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ 
+  isOpen, 
+  onClose, 
+  isCollapsed = false, 
+  onToggleCollapse, 
+  isMobile = false 
+}: SidebarProps) {
   const pathname = usePathname();
+
+  // On mobile, use overlay behavior. On desktop, use collapse behavior
+  const shouldShow = isMobile ? isOpen : !isCollapsed;
 
   return (
     <>
       {/* Mobile backdrop */}
-      {isOpen && (
+      {isOpen && isMobile && (
         <div 
           className="fixed inset-0 bg-black/60 z-40 lg:hidden"
           onClick={onClose}
@@ -50,10 +63,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}
       
       <aside className={cn(
-        "w-[200px] h-screen bg-[#0c0c0c] border-r border-[#1a1a1a] flex flex-col fixed left-0 top-0 z-50",
-        "transition-transform duration-200 ease-out",
-        "lg:translate-x-0",
-        isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        "w-[256px] h-screen bg-[#0c0c0c] border-r border-[#1a1a1a] flex flex-col fixed left-0 top-0 z-50",
+        "transition-all duration-300 ease-in-out",
+        isMobile 
+          ? cn("lg:hidden", isOpen ? "translate-x-0" : "-translate-x-full")
+          : cn("hidden lg:flex", isCollapsed ? "-translate-x-full" : "translate-x-0")
       )}>
         {/* Logo + Status */}
         <div className="p-4 border-b border-[#1a1a1a]">
@@ -66,12 +80,27 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               />
               <span className="font-display text-lg text-[#f5f5f5]">Sashi</span>
             </Link>
-            <button 
-              onClick={onClose}
-              className="lg:hidden p-1 text-[#525252] hover:text-[#737373]"
-            >
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-1">
+              {/* Desktop collapse button */}
+              {!isMobile && onToggleCollapse && (
+                <button 
+                  onClick={onToggleCollapse}
+                  className="p-1 text-[#525252] hover:text-[#737373] hover:bg-[#1c1c1c] rounded transition-colors"
+                  title="Collapse sidebar (⌘B)"
+                >
+                  <PanelLeftClose size={18} />
+                </button>
+              )}
+              {/* Mobile close button */}
+              {isMobile && (
+                <button 
+                  onClick={onClose}
+                  className="p-1 text-[#525252] hover:text-[#737373]"
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
           </div>
           <div className="mt-2">
             <StatusIndicator />

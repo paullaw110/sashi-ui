@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { QuickAddTask } from "./QuickAddTask";
 
@@ -12,33 +12,89 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile overlay state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Desktop collapse state
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Global keyboard shortcut for Cmd+K / Ctrl+K
+  // Initialize sidebar state from localStorage and detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      
+      if (mobile) {
+        // On mobile, always start collapsed
+        setSidebarCollapsed(true);
+      } else {
+        // On desktop, restore from localStorage
+        const stored = localStorage.getItem('sidebar-collapsed');
+        setSidebarCollapsed(stored === 'true');
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Persist sidebar state to localStorage (only for desktop)
+  useEffect(() => {
+    if (!isMobile) {
+      localStorage.setItem('sidebar-collapsed', sidebarCollapsed.toString());
+    }
+  }, [sidebarCollapsed, isMobile]);
+
+  // Toggle sidebar collapse (for desktop)
+  const toggleSidebar = () => {
+    if (isMobile) {
+      setSidebarOpen(!sidebarOpen);
+    } else {
+      setSidebarCollapsed(!sidebarCollapsed);
+    }
+  };
+
+  // Global keyboard shortcuts
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
+      // Cmd+K / Ctrl+K for quick add
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setQuickAddOpen(true);
+      }
+      
+      // Cmd+B / Ctrl+B for sidebar toggle
+      if ((e.metaKey || e.ctrlKey) && e.key === "b") {
+        e.preventDefault();
+        toggleSidebar();
       }
     };
 
     document.addEventListener("keydown", handleKeydown);
     return () => document.removeEventListener("keydown", handleKeydown);
-  }, []);
+  }, [isMobile, sidebarOpen, sidebarCollapsed]);
 
   return (
     <div className="min-h-screen bg-[#0c0c0c]">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        isMobile={isMobile}
+      />
       
-      {/* Mobile header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-[#0c0c0c] border-b border-[#1a1a1a] flex items-center px-4 z-30">
+      {/* Header - shown when sidebar is collapsed or on mobile */}
+      <header className={`fixed top-0 left-0 right-0 h-14 bg-[#0c0c0c] border-b border-[#1a1a1a] flex items-center px-4 z-30 transition-all duration-300 ${
+        isMobile || sidebarCollapsed ? 'block' : 'hidden'
+      }`}>
         <button 
-          onClick={() => setSidebarOpen(true)}
-          className="p-2 -ml-2 text-[#737373] hover:text-[#f5f5f5]"
+          onClick={toggleSidebar}
+          className="p-2 -ml-2 text-[#737373] hover:text-[#f5f5f5] hover:bg-[#1c1c1c] rounded transition-colors"
+          title={sidebarCollapsed ? 'Expand sidebar (⌘B)' : 'Open sidebar'}
         >
-          <Menu size={20} />
+          {isMobile ? <Menu size={20} /> : (sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />)}
         </button>
         <div className="flex items-center gap-2 ml-2">
           <img 
@@ -50,7 +106,13 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
         </div>
       </header>
 
-      <main className="lg:ml-[200px] pt-14 lg:pt-0">
+      <main className={`transition-all duration-300 ${
+        isMobile 
+          ? 'pt-14' 
+          : sidebarCollapsed 
+            ? 'pt-14' 
+            : 'ml-[256px] pt-0'
+      }`}>
         {(title || subtitle) && (
           <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-4 lg:pb-6">
             {title && (
