@@ -131,21 +131,22 @@ async function validateConnection() {
     console.error("❌ Failed to connect to Turso database:", error);
     
     // Provide helpful error messages based on common issues
-    if (error.message.includes("authentication")) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes("authentication")) {
       throw new Error(
         "Database authentication failed. Please verify your TURSO_AUTH_TOKEN is correct and hasn't expired."
       );
-    } else if (error.message.includes("not found") || error.message.includes("404")) {
+    } else if (errorMessage.includes("not found") || errorMessage.includes("404")) {
       throw new Error(
         "Database not found. Please verify your TURSO_DATABASE_URL is correct and the database exists."
       );
-    } else if (error.message.includes("timeout") || error.message.includes("ENOTFOUND")) {
+    } else if (errorMessage.includes("timeout") || errorMessage.includes("ENOTFOUND")) {
       throw new Error(
         "Unable to connect to database. Please check your internet connection and try again."
       );
     } else {
       throw new Error(
-        `Database connection failed: ${error.message}. Please check your Turso configuration.`
+        `Database connection failed: ${errorMessage}. Please check your Turso configuration.`
       );
     }
   }
@@ -196,10 +197,11 @@ async function initDb() {
         await client.execute(migration.sql);
         console.log(`✅ ${migration.name}`);
       } catch (error) {
-        if (error.message.includes("duplicate column name") || error.message.includes("already exists")) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes("duplicate column name") || errorMessage.includes("already exists")) {
           console.log(`⏭️  ${migration.name} (already exists)`);
         } else {
-          console.warn(`⚠️  ${migration.name} failed:`, error.message);
+          console.warn(`⚠️  ${migration.name} failed:`, errorMessage);
         }
         // Continue with other migrations
       }
@@ -207,7 +209,8 @@ async function initDb() {
     
     console.log("✅ Database initialization complete");
   } catch (error) {
-    console.error("❌ Database initialization failed:", error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("❌ Database initialization failed:", errorMessage);
     throw error;
   }
 }
