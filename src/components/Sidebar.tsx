@@ -13,6 +13,8 @@ import {
   Search,
   Target,
   X,
+  Code2,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusIndicator } from "./StatusIndicator";
@@ -22,8 +24,10 @@ const NAV_ITEMS = [
   { href: "/tasks", icon: CheckSquare, label: "Tasks" },
   { href: "/inbox", icon: Inbox, label: "Inbox" },
   { href: "/notes", icon: FileText, label: "Notes" },
+  { href: "/playground", icon: Code2, label: "Code Playground" },
   { href: "/calendar", icon: Calendar, label: "Calendar" },
   { href: "/queue", icon: ListTodo, label: "Queue" },
+  { href: "/skills", icon: Zap, label: "Skills" },
   { href: "/leads", icon: Target, label: "Leads" },
 ];
 
