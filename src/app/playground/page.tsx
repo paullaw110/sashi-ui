@@ -5,7 +5,7 @@ export const metadata = { title: "Code Playground" };
 
 export default function PlaygroundPage() {
   return (
-    <AppLayout title="Code Playground" subtitle="Experiment and test your code">
+    <AppLayout>
       <CodePlayground />
     </AppLayout>
   );
