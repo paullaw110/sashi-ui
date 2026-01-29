@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   const view = searchParams.get("view") || "today";
   const status = searchParams.get("status");
   const projectId = searchParams.get("projectId");
+  const organizationId = searchParams.get("organizationId");
 
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -28,10 +29,12 @@ export async function GET(request: NextRequest) {
             isNull(schema.tasks.dueDate)
           ),
           status ? eq(schema.tasks.status, status) : undefined,
-          projectId ? eq(schema.tasks.projectId, projectId) : undefined
+          projectId ? eq(schema.tasks.projectId, projectId) : undefined,
+          organizationId ? eq(schema.tasks.organizationId, organizationId) : undefined
         ),
         with: {
-          // project relation would go here if set up
+          project: true,
+          organization: true,
         },
         orderBy: (tasks, { asc }) => [asc(tasks.dueDate)],
       });
@@ -40,16 +43,26 @@ export async function GET(request: NextRequest) {
         where: and(
           gte(schema.tasks.dueDate, startOfDay),
           lte(schema.tasks.dueDate, endOfWeek),
-          status ? eq(schema.tasks.status, status) : undefined
+          status ? eq(schema.tasks.status, status) : undefined,
+          organizationId ? eq(schema.tasks.organizationId, organizationId) : undefined
         ),
+        with: {
+          project: true,
+          organization: true,
+        },
         orderBy: (tasks, { asc }) => [asc(tasks.dueDate)],
       });
     } else {
       tasks = await db.query.tasks.findMany({
         where: and(
           status ? eq(schema.tasks.status, status) : undefined,
-          projectId ? eq(schema.tasks.projectId, projectId) : undefined
+          projectId ? eq(schema.tasks.projectId, projectId) : undefined,
+          organizationId ? eq(schema.tasks.organizationId, organizationId) : undefined
         ),
+        with: {
+          project: true,
+          organization: true,
+        },
         orderBy: (tasks, { asc }) => [asc(tasks.dueDate)],
       });
     }
@@ -70,6 +83,7 @@ export async function POST(request: NextRequest) {
       id: generateId(),
       name: body.name,
       projectId: body.projectId || null,
+      organizationId: body.organizationId || null,
       priority: body.priority || null,
       status: body.status || "not_started",
       dueDate: body.dueDate ? new Date(body.dueDate) : null,

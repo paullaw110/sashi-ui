@@ -4,17 +4,37 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Organization, Project } from "@/lib/db/schema";
 
 interface QuickAddTaskProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultOrganizationId?: string;
+  defaultProjectId?: string;
 }
 
-export function QuickAddTask({ isOpen, onClose }: QuickAddTaskProps) {
+export function QuickAddTask({ 
+  isOpen, 
+  onClose, 
+  defaultOrganizationId,
+  defaultProjectId 
+}: QuickAddTaskProps) {
   const [taskName, setTaskName] = useState("");
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState(defaultOrganizationId || "");
+  const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId || "");
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  // Fetch organizations and projects
+  useEffect(() => {
+    if (isOpen) {
+      fetchOrganizations();
+      fetchProjects();
+    }
+  }, [isOpen]);
 
   // Focus input when modal opens
   useEffect(() => {
@@ -23,13 +43,45 @@ export function QuickAddTask({ isOpen, onClose }: QuickAddTaskProps) {
     }
   }, [isOpen]);
 
-  // Clear task name when modal closes
+  // Clear form when modal closes
   useEffect(() => {
     if (!isOpen) {
       setTaskName("");
+      setSelectedOrganizationId(defaultOrganizationId || "");
+      setSelectedProjectId(defaultProjectId || "");
       setIsSubmitting(false);
     }
-  }, [isOpen]);
+  }, [isOpen, defaultOrganizationId, defaultProjectId]);
+
+  const fetchOrganizations = async () => {
+    try {
+      const response = await fetch("/api/organizations");
+      const data = await response.json();
+      setOrganizations(data.organizations || []);
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      // Fetch projects through tasks API to get project data
+      const response = await fetch("/api/tasks?view=all");
+      const data = await response.json();
+      
+      // Extract unique projects
+      const uniqueProjects = new Map<string, Project>();
+      data.tasks?.forEach((task: any) => {
+        if (task.project) {
+          uniqueProjects.set(task.project.id, task.project);
+        }
+      });
+      
+      setProjects(Array.from(uniqueProjects.values()));
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
 
   // Handle escape key
   useEffect(() => {
@@ -56,6 +108,8 @@ export function QuickAddTask({ isOpen, onClose }: QuickAddTaskProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: taskName.trim(),
+          organizationId: selectedOrganizationId || null,
+          projectId: selectedProjectId || null,
           status: "not_started",
           priority: "medium",
         }),
@@ -111,6 +165,42 @@ export function QuickAddTask({ isOpen, onClose }: QuickAddTaskProps) {
                 className="w-full px-3 py-2 bg-[#0c0c0c] border border-[#1a1a1a] rounded-md text-[#f5f5f5] placeholder:text-[#525252] focus:outline-none focus:border-[#333] transition-colors"
                 disabled={isSubmitting}
               />
+
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  value={selectedOrganizationId}
+                  onChange={(e) => setSelectedOrganizationId(e.target.value)}
+                  className="px-3 py-2 bg-[#0c0c0c] border border-[#1a1a1a] rounded-md text-[#f5f5f5] text-sm focus:outline-none focus:border-[#333] transition-colors"
+                  disabled={isSubmitting}
+                >
+                  <option value="">No Organization</option>
+                  {organizations.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="px-3 py-2 bg-[#0c0c0c] border border-[#1a1a1a] rounded-md text-[#f5f5f5] text-sm focus:outline-none focus:border-[#333] transition-colors"
+                  disabled={isSubmitting}
+                >
+                  <option value="">No Project</option>
+                  {projects
+                    .filter(project => 
+                      !selectedOrganizationId || 
+                      project.organizationId === selectedOrganizationId ||
+                      !project.organizationId
+                    )
+                    .map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
               
               <div className="flex items-center justify-between text-xs text-[#525252]">
                 <div>

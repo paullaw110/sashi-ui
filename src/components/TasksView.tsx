@@ -2,33 +2,42 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X } from "lucide-react";
+import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, Building2, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TaskSidePanel } from "./TaskSidePanel";
 import { MonthCalendar } from "./MonthCalendar";
+import OrganizationManager from "./OrganizationManager";
+import MigrationWizard from "./MigrationWizard";
+import Breadcrumb from "./Breadcrumb";
 import { format } from "date-fns";
+import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 
 type Task = {
   id: string;
   name: string;
   projectId: string | null;
+  organizationId: string | null;
   priority: string | null;
   status: string;
   dueDate: string | null  // ISO string from server;
   dueTime: string | null;
   tags: string | null;
   description?: string | null;
+  project?: SchemaProject | null;
+  organization?: Organization | null;
 };
 
 type Project = {
   id: string;
   name: string;
   color: string | null;
+  organizationId?: string | null;
 };
 
 interface TasksViewProps {
   tasks: Task[];
   projects: Project[];
+  organizations?: Organization[];
 }
 
 function getStatusIcon(status: string) {
@@ -126,7 +135,7 @@ function getPriorityBadge(priority: string | null) {
   );
 }
 
-export function TasksView({ tasks, projects }: TasksViewProps) {
+export function TasksView({ tasks, projects, organizations = [] }: TasksViewProps) {
   const router = useRouter();
   const [view, setView] = useState<"list" | "calendar">("calendar");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -134,7 +143,10 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
+  const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [showOrganizations, setShowOrganizations] = useState(false);
+  const [showMigrationWizard, setShowMigrationWizard] = useState(false);
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -143,6 +155,11 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
       
       // Priority filter
       if (filterPriority && task.priority !== filterPriority) return false;
+      
+      // Organization filter
+      if (selectedOrganization) {
+        if (task.organizationId !== selectedOrganization.id) return false;
+      }
       
       // Search filter - search in both name and description
       if (searchQuery) {
@@ -154,7 +171,7 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
       
       return true;
     });
-  }, [tasks, filterStatus, filterPriority, searchQuery]);
+  }, [tasks, filterStatus, filterPriority, selectedOrganization, searchQuery]);
 
   const handleTaskClick = useCallback((task: Task) => {
     setSelectedTask(task);
@@ -242,12 +259,23 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
     setSearchQuery("");
     setFilterStatus(null);
     setFilterPriority(null);
+    setSelectedOrganization(null);
   }, []);
 
-  const hasActiveFilters = searchQuery || filterStatus || filterPriority;
+  const hasActiveFilters = searchQuery || filterStatus || filterPriority || selectedOrganization;
 
   return (
     <div className={cn("flex flex-col", view === "calendar" && "h-[calc(100vh-180px)]")}>
+      {/* Organization Panel */}
+      {showOrganizations && (
+        <div className="mb-4 p-4 bg-[#111] border border-[#1a1a1a] rounded-lg">
+          <OrganizationManager
+            onOrganizationSelect={setSelectedOrganization}
+            selectedOrganizationId={selectedOrganization?.id || null}
+          />
+        </div>
+      )}
+
       {/* Header with view toggle and filters */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <div className="flex items-center gap-4">
@@ -276,6 +304,36 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
             >
               <List size={14} />
               List
+            </button>
+          </div>
+
+          {/* Organization Controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowOrganizations(!showOrganizations)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors border",
+                showOrganizations
+                  ? "bg-[#1c1c1c] text-[#f5f5f5] border-[#333]"
+                  : "text-[#525252] hover:text-[#737373] border-[#222] hover:border-[#333]"
+              )}
+            >
+              <Building2 size={14} />
+              Organizations
+            </button>
+
+            {selectedOrganization && (
+              <div className="px-2 py-1 text-xs bg-[#1a1a1a] text-[#e5e5e5] rounded border border-[#222]">
+                {selectedOrganization.name}
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowMigrationWizard(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors border border-[#222] hover:border-[#333] text-[#525252] hover:text-[#737373]"
+            >
+              <ArrowUpDown size={14} />
+              Migrate Projects
             </button>
           </div>
 
@@ -342,10 +400,11 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
         <div className="bg-[#111] rounded-lg border border-[#1a1a1a]">
           {/* Table Header */}
           <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[#1a1a1a] text-[10px] text-[#404040] uppercase tracking-widest">
-            <div className="col-span-6">Task</div>
+            <div className="col-span-5">Task</div>
+            <div className="col-span-2">Context</div>
             <div className="col-span-2">Priority</div>
             <div className="col-span-2">Status</div>
-            <div className="col-span-2">Due</div>
+            <div className="col-span-1">Due</div>
           </div>
 
           {/* Task Rows */}
@@ -359,7 +418,7 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
                   task.status === "done" && "opacity-40"
                 )}
               >
-                <div className="col-span-6 flex items-center gap-3">
+                <div className="col-span-5 flex items-center gap-3">
                   <button
                     onClick={(e) => cycleStatus(e, task)}
                     className="hover:opacity-70 transition-opacity shrink-0"
@@ -374,12 +433,19 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
                   </span>
                 </div>
                 <div className="col-span-2">
+                  <Breadcrumb
+                    organization={task.organization}
+                    project={task.project}
+                    className="truncate"
+                  />
+                </div>
+                <div className="col-span-2">
                   {getPriorityBadge(task.priority)}
                 </div>
                 <div className="col-span-2">
                   {getStatusBadge(task.status)}
                 </div>
-                <div className="col-span-2">
+                <div className="col-span-1">
                   <span className="text-[11px] text-[#404040]">
                     {task.dueDate ? format(new Date(task.dueDate), "MMM d") : "—"}
                   </span>
@@ -421,6 +487,17 @@ export function TasksView({ tasks, projects }: TasksViewProps) {
         onSave={handleSave}
         onDelete={handleDelete}
       />
+
+      {/* Migration Wizard */}
+      {showMigrationWizard && (
+        <MigrationWizard
+          onComplete={() => {
+            setShowMigrationWizard(false);
+            router.refresh();
+          }}
+          onCancel={() => setShowMigrationWizard(false)}
+        />
+      )}
     </div>
   );
 }

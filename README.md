@@ -1,8 +1,38 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Database Setup
+
+This application uses [Turso](https://turso.tech/) cloud database exclusively for all environments, including local development. There is no local SQLite fallback.
+
+### Required Environment Variables
+
+Create a `.env.local` file with the following required variables:
+
+```bash
+TURSO_DATABASE_URL=your_turso_database_url
+TURSO_AUTH_TOKEN=your_turso_auth_token
+```
+
+Both variables are **required** for the application to start. The application will fail with clear error messages if these are missing or invalid.
+
+### Database Features
+
+- **Single Database:** All environments (local, staging, production) connect to the same Turso database
+- **Real-time Sync:** Changes made locally are immediately visible in production and vice versa
+- **Automatic Schema:** Database tables are created automatically on first connection
+- **Migration Safety:** Schema migrations run safely on the shared database
+
 ## Getting Started
 
-First, run the development server:
+1. **Clone the repository**
+2. **Set up environment variables** (see Database Setup above)
+3. **Install dependencies:**
+
+```bash
+npm install
+```
+
+4. **Run the development server:**
 
 ```bash
 npm run dev

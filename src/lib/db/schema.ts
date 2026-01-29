@@ -1,10 +1,19 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { relations } from "drizzle-orm";
+
+export const organizations = sqliteTable("organizations", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
 
 export const projects = sqliteTable("projects", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   color: text("color"),
   type: text("type"), // client, personal, work
+  organizationId: text("organization_id").references(() => organizations.id),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
@@ -12,6 +21,7 @@ export const tasks = sqliteTable("tasks", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   projectId: text("project_id").references(() => projects.id),
+  organizationId: text("organization_id").references(() => organizations.id),
   priority: text("priority"), // critical, high, medium, low
   status: text("status").notNull().default("not_started"), // not_started, in_progress, waiting, done
   dueDate: integer("due_date", { mode: "timestamp_ms" }),
@@ -51,7 +61,34 @@ export const sashiQueue = sqliteTable("sashi_queue", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
+// Relations
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  projects: many(projects),
+  tasks: many(tasks),
+}));
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [projects.organizationId],
+    references: [organizations.id],
+  }),
+  tasks: many(tasks),
+}));
+
+export const tasksRelations = relations(tasks, ({ one }) => ({
+  project: one(projects, {
+    fields: [tasks.projectId],
+    references: [projects.id],
+  }),
+  organization: one(organizations, {
+    fields: [tasks.organizationId],
+    references: [organizations.id],
+  }),
+}));
+
 // Type exports
+export type Organization = typeof organizations.$inferSelect;
+export type NewOrganization = typeof organizations.$inferInsert;
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
 export type Task = typeof tasks.$inferSelect;

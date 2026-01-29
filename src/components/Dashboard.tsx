@@ -10,6 +10,7 @@ type Task = {
   id: string;
   name: string;
   projectId: string | null;
+  organizationId: string | null;
   priority: string | null;
   status: string;
   dueDate: string | null;  // ISO string from server
