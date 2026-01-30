@@ -2,9 +2,10 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, X, Trash2, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Trash2, Plus, ChevronDown, ChevronUp, Maximize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichEditor } from "./RichEditor";
+import { TaskDetailModal } from "./TaskDetailModal";
 import {
   DndContext,
   DragOverlay,
@@ -56,11 +57,18 @@ type Project = {
   id: string;
   name: string;
   color: string | null;
+  organizationId: string | null;
+};
+
+type Organization = {
+  id: string;
+  name: string;
 };
 
 interface CalendarViewProps {
   tasks: Task[];
   projects: Project[];
+  organizations?: Organization[];
 }
 
 const PRIORITIES = [
@@ -277,9 +285,18 @@ function TimeGridTask({
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
-        className="absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize bg-transparent hover:bg-blue-500/30 transition-colors z-10"
+        className="absolute bottom-0 left-0 right-0 h-6 cursor-ns-resize bg-transparent hover:bg-blue-500/10 transition-all z-20 touch-none group/resize"
       >
-        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-[#525252] opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* Notion-style resize icon */}
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 opacity-0 group-hover/resize:opacity-100 transition-opacity pointer-events-none">
+          <div className="bg-[#333] border border-[#555] rounded px-1.5 py-0.5 shadow-lg">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#a3a3a3]">
+              <path d="M12 3L8 7h8l-4-4z" fill="currentColor" stroke="none"/>
+              <path d="M12 21l4-4H8l4 4z" fill="currentColor" stroke="none"/>
+              <line x1="12" y1="7" x2="12" y2="17"/>
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -881,11 +898,12 @@ function SelectionBox({
 }
 
 // Main Calendar View
-export function CalendarView({ tasks, projects }: CalendarViewProps) {
+export function CalendarView({ tasks, projects, organizations = [] }: CalendarViewProps) {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createDate, setCreateDate] = useState<Date | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -1064,6 +1082,12 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
   const handleTaskClick = useCallback((task: Task) => {
     setSelectedTask(task);
     setIsCreating(false);
+    setIsModalOpen(true);
+  }, []);
+
+  // Open side panel from modal's "Expand" option
+  const handleExpandToPanel = useCallback(() => {
+    setIsModalOpen(false);
     setIsPanelOpen(true);
   }, []);
 
@@ -1071,11 +1095,18 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
     setCreateDate(date);
     setSelectedTask(null);
     setIsCreating(true);
-    setIsPanelOpen(true);
+    setIsModalOpen(true);
   }, []);
 
   const handleClosePanel = useCallback(() => {
     setIsPanelOpen(false);
+    setSelectedTask(null);
+    setIsCreating(false);
+    setCreateDate(null);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
     setSelectedTask(null);
     setIsCreating(false);
     setCreateDate(null);
@@ -1363,7 +1394,21 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
         </DragOverlay>
       </DndContext>
 
-      {/* Task Side Panel */}
+      {/* Task Modal (primary task editing) */}
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={isModalOpen}
+        isCreating={isCreating}
+        defaultDate={createDate}
+        organizations={organizations}
+        projects={projects}
+        onClose={handleCloseModal}
+        onSave={handleSave}
+        onDelete={handleDelete}
+        onExpand={handleExpandToPanel}
+      />
+
+      {/* Task Side Panel (expanded view from modal) */}
       <TaskSidePanel
         task={selectedTask}
         projects={projects}

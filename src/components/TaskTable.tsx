@@ -160,6 +160,9 @@ export function TaskTable({
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskName, setNewTaskName] = useState("");
+  
+  // Optimistic tasks - shown immediately while API call happens
+  const [optimisticTasks, setOptimisticTasks] = useState<Task[]>([]);
 
   // Handler for inline updates (org/project)
   const handleInlineUpdate = useCallback(async (taskId: string, field: string, value: string | null) => {
@@ -176,14 +179,39 @@ export function TaskTable({
     }
   }, [onTaskUpdate, router]);
 
-  // Handler for inline create
+  // Handler for inline create with optimistic update
   const handleInlineCreate = useCallback(async () => {
     if (!newTaskName.trim() || !onInlineCreate) return;
     
+    const taskName = newTaskName.trim();
+    setNewTaskName(""); // Clear input immediately
+    
+    // Create optimistic task
+    const optimisticTask: Task = {
+      id: `optimistic-${Date.now()}`,
+      name: taskName,
+      status: "not_started",
+      priority: null,
+      projectId: null,
+      organizationId: null,
+      dueDate: defaultDueDate ? `${defaultDueDate}T12:00:00.000Z` : null,
+      dueTime: null,
+      tags: null,
+      project: null,
+      organization: null,
+    };
+    
+    // Add to optimistic list immediately
+    setOptimisticTasks(prev => [...prev, optimisticTask]);
+    
     setIsCreating(true);
     try {
-      await onInlineCreate(newTaskName.trim(), defaultDueDate || undefined);
-      setNewTaskName("");
+      await onInlineCreate(taskName, defaultDueDate || undefined);
+      // Clear optimistic task after real data loads via router.refresh()
+      setOptimisticTasks(prev => prev.filter(t => t.id !== optimisticTask.id));
+    } catch {
+      // Remove optimistic task on error
+      setOptimisticTasks(prev => prev.filter(t => t.id !== optimisticTask.id));
     } finally {
       setIsCreating(false);
     }
@@ -199,7 +227,10 @@ export function TaskTable({
     }
   }, [handleInlineCreate]);
 
-  const filteredTasks = tasks.filter((task) => {
+  // Merge real tasks with optimistic tasks
+  const allTasks = [...tasks, ...optimisticTasks];
+  
+  const filteredTasks = allTasks.filter((task) => {
     if (filterStatus && task.status !== filterStatus) return false;
     if (filterPriority && task.priority !== filterPriority) return false;
     return true;
@@ -272,13 +303,17 @@ export function TaskTable({
 
       {/* Rows */}
       <div className="divide-y divide-[#161616]">
-        {filteredTasks.slice(0, 25).map((task) => (
+        {filteredTasks.slice(0, 25).map((task) => {
+          const isOptimistic = task.id.startsWith("optimistic-");
+          
+          return (
           <div
             key={task.id}
-            onClick={() => onTaskClick?.(task)}
+            onClick={() => !isOptimistic && onTaskClick?.(task)}
             className={cn(
               "flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2.5 hover:bg-[var(--bg-surface)] cursor-pointer transition-colors",
-              task.status === "done" && "opacity-40"
+              task.status === "done" && "opacity-40",
+              isOptimistic && "opacity-60 animate-pulse pointer-events-none"
             )}
           >
             {/* Status */}
@@ -367,7 +402,8 @@ export function TaskTable({
               }
             </span>
           </div>
-        ))}
+        );
+        })}
 
         {filteredTasks.length === 0 && !onInlineCreate && (
           <div className="px-4 py-10 text-center text-[var(--text-quaternary)] text-xs">

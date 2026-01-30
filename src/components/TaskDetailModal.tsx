@@ -14,6 +14,7 @@ import {
   CalendarDays,
   Plus,
   MoreHorizontal,
+  Maximize2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -84,11 +85,13 @@ interface TaskDetailModalProps {
   task: Task | null;
   isOpen: boolean;
   isCreating?: boolean;
+  defaultDate?: Date | null;
   organizations: Organization[];
   projects: Project[];
   onClose: () => void;
   onSave: (task: Partial<Task>) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
+  onExpand?: () => void;
 }
 
 const STATUSES = [
@@ -110,11 +113,13 @@ export function TaskDetailModal({
   task,
   isOpen,
   isCreating = false,
+  defaultDate,
   organizations: initialOrganizations,
   projects: initialProjects,
   onClose,
   onSave,
   onDelete,
+  onExpand,
 }: TaskDetailModalProps) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -174,7 +179,7 @@ export function TaskDetailModal({
       setName("");
       setStatus("not_started");
       setPriority(null);
-      setDueDate(undefined);
+      setDueDate(defaultDate || undefined);
       setDueTime("");
       setOrganizationId(null);
       setProjectId(null);
@@ -182,7 +187,7 @@ export function TaskDetailModal({
       setLocalTaskId(null);
       hasCreatedRef.current = false;
     }
-  }, [task, isOpen]);
+  }, [task, isOpen, defaultDate]);
 
   // Auto-save function for existing tasks
   const autoSave = useCallback(async (updates: Partial<Task>) => {
@@ -431,8 +436,8 @@ export function TaskDetailModal({
                 Saving...
               </div>
             )}
-            {/* Three-dot menu for delete */}
-            {(task || localTaskId) && onDelete && (
+            {/* Three-dot menu for expand/delete */}
+            {(task || localTaskId) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
@@ -440,18 +445,26 @@ export function TaskDetailModal({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="text-red-400 focus:text-red-400"
-                  >
-                    {isDeleting ? (
-                      <Loader2 size={14} className="mr-2 animate-spin" />
-                    ) : (
-                      <Trash2 size={14} className="mr-2" />
-                    )}
-                    Delete task
-                  </DropdownMenuItem>
+                  {onExpand && (
+                    <DropdownMenuItem onClick={onExpand}>
+                      <Maximize2 size={14} className="mr-2" />
+                      Expand
+                    </DropdownMenuItem>
+                  )}
+                  {onDelete && (
+                    <DropdownMenuItem
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="text-red-400 focus:text-red-400"
+                    >
+                      {isDeleting ? (
+                        <Loader2 size={14} className="mr-2 animate-spin" />
+                      ) : (
+                        <Trash2 size={14} className="mr-2" />
+                      )}
+                      Delete task
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}

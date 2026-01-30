@@ -29,6 +29,12 @@ async function getProjects() {
   });
 }
 
+async function getOrganizations() {
+  return await db.query.organizations.findMany({
+    orderBy: (organizations, { asc }) => [asc(organizations.name)],
+  });
+}
+
 // Serialize dates to ISO strings for client components
 function serializeTasks<T extends { dueDate: Date | null }>(tasks: T[]) {
   return tasks.map(task => ({
@@ -40,6 +46,7 @@ function serializeTasks<T extends { dueDate: Date | null }>(tasks: T[]) {
 export default async function CalendarPage() {
   const tasks = await getTasks();
   const projects = await getProjects();
+  const organizations = await getOrganizations();
 
   return (
     <AppLayout 
@@ -49,6 +56,7 @@ export default async function CalendarPage() {
       <CalendarView
         tasks={serializeTasks(tasks)}
         projects={projects}
+        organizations={organizations}
       />
     </AppLayout>
   );
