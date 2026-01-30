@@ -207,20 +207,19 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
 
   const handleSave = useCallback(async (taskData: Partial<Task>) => {
     if (taskData.id) {
-      await fetch(`/api/tasks/${taskData.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(taskData),
-      });
+      // Use React Query mutation for proper optimistic updates
+      await updateTask.mutateAsync(taskData as { id: string } & Partial<Task>);
     } else {
+      // For new tasks, still use raw fetch then refresh
+      // (createTask mutation would need the full task shape)
       await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(taskData),
       });
+      router.refresh();
     }
-    router.refresh();
-  }, [router]);
+  }, [updateTask, router]);
 
   // Use React Query for delete - handles optimistic updates + rollback
   const handleDelete = useCallback(async (id: string) => {
@@ -228,13 +227,9 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
   }, [deleteTaskMutation]);
 
   const handleStatusChange = useCallback(async (taskId: string, newStatus: string) => {
-    await fetch(`/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    router.refresh();
-  }, [router]);
+    // Use React Query mutation for proper optimistic updates
+    await updateTask.mutateAsync({ id: taskId, status: newStatus });
+  }, [updateTask]);
 
   const cycleStatus = (e: React.MouseEvent, task: Task) => {
     e.stopPropagation();
