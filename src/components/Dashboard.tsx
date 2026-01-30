@@ -116,6 +116,15 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     return data.task || null;
   }, [router]);
 
+  const handleTaskUpdate = useCallback(async (taskId: string, field: string, value: string | null) => {
+    await fetch(`/api/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [field]: value }),
+    });
+    router.refresh();
+  }, [router]);
+
   const handleTaskMove = useCallback(async (taskId: string, newDate: Date) => {
     // Wait for API to complete before refreshing to avoid race condition
     try {
@@ -166,6 +175,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
             onTaskClick={handleTaskClick}
             onNewTask={handleNewTodayTask}
             onStatusChange={handleStatusChange}
+            onTaskUpdate={handleTaskUpdate}
             onInlineCreate={handleInlineCreate}
           />
 
@@ -178,6 +188,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
             onTaskClick={handleTaskClick}
             onNewTask={handleNewNextTask}
             onStatusChange={handleStatusChange}
+            onTaskUpdate={handleTaskUpdate}
             onInlineCreate={handleInlineCreate}
           />
         </div>

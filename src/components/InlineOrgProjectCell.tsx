@@ -201,7 +201,7 @@ export function InlineOrgProjectCell({
                   .map((item) => (
                     <CommandItem
                       key={item.id}
-                      value={item.name}
+                      value={item.id}
                       onSelect={() => handleSelect(item.id)}
                       className="cursor-pointer"
                     >
