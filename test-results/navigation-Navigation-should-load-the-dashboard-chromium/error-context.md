@@ -1,0 +1,957 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - link "Sashi Sashi" [ref=e6] [cursor=pointer]:
+            - /url: /
+            - img "Sashi" [ref=e7]
+            - generic [ref=e8]: Sashi
+          - button "Collapse sidebar (⌘B)" [ref=e10]:
+            - img [ref=e11]
+        - button "Idle" [ref=e16]:
+          - generic [ref=e18]: Idle
+      - button "Search ⌘K" [ref=e20]:
+        - img [ref=e21]
+        - generic [ref=e24]: Search
+        - generic [ref=e25]: ⌘K
+      - navigation [ref=e26]:
+        - link "Dashboard" [ref=e27] [cursor=pointer]:
+          - /url: /
+          - img [ref=e28]
+          - text: Dashboard
+        - link "Tasks" [ref=e33] [cursor=pointer]:
+          - /url: /tasks
+          - img [ref=e34]
+          - text: Tasks
+        - link "Inbox" [ref=e37] [cursor=pointer]:
+          - /url: /inbox
+          - img [ref=e38]
+          - text: Inbox
+        - link "Notes" [ref=e41] [cursor=pointer]:
+          - /url: /notes
+          - img [ref=e42]
+          - text: Notes
+        - link "Code Playground" [ref=e45] [cursor=pointer]:
+          - /url: /playground
+          - img [ref=e46]
+          - text: Code Playground
+        - link "Calendar" [ref=e50] [cursor=pointer]:
+          - /url: /calendar
+          - img [ref=e51]
+          - text: Calendar
+        - link "Queue" [ref=e53] [cursor=pointer]:
+          - /url: /queue
+          - img [ref=e54]
+          - text: Queue
+        - link "Skills" [ref=e57] [cursor=pointer]:
+          - /url: /skills
+          - img [ref=e58]
+          - text: Skills
+        - link "Leads" [ref=e60] [cursor=pointer]:
+          - /url: /leads
+          - img [ref=e61]
+          - text: Leads
+      - button "Settings" [ref=e66]:
+        - img [ref=e67]
+        - text: Settings
+    - main [ref=e70]:
+      - generic [ref=e72]:
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]:
+              - generic [ref=e76]:
+                - heading "Today" [level=2] [ref=e77]
+                - generic [ref=e78]: "23"
+              - generic [ref=e79]:
+                - combobox [ref=e80]:
+                  - option "Status" [selected]
+                  - option "Todo"
+                  - option "In Progress"
+                  - option "Waiting"
+                  - option "Done"
+                - combobox [ref=e81]:
+                  - option "Priority" [selected]
+                  - option "Non-Negotiable"
+                  - option "Critical"
+                  - option "High"
+                  - option "Medium"
+                  - option "Low"
+                - button "Add" [ref=e82]:
+                  - img [ref=e83]
+                  - generic [ref=e84]: Add
+            - generic [ref=e85]:
+              - generic: Task
+              - generic [ref=e86]: Organization
+              - generic [ref=e87]: Project
+              - generic [ref=e88]: Priority
+              - generic [ref=e89]: Status
+              - generic [ref=e90]: Due
+            - generic [ref=e91]:
+              - generic [ref=e92] [cursor=pointer]:
+                - button [ref=e93]:
+                  - img [ref=e94]
+                - generic: AI Integration - Table + Widgets
+                - generic [ref=e96]: —
+                - generic [ref=e97]: —
+                - generic [ref=e98]: Non-Negotiable
+                - generic [ref=e99]: Not Started
+                - generic [ref=e100]: Jan 30
+              - generic [ref=e101] [cursor=pointer]:
+                - button [ref=e102]:
+                  - img [ref=e103]
+                - generic: Tradeshow Media
+                - generic [ref=e105]: —
+                - generic [ref=e106]: —
+                - generic [ref=e107]: Non-Negotiable
+                - generic [ref=e108]: Not Started
+                - generic [ref=e109]: Jan 30
+              - generic [ref=e110] [cursor=pointer]:
+                - button [ref=e111]:
+                  - img [ref=e112]
+                - generic: Add reviews on webstite
+                - generic [ref=e114]: —
+                - generic [ref=e115]: —
+                - generic [ref=e116]: Critical
+                - generic [ref=e117]: Not Started
+                - generic [ref=e118]: Jan 30
+              - generic [ref=e119] [cursor=pointer]:
+                - button [ref=e120]:
+                  - img [ref=e121]
+                - generic: Chat Revamp
+                - generic [ref=e123]: —
+                - generic [ref=e124]: —
+                - generic [ref=e125]: Critical
+                - generic [ref=e126]: Not Started
+                - generic [ref=e127]: Jan 30
+              - generic [ref=e128] [cursor=pointer]:
+                - button [ref=e129]:
+                  - img [ref=e130]
+                - generic: Home Loan Look into
+                - generic [ref=e132]: —
+                - generic [ref=e133]: —
+                - generic [ref=e134]: Critical
+                - generic [ref=e135]: Not Started
+                - generic [ref=e136]: Jan 30
+              - generic [ref=e137] [cursor=pointer]:
+                - button [ref=e138]:
+                  - img [ref=e139]
+                - generic: weed parkway strip
+                - generic [ref=e141]: —
+                - generic [ref=e142]: —
+                - generic [ref=e143]: Critical
+                - generic [ref=e144]: Not Started
+                - generic [ref=e145]: Jan 30
+              - generic [ref=e146] [cursor=pointer]:
+                - button [ref=e147]:
+                  - img [ref=e148]
+                - generic: Create one BG Video
+                - generic [ref=e150]: —
+                - generic [ref=e151]: —
+                - generic [ref=e152]: Critical
+                - generic [ref=e153]: Not Started
+                - generic [ref=e154]: Jan 30
+              - generic [ref=e155] [cursor=pointer]:
+                - button [ref=e156]:
+                  - img [ref=e157]
+                - generic: Hero Section w/ partnership logos
+                - generic [ref=e159]: —
+                - generic [ref=e160]: —
+                - generic [ref=e161]: High
+                - generic [ref=e162]: Not Started
+                - generic [ref=e163]: Jan 30
+              - generic [ref=e164] [cursor=pointer]:
+                - button [ref=e165]:
+                  - img [ref=e166]
+                - generic: Start Paying Loans
+                - generic [ref=e168]: —
+                - generic [ref=e169]: —
+                - generic [ref=e170]: High
+                - generic [ref=e171]: Not Started
+                - generic [ref=e172]: Jan 30
+              - generic [ref=e173] [cursor=pointer]:
+                - button [ref=e174]:
+                  - img [ref=e175]
+                - generic: tooltip for configure providers
+                - generic [ref=e177]: —
+                - generic [ref=e178]: —
+                - generic [ref=e179]: High
+                - generic [ref=e180]: Not Started
+                - generic [ref=e181]: Jan 30
+              - generic [ref=e182] [cursor=pointer]:
+                - button [ref=e183]:
+                  - img [ref=e184]
+                - generic: time machine report
+                - generic [ref=e186]: —
+                - generic [ref=e187]: —
+                - generic [ref=e188]: High
+                - generic [ref=e189]: Not Started
+                - generic [ref=e190]: Jan 30
+              - generic [ref=e191] [cursor=pointer]:
+                - button [ref=e192]:
+                  - img [ref=e193]
+                - generic: plan framer
+                - generic [ref=e195]: —
+                - generic [ref=e196]: —
+                - generic [ref=e197]: High
+                - generic [ref=e198]: Not Started
+                - generic [ref=e199]: Jan 30
+              - generic [ref=e200] [cursor=pointer]:
+                - button [ref=e201]:
+                  - img [ref=e202]
+                - generic: Research Storybook
+                - generic [ref=e204]: —
+                - generic [ref=e205]: —
+                - generic [ref=e206]: Low
+                - generic [ref=e207]: Not Started
+                - generic [ref=e208]: Jan 30
+              - generic [ref=e209] [cursor=pointer]:
+                - button [ref=e210]:
+                  - img [ref=e211]
+                - generic: Email Updates for Web clients
+                - generic [ref=e213]: —
+                - generic [ref=e214]: —
+                - generic [ref=e215]: Low
+                - generic [ref=e216]: Not Started
+                - generic [ref=e217]: Jan 30
+              - generic [ref=e218] [cursor=pointer]:
+                - button [ref=e219]:
+                  - img [ref=e220]
+                - generic: "imPAC: Product Analytics"
+                - generic [ref=e222]: —
+                - generic [ref=e223]: —
+                - generic [ref=e224]: Low
+                - generic [ref=e225]: Not Started
+                - generic [ref=e226]: Jan 30
+              - generic [ref=e227] [cursor=pointer]:
+                - button [ref=e228]:
+                  - img [ref=e229]
+                - generic: Scores Tab
+                - generic [ref=e231]: —
+                - generic [ref=e232]: —
+                - generic [ref=e233]: Low
+                - generic [ref=e234]: Not Started
+                - generic [ref=e235]: Jan 30
+              - generic [ref=e236] [cursor=pointer]:
+                - button [ref=e237]:
+                  - img [ref=e238]
+                - generic: pay Malcolm!
+                - generic [ref=e240]: —
+                - generic [ref=e241]: —
+                - generic [ref=e242]: —
+                - generic [ref=e243]: Not Started
+                - generic [ref=e244]: Jan 30
+              - generic [ref=e245] [cursor=pointer]:
+                - button [ref=e246]:
+                  - img [ref=e247]
+                - generic: AI Integration - Search
+                - generic [ref=e249]: —
+                - generic [ref=e250]: —
+                - generic [ref=e251]: —
+                - generic [ref=e252]: Not Started
+                - generic [ref=e253]: Jan 30
+              - generic [ref=e254] [cursor=pointer]:
+                - button [ref=e255]:
+                  - img [ref=e256]
+                - generic: new compensation column
+                - generic [ref=e258]: —
+                - generic [ref=e259]: —
+                - generic [ref=e260]: —
+                - generic [ref=e261]: Not Started
+                - generic [ref=e262]: Jan 30
+              - generic [ref=e263] [cursor=pointer]:
+                - button [ref=e264]:
+                  - img [ref=e265]
+                - generic: update findings exemptions tab
+                - generic [ref=e267]: —
+                - generic [ref=e268]: —
+                - generic [ref=e269]: —
+                - generic [ref=e270]: Not Started
+                - generic [ref=e271]: Jan 30
+              - generic [ref=e272] [cursor=pointer]:
+                - button [ref=e273]:
+                  - img [ref=e274]
+                - generic: Use Case Web pages
+                - generic [ref=e276]: —
+                - generic [ref=e277]: —
+                - generic [ref=e278]: Non-Negotiable
+                - generic [ref=e279]: Waiting
+                - generic [ref=e280]: Jan 30
+              - generic [ref=e281] [cursor=pointer]:
+                - button [ref=e282]:
+                  - img [ref=e283]
+                - generic: One Pager - Overview
+                - generic [ref=e285]: —
+                - generic [ref=e286]: —
+                - generic [ref=e287]: Non-Negotiable
+                - generic [ref=e288]: Waiting
+                - generic [ref=e289]: Jan 30
+              - generic [ref=e290] [cursor=pointer]:
+                - button [ref=e291]:
+                  - img [ref=e292]
+                - generic: progress meter for run status,
+                - generic [ref=e294]: —
+                - generic [ref=e295]: —
+                - generic [ref=e296]: Low
+                - generic [ref=e297]: Waiting
+                - generic [ref=e298]: Jan 30
+          - generic [ref=e299]:
+            - generic [ref=e300]:
+              - generic [ref=e301]:
+                - heading "Next" [level=2] [ref=e302]
+                - generic [ref=e303]: "24"
+              - button "Add" [ref=e305]:
+                - img [ref=e306]
+                - generic [ref=e307]: Add
+            - generic [ref=e308]:
+              - generic: Task
+              - generic [ref=e309]: Organization
+              - generic [ref=e310]: Project
+              - generic [ref=e311]: Priority
+              - generic [ref=e312]: Status
+              - generic [ref=e313]: Due
+            - generic [ref=e314]:
+              - generic [ref=e315] [cursor=pointer]:
+                - button [ref=e316]:
+                  - img [ref=e317]
+                - generic: AI Dashboard Insights - Most Risk
+                - generic [ref=e319]: —
+                - generic [ref=e320]: —
+                - generic [ref=e321]: Non-Negotiable
+                - generic [ref=e322]: Not Started
+                - generic [ref=e323]: Jan 31
+              - generic [ref=e324] [cursor=pointer]:
+                - button [ref=e325]:
+                  - img [ref=e326]
+                - generic: Asset History + add created on other stats
+                - generic [ref=e328]: —
+                - generic [ref=e329]: —
+                - generic [ref=e330]: Non-Negotiable
+                - generic [ref=e331]: Not Started
+                - generic [ref=e332]: Jan 31
+              - generic [ref=e333] [cursor=pointer]:
+                - button [ref=e334]:
+                  - img [ref=e335]
+                - generic: PCC - web ask
+                - generic [ref=e337]: —
+                - generic [ref=e338]: —
+                - generic [ref=e339]: Non-Negotiable
+                - generic [ref=e340]: Not Started
+                - generic [ref=e341]: Jan 31
+              - generic [ref=e342] [cursor=pointer]:
+                - button [ref=e343]:
+                  - img [ref=e344]
+                - generic: Tradeshow Media
+                - generic [ref=e346]: —
+                - generic [ref=e347]: —
+                - generic [ref=e348]: Non-Negotiable
+                - generic [ref=e349]: Not Started
+                - generic [ref=e350]: Jan 31
+              - generic [ref=e351] [cursor=pointer]:
+                - button [ref=e352]:
+                  - img [ref=e353]
+                - generic: overview dashboard - key findings
+                - generic [ref=e355]: —
+                - generic [ref=e356]: —
+                - generic [ref=e357]: High
+                - generic [ref=e358]: Not Started
+                - generic [ref=e359]: Jan 31
+              - generic [ref=e360] [cursor=pointer]:
+                - button [ref=e361]:
+                  - img [ref=e362]
+                - generic: Email Signature Deven
+                - generic [ref=e364]: —
+                - generic [ref=e365]: —
+                - generic [ref=e366]: High
+                - generic [ref=e367]: Not Started
+                - generic [ref=e368]: Jan 31
+              - generic [ref=e369] [cursor=pointer]:
+                - button [ref=e370]:
+                  - img [ref=e371]
+                - generic: Plant Trees
+                - generic [ref=e373]: —
+                - generic [ref=e374]: —
+                - generic [ref=e375]: High
+                - generic [ref=e376]: Not Started
+                - generic [ref=e377]: Jan 31
+              - generic [ref=e378] [cursor=pointer]:
+                - button [ref=e379]:
+                  - img [ref=e380]
+                - generic: Toastmasters
+                - generic [ref=e382]: —
+                - generic [ref=e383]: —
+                - generic [ref=e384]: Medium
+                - generic [ref=e385]: Not Started
+                - generic [ref=e386]: Jan 31
+              - generic [ref=e387] [cursor=pointer]:
+                - button [ref=e388]:
+                  - img [ref=e389]
+                - generic: spectrum mobile
+                - generic [ref=e391]: —
+                - generic [ref=e392]: —
+                - generic [ref=e393]: Low
+                - generic [ref=e394]: Not Started
+                - generic [ref=e395]: Jan 31
+              - generic [ref=e396] [cursor=pointer]:
+                - button [ref=e397]:
+                  - img [ref=e398]
+                - generic: Clothes donation
+                - generic [ref=e400]: —
+                - generic [ref=e401]: —
+                - generic [ref=e402]: Low
+                - generic [ref=e403]: Not Started
+                - generic [ref=e404]: Jan 31
+              - generic [ref=e405] [cursor=pointer]:
+                - button [ref=e406]:
+                  - img [ref=e407]
+                - generic: Research Storybook
+                - generic [ref=e409]: —
+                - generic [ref=e410]: —
+                - generic [ref=e411]: Low
+                - generic [ref=e412]: Not Started
+                - generic [ref=e413]: Jan 31
+              - generic [ref=e414] [cursor=pointer]:
+                - button [ref=e415]:
+                  - img [ref=e416]
+                - generic: Car insureance
+                - generic [ref=e418]: —
+                - generic [ref=e419]: —
+                - generic [ref=e420]: —
+                - generic [ref=e421]: Not Started
+                - generic [ref=e422]: Jan 31
+              - generic [ref=e423] [cursor=pointer]:
+                - button [ref=e424]:
+                  - img [ref=e425]
+                - generic: Garden Wall
+                - generic [ref=e427]: —
+                - generic [ref=e428]: —
+                - generic [ref=e429]: —
+                - generic [ref=e430]: Not Started
+                - generic [ref=e431]: Jan 31
+              - generic [ref=e432] [cursor=pointer]:
+                - button [ref=e433]:
+                  - img [ref=e434]
+                - generic: Plant Plan
+                - generic [ref=e436]: —
+                - generic [ref=e437]: —
+                - generic [ref=e438]: —
+                - generic [ref=e439]: Not Started
+                - generic [ref=e440]: Jan 31
+              - generic [ref=e441] [cursor=pointer]:
+                - button [ref=e442]:
+                  - img [ref=e443]
+                - generic: Build Bench frame
+                - generic [ref=e445]: —
+                - generic [ref=e446]: —
+                - generic [ref=e447]: —
+                - generic [ref=e448]: Not Started
+                - generic [ref=e449]: Jan 31
+              - generic [ref=e450] [cursor=pointer]:
+                - button [ref=e451]:
+                  - img [ref=e452]
+                - generic: home insurance
+                - generic [ref=e454]: —
+                - generic [ref=e455]: —
+                - generic [ref=e456]: —
+                - generic [ref=e457]: Not Started
+                - generic [ref=e458]: Jan 31
+              - generic [ref=e459] [cursor=pointer]:
+                - button [ref=e460]:
+                  - img [ref=e461]
+                - generic: Learn Framer
+                - generic [ref=e463]: —
+                - generic [ref=e464]: —
+                - generic [ref=e465]: —
+                - generic [ref=e466]: Not Started
+                - generic [ref=e467]: Jan 31
+              - generic [ref=e468] [cursor=pointer]:
+                - button [ref=e469]:
+                  - img [ref=e470]
+                - generic: plan traitor
+                - generic [ref=e472]: —
+                - generic [ref=e473]: —
+                - generic [ref=e474]: —
+                - generic [ref=e475]: Not Started
+                - generic [ref=e476]: Jan 31
+              - generic [ref=e477] [cursor=pointer]:
+                - button [ref=e478]:
+                  - img [ref=e479]
+                - generic: Prabahar and Barry notes
+                - generic [ref=e481]: —
+                - generic [ref=e482]: —
+                - generic [ref=e483]: —
+                - generic [ref=e484]: Not Started
+                - generic [ref=e485]: Jan 31
+              - generic [ref=e486] [cursor=pointer]:
+                - button [ref=e487]:
+                  - img [ref=e488]
+                - generic: AI Chat
+                - generic [ref=e490]: —
+                - generic [ref=e491]: —
+                - generic [ref=e492]: —
+                - generic [ref=e493]: Not Started
+                - generic [ref=e494]: Jan 31
+              - generic [ref=e495] [cursor=pointer]:
+                - button [ref=e496]:
+                  - img [ref=e497]
+                - generic: Text Kevin
+                - generic [ref=e499]: —
+                - generic [ref=e500]: —
+                - generic [ref=e501]: —
+                - generic [ref=e502]: Not Started
+                - generic [ref=e503]: Jan 31
+              - generic [ref=e504] [cursor=pointer]:
+                - button [ref=e505]:
+                  - img [ref=e506]
+                - generic: set up daily task tackle help from sashi
+                - generic [ref=e508]: —
+                - generic [ref=e509]: —
+                - generic [ref=e510]: —
+                - generic [ref=e511]: Not Started
+                - generic [ref=e512]: Jan 31
+              - generic [ref=e513] [cursor=pointer]:
+                - button [ref=e514]:
+                  - img [ref=e515]
+                - generic: set up task tackle
+                - generic [ref=e517]: —
+                - generic [ref=e518]: —
+                - generic [ref=e519]: —
+                - generic [ref=e520]: Not Started
+                - generic [ref=e521]: Jan 31
+              - generic [ref=e522] [cursor=pointer]:
+                - button [ref=e523]:
+                  - img [ref=e524]
+                - generic: set up sashi task helper
+                - generic [ref=e526]: —
+                - generic [ref=e527]: —
+                - generic [ref=e528]: —
+                - generic [ref=e529]: Not Started
+                - generic [ref=e530]: Jan 31
+        - generic [ref=e531]:
+          - generic [ref=e532]:
+            - generic [ref=e533]:
+              - heading "January 2026" [level=2] [ref=e534]
+              - generic [ref=e535]:
+                - button [ref=e536]:
+                  - img [ref=e537]
+                - button "Today" [ref=e539]
+                - button [ref=e540]:
+                  - img [ref=e541]
+            - generic [ref=e543]:
+              - generic [ref=e544]:
+                - generic [ref=e545]:
+                  - generic [ref=e546]: Sun
+                  - generic [ref=e547]: "25"
+                - img [ref=e550]
+              - generic [ref=e551]:
+                - generic [ref=e552]:
+                  - generic [ref=e553]: Mon
+                  - generic [ref=e554]: "26"
+                - img [ref=e557]
+              - generic [ref=e558]:
+                - generic [ref=e559]:
+                  - generic [ref=e560]: Tue
+                  - generic [ref=e561]: "27"
+                - img [ref=e564]
+              - generic [ref=e565]:
+                - generic [ref=e566]:
+                  - generic [ref=e567]: Wed
+                  - generic [ref=e568]: "28"
+                - generic [ref=e569]:
+                  - button "help Not Started" [ref=e570]:
+                    - generic [ref=e571]:
+                      - generic [ref=e573]: help
+                      - generic [ref=e574]: Not Started
+                  - button "One Pager - Overview 16:45 Waiting On Client" [ref=e575]:
+                    - generic [ref=e576]:
+                      - generic [ref=e577]:
+                        - generic: One Pager - Overview
+                        - generic [ref=e578]: 16:45
+                      - generic [ref=e579]: Waiting On Client
+              - generic [ref=e580]:
+                - generic [ref=e581]:
+                  - generic [ref=e582]: Thu
+                  - generic [ref=e583]: "29"
+                - generic [ref=e584]:
+                  - button "progress meter for run status, Waiting On Client" [ref=e585]:
+                    - generic [ref=e586]:
+                      - generic [ref=e588]: progress meter for run status,
+                      - generic [ref=e589]: Waiting On Client
+                  - button "COMPOSE QA 11:00 Not Started" [ref=e590]:
+                    - generic [ref=e591]:
+                      - generic [ref=e592]:
+                        - generic [ref=e593]: COMPOSE QA
+                        - generic [ref=e594]: 11:00
+                      - generic [ref=e595]: Not Started
+                  - button "QA Plan Not Started" [ref=e596]:
+                    - generic [ref=e597]:
+                      - generic [ref=e599]: QA Plan
+                      - generic [ref=e600]: Not Started
+                  - button "Chat Revamp Not Started" [ref=e601]:
+                    - generic [ref=e602]:
+                      - generic [ref=e604]: Chat Revamp
+                      - generic [ref=e605]: Not Started
+                  - button "access forbidden Not Started" [ref=e606]:
+                    - generic [ref=e607]:
+                      - generic [ref=e609]: access forbidden
+                      - generic [ref=e610]: Not Started
+                  - button "Auto-Ticketing QA Not Started" [ref=e611]:
+                    - generic [ref=e612]:
+                      - generic [ref=e614]: Auto-Ticketing QA
+                      - generic [ref=e615]: Not Started
+                  - button "imPAC Tags Not Started" [ref=e616]:
+                    - generic [ref=e617]:
+                      - generic [ref=e619]: imPAC Tags
+                      - generic [ref=e620]: Not Started
+                  - button "Add Blog Section on Home Not Started" [ref=e621]:
+                    - generic [ref=e622]:
+                      - generic [ref=e624]: Add Blog Section on Home
+                      - generic [ref=e625]: Not Started
+                  - button "Create one BG Video Not Started" [ref=e626]:
+                    - generic [ref=e627]:
+                      - generic [ref=e629]: Create one BG Video
+                      - generic [ref=e630]: Not Started
+                  - button "PCC - web ask Not Started" [ref=e631]:
+                    - generic [ref=e632]:
+                      - generic [ref=e634]: PCC - web ask
+                      - generic [ref=e635]: Not Started
+                  - button "plan framer Not Started" [ref=e636]:
+                    - generic [ref=e637]:
+                      - generic [ref=e639]: plan framer
+                      - generic [ref=e640]: Not Started
+                  - button "testing in compose Not Started" [ref=e641]:
+                    - generic [ref=e642]:
+                      - generic [ref=e644]: testing in compose
+                      - generic [ref=e645]: Not Started
+                  - button "Compensating Framework? Not Started" [ref=e646]:
+                    - generic [ref=e647]:
+                      - generic [ref=e649]: Compensating Framework?
+                      - generic [ref=e650]: Not Started
+                  - button "organize new tables in compose Not Started" [ref=e651]:
+                    - generic [ref=e652]:
+                      - generic [ref=e654]: organize new tables in compose
+                      - generic [ref=e655]: Not Started
+                  - 'button "imPAC: Hub Not Started" [ref=e656]':
+                    - generic [ref=e657]:
+                      - generic [ref=e659]: "imPAC: Hub"
+                      - generic [ref=e660]: Not Started
+                  - button "message brian Done" [ref=e661]:
+                    - generic [ref=e662]:
+                      - generic [ref=e664]: message brian
+                      - generic [ref=e665]: Done
+                  - button "remove compensation tab and then make exception column in the policy catalogue Not Started" [ref=e666]:
+                    - generic [ref=e667]:
+                      - generic [ref=e669]: remove compensation tab and then make exception column in the policy catalogue
+                      - generic [ref=e670]: Not Started
+                  - button "Create filters in framework studio 10:00 Not Started" [ref=e671]:
+                    - generic [ref=e672]:
+                      - generic [ref=e673]:
+                        - generic: Create filters in framework studio
+                        - generic [ref=e674]: 10:00
+                      - generic [ref=e675]: Not Started
+                  - button "Use Case Web pages 12:00 Waiting On Client" [ref=e676]:
+                    - generic [ref=e677]:
+                      - generic [ref=e678]:
+                        - generic: Use Case Web pages
+                        - generic [ref=e679]: 12:00
+                      - generic [ref=e680]: Waiting On Client
+                  - button "Clear Side Yard Near Neighbor 16:30 Not Started" [ref=e681]:
+                    - generic [ref=e682]:
+                      - generic [ref=e683]:
+                        - generic: Clear Side Yard Near Neighbor
+                        - generic [ref=e684]: 16:30
+                      - generic [ref=e685]: Not Started
+                  - button "Review Compensating Policy 18:30 Not Started" [ref=e686]:
+                    - generic [ref=e687]:
+                      - generic [ref=e688]:
+                        - generic: Review Compensating Policy
+                        - generic [ref=e689]: 18:30
+                      - generic [ref=e690]: Not Started
+                  - button "plan content creation pp design 19:30 Not Started" [ref=e691]:
+                    - generic [ref=e692]:
+                      - generic [ref=e693]:
+                        - generic: plan content creation pp design
+                        - generic [ref=e694]: 19:30
+                      - generic [ref=e695]: Not Started
+                  - button "graph / ticket not all have 13:45 Not Started" [ref=e696]:
+                    - generic [ref=e697]:
+                      - generic [ref=e698]:
+                        - generic: graph / ticket not all have
+                        - generic [ref=e699]: 13:45
+                      - generic [ref=e700]: Not Started
+                  - button "QA Framework Side Panel 15:15 Not Started" [ref=e701]:
+                    - generic [ref=e702]:
+                      - generic [ref=e703]:
+                        - generic [ref=e704]: QA Framework Side Panel
+                        - generic [ref=e705]: 15:15
+                      - generic [ref=e706]: Not Started
+                  - button "Cyera Web Page 15:30 Not Started" [ref=e707]:
+                    - generic [ref=e708]:
+                      - generic [ref=e709]:
+                        - generic: Cyera Web Page
+                        - generic [ref=e710]: 15:30
+                      - generic [ref=e711]: Not Started
+                  - button "tooltip for configure providers Not Started" [ref=e712]:
+                    - generic [ref=e713]:
+                      - generic [ref=e715]: tooltip for configure providers
+                      - generic [ref=e716]: Not Started
+                  - button "time machine report Not Started" [ref=e717]:
+                    - generic [ref=e718]:
+                      - generic [ref=e720]: time machine report
+                      - generic [ref=e721]: Not Started
+                  - button "message brian Not Started" [ref=e722]:
+                    - generic [ref=e723]:
+                      - generic [ref=e725]: message brian
+                      - generic [ref=e726]: Not Started
+                  - 'button "imPAC: Product Analytics Not Started" [ref=e727]':
+                    - generic [ref=e728]:
+                      - generic [ref=e730]: "imPAC: Product Analytics"
+                      - generic [ref=e731]: Not Started
+                  - button "Scores Tab Not Started" [ref=e732]:
+                    - generic [ref=e733]:
+                      - generic [ref=e735]: Scores Tab
+                      - generic [ref=e736]: Not Started
+                  - button "QA Plan Not Started" [ref=e737]:
+                    - generic [ref=e738]:
+                      - generic [ref=e740]: QA Plan
+                      - generic [ref=e741]: Not Started
+                  - button "AI Dashboard Insights - Most Risk Not Started" [ref=e742]:
+                    - generic [ref=e743]:
+                      - generic [ref=e745]: AI Dashboard Insights - Most Risk
+                      - generic [ref=e746]: Not Started
+                  - button "Compensating Framework? Not Started" [ref=e747]:
+                    - generic [ref=e748]:
+                      - generic [ref=e750]: Compensating Framework?
+                      - generic [ref=e751]: Not Started
+                  - button "One Pager addition Deven 16:00 Not Started" [ref=e752]:
+                    - generic [ref=e753]:
+                      - generic [ref=e754]:
+                        - generic: One Pager addition Deven
+                        - generic [ref=e755]: 16:00
+                      - generic [ref=e756]: Not Started
+                  - button "AI Remediation Steps Design (Sneha) 20:00 Waiting On Client" [ref=e757]:
+                    - generic [ref=e758]:
+                      - generic [ref=e759]:
+                        - generic: AI Remediation Steps Design (Sneha)
+                        - generic [ref=e760]: 20:00
+                      - generic [ref=e761]: Waiting On Client
+              - generic [ref=e762]:
+                - generic [ref=e763]:
+                  - generic [ref=e764]: Fri
+                  - generic [ref=e765]: "30"
+                - generic [ref=e766]:
+                  - button "progress meter for run status, Waiting On Client" [ref=e767]:
+                    - generic [ref=e768]:
+                      - generic [ref=e770]: progress meter for run status,
+                      - generic [ref=e771]: Waiting On Client
+                  - button "AI Integration - Table + Widgets Not Started" [ref=e772]:
+                    - generic [ref=e773]:
+                      - generic [ref=e775]: AI Integration - Table + Widgets
+                      - generic [ref=e776]: Not Started
+                  - button "Hero Section w/ partnership logos Not Started" [ref=e777]:
+                    - generic [ref=e778]:
+                      - generic [ref=e780]: Hero Section w/ partnership logos
+                      - generic [ref=e781]: Not Started
+                  - button "Add reviews on webstite Not Started" [ref=e782]:
+                    - generic [ref=e783]:
+                      - generic [ref=e785]: Add reviews on webstite
+                      - generic [ref=e786]: Not Started
+                  - button "pay Malcolm! Not Started" [ref=e787]:
+                    - generic [ref=e788]:
+                      - generic [ref=e790]: pay Malcolm!
+                      - generic [ref=e791]: Not Started
+                  - button "Chat Revamp Not Started" [ref=e792]:
+                    - generic [ref=e793]:
+                      - generic [ref=e795]: Chat Revamp
+                      - generic [ref=e796]: Not Started
+                  - button "AI Integration - Search Not Started" [ref=e797]:
+                    - generic [ref=e798]:
+                      - generic [ref=e800]: AI Integration - Search
+                      - generic [ref=e801]: Not Started
+                  - button "new compensation column Not Started" [ref=e802]:
+                    - generic [ref=e803]:
+                      - generic [ref=e805]: new compensation column
+                      - generic [ref=e806]: Not Started
+                  - button "update findings exemptions tab Not Started" [ref=e807]:
+                    - generic [ref=e808]:
+                      - generic [ref=e810]: update findings exemptions tab
+                      - generic [ref=e811]: Not Started
+                  - button "Use Case Web pages 12:00 Waiting On Client" [ref=e812]:
+                    - generic [ref=e813]:
+                      - generic [ref=e814]:
+                        - generic: Use Case Web pages
+                        - generic [ref=e815]: 12:00
+                      - generic [ref=e816]: Waiting On Client
+                  - button "Tradeshow Media 16:00 Not Started" [ref=e817]:
+                    - generic [ref=e818]:
+                      - generic [ref=e819]:
+                        - generic: Tradeshow Media
+                        - generic [ref=e820]: 16:00
+                      - generic [ref=e821]: Not Started
+                  - button "Start Paying Loans Not Started" [ref=e822]:
+                    - generic [ref=e823]:
+                      - generic [ref=e825]: Start Paying Loans
+                      - generic [ref=e826]: Not Started
+                  - button "Home Loan Look into Not Started" [ref=e827]:
+                    - generic [ref=e828]:
+                      - generic [ref=e830]: Home Loan Look into
+                      - generic [ref=e831]: Not Started
+                  - button "Research Storybook Not Started" [ref=e832]:
+                    - generic [ref=e833]:
+                      - generic [ref=e835]: Research Storybook
+                      - generic [ref=e836]: Not Started
+                  - button "weed parkway strip Not Started" [ref=e837]:
+                    - generic [ref=e838]:
+                      - generic [ref=e840]: weed parkway strip
+                      - generic [ref=e841]: Not Started
+                  - button "Email Updates for Web clients Not Started" [ref=e842]:
+                    - generic [ref=e843]:
+                      - generic [ref=e845]: Email Updates for Web clients
+                      - generic [ref=e846]: Not Started
+                  - button "tooltip for configure providers Not Started" [ref=e847]:
+                    - generic [ref=e848]:
+                      - generic [ref=e850]: tooltip for configure providers
+                      - generic [ref=e851]: Not Started
+                  - button "time machine report Not Started" [ref=e852]:
+                    - generic [ref=e853]:
+                      - generic [ref=e855]: time machine report
+                      - generic [ref=e856]: Not Started
+                  - button "Create one BG Video Not Started" [ref=e857]:
+                    - generic [ref=e858]:
+                      - generic [ref=e860]: Create one BG Video
+                      - generic [ref=e861]: Not Started
+                  - button "plan framer Not Started" [ref=e862]:
+                    - generic [ref=e863]:
+                      - generic [ref=e865]: plan framer
+                      - generic [ref=e866]: Not Started
+                  - 'button "imPAC: Product Analytics Not Started" [ref=e867]':
+                    - generic [ref=e868]:
+                      - generic [ref=e870]: "imPAC: Product Analytics"
+                      - generic [ref=e871]: Not Started
+                  - button "Scores Tab Not Started" [ref=e872]:
+                    - generic [ref=e873]:
+                      - generic [ref=e875]: Scores Tab
+                      - generic [ref=e876]: Not Started
+                  - button "One Pager - Overview 16:45 Waiting On Client" [ref=e877]:
+                    - generic [ref=e878]:
+                      - generic [ref=e879]:
+                        - generic: One Pager - Overview
+                        - generic [ref=e880]: 16:45
+                      - generic [ref=e881]: Waiting On Client
+              - generic [ref=e882]:
+                - generic [ref=e883]:
+                  - generic [ref=e884]: Sat
+                  - generic [ref=e885]: "31"
+                - generic [ref=e886]:
+                  - button "spectrum mobile Not Started" [ref=e887]:
+                    - generic [ref=e888]:
+                      - generic [ref=e890]: spectrum mobile
+                      - generic [ref=e891]: Not Started
+                  - button "Car insureance Not Started" [ref=e892]:
+                    - generic [ref=e893]:
+                      - generic [ref=e895]: Car insureance
+                      - generic [ref=e896]: Not Started
+                  - button "overview dashboard - key findings Not Started" [ref=e897]:
+                    - generic [ref=e898]:
+                      - generic [ref=e900]: overview dashboard - key findings
+                      - generic [ref=e901]: Not Started
+                  - button "Garden Wall Not Started" [ref=e902]:
+                    - generic [ref=e903]:
+                      - generic [ref=e905]: Garden Wall
+                      - generic [ref=e906]: Not Started
+                  - button "Plant Plan Not Started" [ref=e907]:
+                    - generic [ref=e908]:
+                      - generic [ref=e910]: Plant Plan
+                      - generic [ref=e911]: Not Started
+                  - button "Build Bench frame Not Started" [ref=e912]:
+                    - generic [ref=e913]:
+                      - generic [ref=e915]: Build Bench frame
+                      - generic [ref=e916]: Not Started
+                  - button "AI Dashboard Insights - Most Risk Not Started" [ref=e917]:
+                    - generic [ref=e918]:
+                      - generic [ref=e920]: AI Dashboard Insights - Most Risk
+                      - generic [ref=e921]: Not Started
+                  - button "Email Signature Deven Not Started" [ref=e922]:
+                    - generic [ref=e923]:
+                      - generic [ref=e925]: Email Signature Deven
+                      - generic [ref=e926]: Not Started
+                  - button "Asset History + add created on other stats Not Started" [ref=e927]:
+                    - generic [ref=e928]:
+                      - generic [ref=e930]: Asset History + add created on other stats
+                      - generic [ref=e931]: Not Started
+                  - button "home insurance Not Started" [ref=e932]:
+                    - generic [ref=e933]:
+                      - generic [ref=e935]: home insurance
+                      - generic [ref=e936]: Not Started
+                  - button "Clothes donation Not Started" [ref=e937]:
+                    - generic [ref=e938]:
+                      - generic [ref=e940]: Clothes donation
+                      - generic [ref=e941]: Not Started
+                  - button "Learn Framer Not Started" [ref=e942]:
+                    - generic [ref=e943]:
+                      - generic [ref=e945]: Learn Framer
+                      - generic [ref=e946]: Not Started
+                  - button "plan traitor Not Started" [ref=e947]:
+                    - generic [ref=e948]:
+                      - generic [ref=e950]: plan traitor
+                      - generic [ref=e951]: Not Started
+                  - button "Toastmasters Not Started" [ref=e952]:
+                    - generic [ref=e953]:
+                      - generic [ref=e955]: Toastmasters
+                      - generic [ref=e956]: Not Started
+                  - button "Prabahar and Barry notes Not Started" [ref=e957]:
+                    - generic [ref=e958]:
+                      - generic [ref=e960]: Prabahar and Barry notes
+                      - generic [ref=e961]: Not Started
+                  - button "PCC - web ask Not Started" [ref=e962]:
+                    - generic [ref=e963]:
+                      - generic [ref=e965]: PCC - web ask
+                      - generic [ref=e966]: Not Started
+                  - button "AI Chat Not Started" [ref=e967]:
+                    - generic [ref=e968]:
+                      - generic [ref=e970]: AI Chat
+                      - generic [ref=e971]: Not Started
+                  - button "Text Kevin Not Started" [ref=e972]:
+                    - generic [ref=e973]:
+                      - generic [ref=e975]: Text Kevin
+                      - generic [ref=e976]: Not Started
+                  - button "set up daily task tackle help from sashi Not Started" [ref=e977]:
+                    - generic [ref=e978]:
+                      - generic [ref=e980]: set up daily task tackle help from sashi
+                      - generic [ref=e981]: Not Started
+                  - button "set up task tackle Not Started" [ref=e982]:
+                    - generic [ref=e983]:
+                      - generic [ref=e985]: set up task tackle
+                      - generic [ref=e986]: Not Started
+                  - button "set up sashi task helper Not Started" [ref=e987]:
+                    - generic [ref=e988]:
+                      - generic [ref=e990]: set up sashi task helper
+                      - generic [ref=e991]: Not Started
+                  - button "Plant Trees 16:00 Not Started" [ref=e992]:
+                    - generic [ref=e993]:
+                      - generic [ref=e994]:
+                        - generic: Plant Trees
+                        - generic [ref=e995]: 16:00
+                      - generic [ref=e996]: Not Started
+                  - button "Tradeshow Media 16:00 Not Started" [ref=e997]:
+                    - generic [ref=e998]:
+                      - generic [ref=e999]:
+                        - generic: Tradeshow Media
+                        - generic [ref=e1000]: 16:00
+                      - generic [ref=e1001]: Not Started
+                  - button "Research Storybook Not Started" [ref=e1002]:
+                    - generic [ref=e1003]:
+                      - generic [ref=e1005]: Research Storybook
+                      - generic [ref=e1006]: Not Started
+          - status [ref=e1007]
+    - generic [ref=e1008]:
+      - heading "Command Palette" [level=2] [ref=e1009]
+      - paragraph [ref=e1010]: Search for a command to run...
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e1016] [cursor=pointer]:
+    - img [ref=e1017]
+  - alert [ref=e1020]
+```

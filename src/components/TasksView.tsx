@@ -12,7 +12,7 @@ import MigrationWizard from "./MigrationWizard";
 import Breadcrumb from "./Breadcrumb";
 import { format } from "date-fns";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
-import { useMoveTask, useMoveTasks, useUpdateTask, useDeleteTask } from "@/lib/hooks/use-tasks";
+import { useMoveTask, useMoveTasks, useUpdateTask, useDeleteTask, useTasks } from "@/lib/hooks/use-tasks";
 
 type Task = {
   id: string;
@@ -130,8 +130,14 @@ function getPriorityBadge(priority: string | null) {
   );
 }
 
-export function TasksView({ tasks, projects, organizations = [] }: TasksViewProps) {
+export function TasksView({ tasks: serverTasks, projects, organizations = [] }: TasksViewProps) {
   const router = useRouter();
+  
+  // Use React Query for tasks - server data as initial, then React Query manages it
+  // This enables optimistic updates to reflect immediately in the UI
+  // Cast to any to handle minor type differences between server/client Task types
+  const { data: queryTasks } = useTasks(serverTasks as any);
+  const tasks = (queryTasks || serverTasks) as Task[];
   
   // React Query mutations for proper optimistic updates
   const moveTask = useMoveTask();

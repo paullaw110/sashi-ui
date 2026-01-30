@@ -43,10 +43,14 @@ async function updateTask({
 }
 
 // Hook to fetch tasks
-export function useTasks() {
+// Accepts optional initialData from server to enable SSR + optimistic updates
+export function useTasks(initialData?: Task[]) {
   return useQuery({
     queryKey: ["tasks"],
     queryFn: fetchTasks,
+    initialData,
+    // Don't refetch immediately if we have initial data - trust it
+    staleTime: initialData ? 1000 * 30 : 0,
   });
 }
 
