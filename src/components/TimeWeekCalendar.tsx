@@ -212,7 +212,7 @@ function TimedTask({
         task.priority === "critical" && "border-l-2 border-l-red-500",
         task.priority === "high" && "border-l-2 border-l-amber-500",
         isDragging && "opacity-30 z-50",
-        isResizing && "z-50 ring-2 ring-blue-500/50 cursor-ns-resize"
+        isResizing && "z-50 ring-2 ring-[var(--accent-primary)]/50 cursor-ns-resize"
       )}
     >
       <div className="font-medium truncate text-[var(--text-primary)] text-[11px]">
@@ -222,7 +222,7 @@ function TimedTask({
         <div className="text-[10px] text-[var(--text-tertiary)]">
           {task.dueTime.substring(0, 5)}
           {isResizing && (
-            <span className="text-blue-400 ml-1">→ {endTimeDisplay}</span>
+            <span className="text-[var(--accent-primary)] ml-1">→ {endTimeDisplay}</span>
           )}
         </div>
       )}
@@ -236,16 +236,16 @@ function TimedTask({
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
           onClick={(e) => e.stopPropagation()}
-          className="absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize bg-transparent hover:bg-blue-500/10 transition-all z-20 touch-none group/resize flex items-end justify-center"
+          className="absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize bg-transparent hover:bg-[var(--accent-primary)]/10 transition-all z-20 touch-none group/resize flex items-end justify-center"
         >
           {/* Resize indicator bar */}
-          <div className="w-8 h-1 rounded-full bg-[var(--border-default)] opacity-0 group-hover:opacity-100 group-hover/resize:opacity-100 group-hover/resize:bg-blue-400 mb-0.5 transition-all" />
+          <div className="w-8 h-1 rounded-full bg-[var(--border-default)] opacity-0 group-hover:opacity-100 group-hover/resize:opacity-100 group-hover/resize:bg-[var(--accent-primary)] mb-0.5 transition-all" />
         </div>
       )}
       
       {/* Resize time tooltip */}
       {isResizing && (
-        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded shadow-lg text-[11px] font-medium text-blue-400 whitespace-nowrap z-50">
+        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded shadow-lg text-[11px] font-medium text-[var(--accent-primary)] whitespace-nowrap z-50">
           {displayDuration} min → {endTimeDisplay}
         </div>
       )}
@@ -304,7 +304,7 @@ function HourSlot({
       ref={setNodeRef}
       className={cn(
         "border-t border-[var(--border-subtle)] relative transition-colors",
-        isOver && "bg-blue-500/15"
+        isOver && "bg-[var(--accent-primary)]/15"
       )}
       style={{ height: HOUR_HEIGHT }}
     />
@@ -328,7 +328,7 @@ function AllDayCell({
       ref={setNodeRef}
       className={cn(
         "flex-1 min-w-0 border-r border-[var(--border-subtle)] last:border-r-0 px-0.5 py-0.5 transition-colors",
-        isOver && "bg-blue-500/15"
+        isOver && "bg-[var(--accent-primary)]/15"
       )}
     >
       {tasks.map((task) => (
@@ -364,9 +364,9 @@ function DragGhostPreview({
       className="pointer-events-none"
       style={{ height: `${height}px` }}
     >
-      <div className="h-full px-2 py-1 bg-blue-500/20 border-2 border-dashed border-blue-500 rounded text-xs">
-        <div className="font-medium text-blue-500 truncate">{task.name}</div>
-        <div className="text-[10px] text-blue-400">
+      <div className="h-full px-2 py-1 bg-[var(--accent-primary)]/20 border-2 border-dashed border-[var(--accent-primary)] rounded text-xs">
+        <div className="font-medium text-[var(--accent-primary)] truncate">{task.name}</div>
+        <div className="text-[10px] text-[var(--accent-primary)]">
           {minutesToTimeString(startMinutes)} → {minutesToTimeString(endMinutes)}
         </div>
       </div>
@@ -621,7 +621,7 @@ export function TimeWeekCalendar({
                 className={cn(
                   "flex-1 min-w-0 px-2 py-2 text-center border-r border-[var(--border-subtle)] last:border-r-0 transition-colors",
                   isCurrentDay && "bg-[var(--bg-surface)]",
-                  isTargetDay && "bg-blue-500/10"
+                  isTargetDay && "bg-[var(--accent-primary)]/10"
                 )}
               >
                 <div className="text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest">
@@ -755,10 +755,10 @@ export function TimeWeekCalendar({
       {/* Drag overlay - follows cursor */}
       <DragOverlay>
         {activeTask ? (
-          <div className="px-3 py-2 rounded bg-[var(--bg-active)] shadow-xl border border-blue-500/50 text-xs text-[var(--text-primary)] cursor-grabbing font-medium max-w-[160px]">
+          <div className="px-3 py-2 rounded bg-[var(--bg-active)] shadow-xl border border-[var(--accent-primary)]/50 text-xs text-[var(--text-primary)] cursor-grabbing font-medium max-w-[160px]">
             <div className="truncate">{activeTask.name}</div>
             {dragTarget && (
-              <div className="text-blue-400 text-[10px] mt-0.5">
+              <div className="text-[var(--accent-primary)] text-[10px] mt-0.5">
                 → {dragTarget.displayTime}
               </div>
             )}

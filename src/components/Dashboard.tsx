@@ -179,7 +179,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
 
   return (
     <>
-      <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
         {/* Left Column - Task Lists */}
         <div className="space-y-6">
           <TaskTable
@@ -214,7 +214,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
         </div>
 
         {/* Right Column - Week View with Time (hidden on mobile) */}
-        <div className="hidden lg:block h-[calc(100vh-180px)]">
+        <div className="hidden lg:flex lg:flex-col lg:min-h-0 lg:flex-1">
           <TimeWeekCalendar 
             tasks={filteredWeekTasks} 
             onTaskClick={handleTaskClick}
