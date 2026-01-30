@@ -345,7 +345,7 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="text-[11px] text-[#e5e5e5] bg-[#111] border border-[#222] pl-9 pr-3 py-1.5 rounded hover:border-[#333] focus:border-[#404040] focus:outline-none transition-colors w-48"
+              className="text-xs text-[#e5e5e5] bg-[#111] border border-[#222] pl-9 pr-3 py-1.5 rounded hover:border-[#333] focus:border-[#404040] focus:outline-none transition-colors w-48"
             />
           </div>
 
@@ -353,7 +353,7 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
           <select
             value={filterStatus || ""}
             onChange={(e) => setFilterStatus(e.target.value || null)}
-            className="text-[11px] text-[#525252] bg-[#111] border border-[#222] px-2 py-1.5 rounded hover:border-[#333] focus:outline-none transition-colors"
+            className="text-xs text-[#525252] bg-[#111] border border-[#222] px-2 py-1.5 rounded hover:border-[#333] focus:outline-none transition-colors"
           >
             <option value="">All Status</option>
             <option value="not_started">Todo</option>
@@ -364,7 +364,7 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
           <select
             value={filterPriority || ""}
             onChange={(e) => setFilterPriority(e.target.value || null)}
-            className="text-[11px] text-[#525252] bg-[#111] border border-[#222] px-2 py-1.5 rounded hover:border-[#333] focus:outline-none transition-colors"
+            className="text-xs text-[#525252] bg-[#111] border border-[#222] px-2 py-1.5 rounded hover:border-[#333] focus:outline-none transition-colors"
           >
             <option value="">All Priority</option>
             <option value="non-negotiable">Non-Negotiable</option>
@@ -378,7 +378,7 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="flex items-center gap-1.5 text-[11px] text-[#525252] hover:text-[#737373] border border-[#222] hover:border-[#333] px-2 py-1.5 rounded transition-colors"
+              className="flex items-center gap-1.5 text-xs text-[#525252] hover:text-[#737373] border border-[#222] hover:border-[#333] px-2 py-1.5 rounded transition-colors"
             >
               <X size={12} />
               Clear
@@ -388,7 +388,7 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
 
         <button 
           onClick={handleNewTask}
-          className="flex items-center gap-1.5 text-[11px] text-[#0c0c0c] bg-[#e5e5e5] hover:bg-[#f5f5f5] px-3 py-1.5 rounded-lg font-medium transition-colors"
+          className="flex items-center gap-1.5 text-xs text-[#0c0c0c] bg-[#e5e5e5] hover:bg-[#f5f5f5] px-3 py-1.5 rounded-lg font-medium transition-colors"
         >
           <Plus size={14} />
           New Task
@@ -399,7 +399,7 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
       {view === "list" ? (
         <div className="bg-[#111] rounded-lg border border-[#1a1a1a]">
           {/* Table Header */}
-          <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[#1a1a1a] text-[10px] text-[#404040] uppercase tracking-widest">
+          <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[#1a1a1a] text-[10px] text-[#525252] uppercase tracking-widest">
             <div className="col-span-5">Task</div>
             <div className="col-span-2">Context</div>
             <div className="col-span-2">Priority</div>
@@ -426,8 +426,8 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
                     {getStatusIcon(task.status)}
                   </button>
                   <span className={cn(
-                    "text-xs truncate",
-                    task.status === "done" ? "text-[#404040] line-through" : "text-[#e5e5e5]"
+                    "text-sm truncate font-medium",
+                    task.status === "done" ? "text-[#525252] line-through" : "text-[#e5e5e5]"
                   )}>
                     {task.name}
                   </span>
@@ -446,7 +446,7 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
                   {getStatusBadge(task.status)}
                 </div>
                 <div className="col-span-1">
-                  <span className="text-[11px] text-[#404040]">
+                  <span className="text-xs text-[#525252]">
                     {task.dueDate ? format(new Date(task.dueDate), "MMM d") : "—"}
                   </span>
                 </div>
@@ -462,7 +462,7 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
 
           {/* Footer */}
           <div className="px-4 py-3 border-t border-[#1a1a1a]">
-            <span className="text-[10px] text-[#333]">
+            <span className="text-xs text-[#525252]">
               {filteredTasks.length} task{filteredTasks.length !== 1 && "s"}
             </span>
           </div>

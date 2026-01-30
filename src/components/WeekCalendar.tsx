@@ -155,8 +155,8 @@ function TaskItem({
         }
       }}
       className={cn(
-        "text-[11px] px-2 py-2 rounded bg-[#1a1a1a] hover:bg-[#222] cursor-grab active:cursor-grabbing text-[#a3a3a3] transition-colors border border-[#222] touch-none",
-        task.status === "done" && "line-through text-[#525252]",
+        "text-sm px-2 py-2 rounded bg-[#1a1a1a] hover:bg-[#222] cursor-grab active:cursor-grabbing text-[#e5e5e5] transition-colors border border-[#222] touch-none",
+        task.status === "done" && "line-through text-[#737373]",
         task.priority === "critical" && "border-l-2 border-l-red-500/30",
         task.priority === "high" && "border-l-2 border-l-amber-500/30",
         task.priority === "medium" && "border-l-2 border-l-blue-500/30",
@@ -167,14 +167,14 @@ function TaskItem({
     >
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate">{task.name}</span>
+          <span className="truncate font-medium">{task.name}</span>
           {task.dueTime && (
-            <span className="text-[9px] text-[#525252] ml-auto">
+            <span className="text-xs text-[#737373] ml-auto">
               {task.dueTime.substring(0, 5)}
             </span>
           )}
         </div>
-        <span className={cn("text-[9px] px-1.5 py-0.5 rounded w-fit", getStatusBgColor(task.status))}>
+        <span className={cn("text-xs px-1.5 py-0.5 rounded w-fit", getStatusBgColor(task.status))}>
           {getStatusDisplayText(task.status)}
         </span>
       </div>
@@ -222,7 +222,7 @@ function DayColumn({
           isCurrentDay && "bg-[#1a1a1a]"
         )}
       >
-        <div className="text-[9px] text-[#404040] uppercase tracking-widest">
+        <div className="text-[10px] text-[#525252] uppercase tracking-widest">
           {format(day, "EEE")}
         </div>
         <div
@@ -560,7 +560,7 @@ export function WeekCalendar({
       <div className="bg-[#111] rounded-lg border border-[#1a1a1a]">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a1a]">
-          <h2 className="font-display text-base text-[#f5f5f5]">
+          <h2 className="font-display text-lg text-[#f5f5f5]">
             {format(currentDate, "MMMM yyyy")}
           </h2>
           <div className="flex items-center gap-2">
@@ -572,7 +572,7 @@ export function WeekCalendar({
             </button>
             <button
               onClick={() => setCurrentDate(new Date())}
-              className="text-[10px] text-[#e5e5e5] bg-[#1a1a1a] hover:bg-[#222] px-3 py-1.5 rounded transition-colors"
+              className="text-xs text-[#e5e5e5] bg-[#1a1a1a] hover:bg-[#222] px-3 py-1.5 rounded transition-colors"
             >
               Today
             </button>
@@ -631,15 +631,15 @@ export function WeekCalendar({
             {tasksBeingDragged.length > 1 ? (
               // Show stacked preview for multiple tasks
               <div className="relative">
-                <div className="px-2 py-1.5 rounded bg-[#222] shadow-xl border border-[#444] text-[11px] text-[#f5f5f5] cursor-grabbing">
+                <div className="px-3 py-2 rounded bg-[#222] shadow-xl border border-[#444] text-sm text-[#f5f5f5] cursor-grabbing font-medium">
                   {activeTask.name}
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium">
+                <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
                   {tasksBeingDragged.length}
                 </div>
               </div>
             ) : (
-              <div className="px-2 py-1.5 rounded bg-[#222] shadow-xl border border-[#444] text-[11px] text-[#f5f5f5] cursor-grabbing">
+              <div className="px-3 py-2 rounded bg-[#222] shadow-xl border border-[#444] text-sm text-[#f5f5f5] cursor-grabbing font-medium">
                 {activeTask.name}
               </div>
             )}

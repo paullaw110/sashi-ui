@@ -77,7 +77,7 @@ function getStatusBadge(status: string) {
   
   return (
     <span className={cn(
-      "text-[10px] px-2 py-0.5 rounded border whitespace-nowrap",
+      "text-xs px-2 py-0.5 rounded border whitespace-nowrap",
       bg, text, border
     )}>
       {label}
@@ -86,7 +86,7 @@ function getStatusBadge(status: string) {
 }
 
 function getPriorityBadge(priority: string | null) {
-  if (!priority) return <span className="text-[10px] text-[#333]">—</span>;
+  if (!priority) return <span className="text-xs text-[#525252]">—</span>;
   
   const config: Record<string, { label: string; bg: string; text: string; border: string }> = {
     "non-negotiable": { 
@@ -130,7 +130,7 @@ function getPriorityBadge(priority: string | null) {
   
   return (
     <span className={cn(
-      "text-[10px] px-2 py-0.5 rounded border whitespace-nowrap",
+      "text-xs px-2 py-0.5 rounded border whitespace-nowrap",
       bg, text, border
     )}>
       {label}
@@ -169,8 +169,8 @@ export function TaskTable({
       {/* Header */}
       <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-[#1a1a1a]">
         <div className="flex items-center gap-2 sm:gap-3">
-          <h2 className="font-display text-sm sm:text-base text-[#f5f5f5]">{title}</h2>
-          <span className="text-[10px] text-[#404040]">{filteredTasks.length}</span>
+          <h2 className="font-display text-lg text-[#f5f5f5]">{title}</h2>
+          <span className="text-xs text-[#525252]">{filteredTasks.length}</span>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
           {showFilters && (
@@ -178,7 +178,7 @@ export function TaskTable({
               <select
                 value={filterStatus || ""}
                 onChange={(e) => setFilterStatus(e.target.value || null)}
-                className="text-[10px] sm:text-[11px] text-[#525252] bg-transparent border border-[#222] px-1.5 sm:px-2 py-1 rounded hover:border-[#333] focus:outline-none transition-colors"
+                className="text-xs text-[#525252] bg-transparent border border-[#222] px-2 py-1 rounded hover:border-[#333] focus:outline-none transition-colors"
               >
                 <option value="">Status</option>
                 <option value="not_started">Todo</option>
@@ -189,7 +189,7 @@ export function TaskTable({
               <select
                 value={filterPriority || ""}
                 onChange={(e) => setFilterPriority(e.target.value || null)}
-                className="hidden sm:block text-[11px] text-[#525252] bg-transparent border border-[#222] px-2 py-1 rounded hover:border-[#333] focus:outline-none transition-colors"
+                className="hidden sm:block text-xs text-[#525252] bg-transparent border border-[#222] px-2 py-1 rounded hover:border-[#333] focus:outline-none transition-colors"
               >
                 <option value="">Priority</option>
                 <option value="non-negotiable">Non-Negotiable</option>
@@ -202,7 +202,7 @@ export function TaskTable({
           )}
           <button 
             onClick={onNewTask}
-            className="flex items-center gap-1 text-[11px] text-[#525252] hover:text-[#a3a3a3] px-2 py-1 rounded hover:bg-[#1a1a1a] transition-colors"
+            className="flex items-center gap-1 text-xs text-[#525252] hover:text-[#a3a3a3] px-2 py-1 rounded hover:bg-[#1a1a1a] transition-colors"
           >
             <Plus size={12} />
             <span className="hidden sm:inline">Add</span>
@@ -211,7 +211,7 @@ export function TaskTable({
       </div>
 
       {/* Column Headers */}
-      <div className="flex items-center gap-4 sm:gap-6 px-3 sm:px-4 py-2 border-b border-[#1a1a1a] text-[9px] text-[#404040] uppercase tracking-widest">
+      <div className="flex items-center gap-4 sm:gap-6 px-3 sm:px-4 py-2 border-b border-[#1a1a1a] text-[10px] text-[#525252] uppercase tracking-widest">
         <div className="w-5"></div>
         <div className="flex-1">Task</div>
         <div className="w-24 sm:w-28 hidden sm:block">Priority</div>
@@ -240,8 +240,8 @@ export function TaskTable({
 
             {/* Name */}
             <span className={cn(
-              "flex-1 text-xs truncate",
-              task.status === "done" ? "text-[#404040] line-through" : "text-[#e5e5e5]"
+              "flex-1 text-sm truncate font-medium",
+              task.status === "done" ? "text-[#525252] line-through" : "text-[#e5e5e5]"
             )}>
               {task.name}
             </span>
