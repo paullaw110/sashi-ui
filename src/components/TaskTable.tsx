@@ -3,19 +3,7 @@
 import { useState } from "react";
 import { Plus, Circle, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-type Organization = {
-  id: string;
-  name: string;
-  description?: string | null;
-};
-
-type Project = {
-  id: string;
-  name: string;
-  color: string | null;
-  organizationId?: string | null;
-};
+import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 
 type Task = {
   id: string;
@@ -27,13 +15,13 @@ type Task = {
   dueDate: string | null;  // ISO string from server
   dueTime: string | null;
   tags: string | null;
-  project?: Project | null;
+  project?: SchemaProject | null;
   organization?: Organization | null;
 };
 
 interface TaskTableProps {
   tasks: Task[];
-  projects: Project[];
+  projects: SchemaProject[];
   organizations?: Organization[];
   title: string;
   showFilters?: boolean;

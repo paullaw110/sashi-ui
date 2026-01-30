@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, Building2, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TaskSidePanel } from "./TaskSidePanel";
+import { TaskModal } from "./TaskModal";
 import { MonthCalendar } from "./MonthCalendar";
 import OrganizationManager from "./OrganizationManager";
 import MigrationWizard from "./MigrationWizard";
@@ -27,16 +27,9 @@ type Task = {
   organization?: Organization | null;
 };
 
-type Project = {
-  id: string;
-  name: string;
-  color: string | null;
-  organizationId?: string | null;
-};
-
 interface TasksViewProps {
   tasks: Task[];
-  projects: Project[];
+  projects: SchemaProject[];
   organizations?: Organization[];
 }
 
@@ -478,9 +471,10 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
         </div>
       )}
 
-      <TaskSidePanel
+      <TaskModal
         task={selectedTask}
         projects={projects}
+        organizations={organizations}
         isOpen={isPanelOpen}
         isCreating={isCreating}
         onClose={handleClosePanel}

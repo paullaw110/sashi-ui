@@ -4,7 +4,8 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { TaskTable } from "./TaskTable";
 import { WeekCalendar } from "./WeekCalendar";
-import { TaskSidePanel } from "./TaskSidePanel";
+import { TaskModal } from "./TaskModal";
+import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 
 type Task = {
   id: string;
@@ -17,28 +18,15 @@ type Task = {
   dueTime: string | null;
   tags: string | null;
   description?: string | null;
-  project?: Project | null;
+  project?: SchemaProject | null;
   organization?: Organization | null;
-};
-
-type Organization = {
-  id: string;
-  name: string;
-  description?: string | null;
-};
-
-type Project = {
-  id: string;
-  name: string;
-  color: string | null;
-  organizationId?: string | null;
 };
 
 interface DashboardProps {
   todayTasks: Task[];
   weekTasks: Task[];
   nextTasks: Task[];
-  projects: Project[];
+  projects: SchemaProject[];
   organizations?: Organization[];
 }
 
@@ -186,9 +174,10 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
         </div>
       </div>
 
-      <TaskSidePanel
+      <TaskModal
         task={selectedTask}
         projects={projects}
+        organizations={organizations}
         isOpen={isPanelOpen}
         isCreating={isCreating}
         defaultDate={defaultDate}
