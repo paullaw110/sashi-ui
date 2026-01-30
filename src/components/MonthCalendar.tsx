@@ -177,10 +177,8 @@ const TaskItem = memo(function TaskItem({
       className={cn(
         "text-sm px-2 py-1.5 mb-1.5 rounded bg-[#1a1a1a] hover:bg-[#222] cursor-grab active:cursor-grabbing text-[#e5e5e5] transition-colors border border-transparent hover:border-[#333] touch-none",
         task.status === "done" && "line-through text-[#737373]",
-        task.priority === "critical" && "border-l-2 border-l-red-500/50",
-        task.priority === "high" && "border-l-2 border-l-amber-500/50",
-        task.priority === "medium" && "border-l-2 border-l-blue-500/50",
-        !isSelected && !task.priority && "hover:border-[#333]",
+        task.priority === "non-negotiable" && "border-l-2 border-l-red-500/50",
+        !isSelected && task.priority !== "non-negotiable" && "hover:border-[#333]",
         isSelected && "border-blue-500/30 bg-blue-500/10",
         (isDragging || isDraggedAlong) && "opacity-30"
       )}
