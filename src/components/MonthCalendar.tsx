@@ -13,7 +13,8 @@ import {
   useSensors,
   useDroppable,
   useDraggable,
-  closestCenter,
+  pointerWithin,
+  rectIntersection,
 } from "@dnd-kit/core";
 import {
   startOfMonth,
@@ -745,7 +746,7 @@ export function MonthCalendar({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
