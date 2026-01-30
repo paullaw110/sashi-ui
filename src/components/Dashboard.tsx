@@ -1,26 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback, useMemo } from "react";
 import { TaskTable } from "./TaskTable";
 import { TimeWeekCalendar } from "./TimeWeekCalendar";
 import { TaskDetailModal } from "./TaskDetailModal";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
-
-type Task = {
-  id: string;
-  name: string;
-  projectId: string | null;
-  organizationId: string | null;
-  priority: string | null;
-  status: string;
-  dueDate: string | null;  // ISO string from server
-  dueTime: string | null;
-  tags: string | null;
-  description?: string | null;
-  project?: SchemaProject | null;
-  organization?: Organization | null;
-};
+import { useTasks, useUpdateTask, useDeleteTask, useMoveTask, Task } from "@/lib/hooks/use-tasks";
+import { format, startOfDay, endOfDay, addDays, startOfWeek, endOfWeek } from "date-fns";
 
 interface DashboardProps {
   todayTasks: Task[];
@@ -30,23 +16,87 @@ interface DashboardProps {
   organizations?: Organization[];
 }
 
+// Type for tasks from TaskTable (slightly different schema)
+type TableTask = Task & {
+  project?: SchemaProject | null;
+  organization?: Organization | null;
+};
+
 export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organizations = [] }: DashboardProps) {
-  const router = useRouter();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [defaultDate, setDefaultDate] = useState<Date | null>(null);
 
-  const handleTaskClick = useCallback((task: Task) => {
-    setSelectedTask(task);
+  // Combine server data as initial data for React Query
+  // This dedupes tasks that appear in multiple lists
+  const initialTasks = useMemo(() => {
+    const taskMap = new Map<string, Task>();
+    [...todayTasks, ...weekTasks, ...nextTasks].forEach(t => taskMap.set(t.id, t as Task));
+    return Array.from(taskMap.values());
+  }, [todayTasks, weekTasks, nextTasks]);
+
+  // React Query for optimistic updates (cast to handle minor type differences)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: allTasks } = useTasks(initialTasks as any) as { data: Task[] | undefined };
+  const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
+  const moveTask = useMoveTask();
+
+  // Filter tasks for today (due today, not done)
+  const filteredTodayTasks = useMemo((): TableTask[] => {
+    if (!allTasks) return todayTasks as TableTask[];
+    const now = new Date();
+    const dayStart = startOfDay(now);
+    const dayEnd = endOfDay(now);
+    
+    return (allTasks.filter(task => {
+      if (task.status === "done") return false;
+      if (!task.dueDate) return false;
+      const due = new Date(task.dueDate);
+      return due >= dayStart && due <= dayEnd;
+    }) as TableTask[]);
+  }, [allTasks, todayTasks]);
+
+  // Filter tasks for next (tomorrow, not done)
+  const filteredNextTasks = useMemo((): TableTask[] => {
+    if (!allTasks) return nextTasks as TableTask[];
+    const tomorrow = addDays(new Date(), 1);
+    const dayStart = startOfDay(tomorrow);
+    const dayEnd = endOfDay(tomorrow);
+    
+    return (allTasks.filter(task => {
+      if (task.status === "done") return false;
+      if (!task.dueDate) return false;
+      const due = new Date(task.dueDate);
+      return due >= dayStart && due <= dayEnd;
+    }) as TableTask[]);
+  }, [allTasks, nextTasks]);
+
+  // Filter tasks for week view
+  const filteredWeekTasks = useMemo((): TableTask[] => {
+    if (!allTasks) return weekTasks as TableTask[];
+    const now = new Date();
+    const weekStart = startOfWeek(now, { weekStartsOn: 0 });
+    const weekEnd = endOfWeek(now, { weekStartsOn: 0 });
+    
+    return (allTasks.filter(task => {
+      if (!task.dueDate) return false;
+      const due = new Date(task.dueDate);
+      return due >= weekStart && due <= weekEnd;
+    }) as TableTask[]);
+  }, [allTasks, weekTasks]);
+
+  const handleTaskClick = useCallback((task: TableTask) => {
+    setSelectedTask(task as Task);
     setIsCreating(false);
     setIsPanelOpen(true);
   }, []);
 
-  const handleNewTask = useCallback((defaultDate?: Date) => {
+  const handleNewTask = useCallback((date?: Date) => {
     setSelectedTask(null);
     setIsCreating(true);
-    setDefaultDate(defaultDate || null);
+    setDefaultDate(date || null);
     setIsPanelOpen(true);
   }, []);
 
@@ -55,9 +105,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
   }, [handleNewTask]);
 
   const handleNewNextTask = useCallback(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    handleNewTask(tomorrow);
+    handleNewTask(addDays(new Date(), 1));
   }, [handleNewTask]);
 
   const handleClosePanel = useCallback(() => {
@@ -67,39 +115,31 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     setDefaultDate(null);
   }, []);
 
+  // Use React Query mutation for instant updates
   const handleSave = useCallback(async (taskData: Partial<Task>) => {
     if (taskData.id) {
-      await fetch(`/api/tasks/${taskData.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(taskData),
-      });
+      await updateTask.mutateAsync(taskData as { id: string } & Partial<Task>);
     } else {
+      // For new tasks, use raw fetch (useCreateTask could be used too)
       await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(taskData),
       });
     }
-    router.refresh();
-  }, [router]);
+  }, [updateTask]);
 
+  // Use React Query mutation for instant delete
   const handleDelete = useCallback(async (id: string) => {
-    await fetch(`/api/tasks/${id}`, {
-      method: "DELETE",
-    });
-    router.refresh();
-  }, [router]);
+    await deleteTask.mutateAsync(id);
+  }, [deleteTask]);
 
+  // Use React Query mutation for instant status change
   const handleStatusChange = useCallback(async (taskId: string, newStatus: string) => {
-    await fetch(`/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    router.refresh();
-  }, [router]);
+    await updateTask.mutateAsync({ id: taskId, status: newStatus });
+  }, [updateTask]);
 
+  // Inline create still uses fetch (optimistic handled by TaskTable)
   const handleInlineCreate = useCallback(async (name: string, dueDate?: string) => {
     const response = await fetch("/api/tasks", {
       method: "POST",
@@ -112,78 +152,27 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     });
     
     const data = await response.json();
-    router.refresh();
     return data.task || null;
-  }, [router]);
+  }, []);
 
+  // Use React Query mutation for instant field updates
   const handleTaskUpdate = useCallback(async (taskId: string, field: string, value: string | null) => {
-    await fetch(`/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [field]: value }),
-    });
-    router.refresh();
-  }, [router]);
+    await updateTask.mutateAsync({ id: taskId, [field]: value });
+  }, [updateTask]);
 
+  // Use React Query mutation for instant moves
   const handleTaskMove = useCallback(async (taskId: string, newDate: Date, newTime?: string) => {
-    // Wait for API to complete before refreshing to avoid race condition
-    try {
-      const body: Record<string, unknown> = { dueDate: newDate.toISOString() };
-      // If time is provided, update it; if undefined (dropped to all-day), clear it
-      if (newTime !== undefined) {
-        body.dueTime = newTime || null;
-      }
-      
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+    // Use moveTask for date changes, updateTask for time
+    if (newTime !== undefined) {
+      await updateTask.mutateAsync({ 
+        id: taskId, 
+        dueDate: format(newDate, "yyyy-MM-dd"),
+        dueTime: newTime || null 
       });
-      
-      if (!response.ok) {
-        console.error('Failed to move task:', await response.text());
-      }
-      
-      // Small delay to ensure server revalidation completes
-      await new Promise(resolve => setTimeout(resolve, 100));
-      router.refresh();
-    } catch (error) {
-      console.error('Error moving task:', error);
-      router.refresh(); // Refresh anyway to restore correct state
+    } else {
+      await moveTask.mutateAsync({ taskId, newDate });
     }
-  }, [router]);
-
-  const handleTaskResize = useCallback(async (taskId: string, newDuration: number) => {
-    try {
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ duration: newDuration }),
-      });
-      
-      if (!response.ok) {
-        console.error('Failed to resize task:', await response.text());
-      }
-      
-      router.refresh();
-    } catch (error) {
-      console.error('Error resizing task:', error);
-      router.refresh();
-    }
-  }, [router]);
-
-  const handleTasksMove = useCallback(async (taskIds: string[], newDate: Date) => {
-    await Promise.all(
-      taskIds.map(taskId =>
-        fetch(`/api/tasks/${taskId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ dueDate: newDate.toISOString() }),
-        })
-      )
-    );
-    router.refresh();
-  }, [router]);
+  }, [moveTask, updateTask]);
 
   return (
     <>
@@ -191,13 +180,13 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
         {/* Left Column - Task Lists */}
         <div className="space-y-6">
           <TaskTable
-            tasks={todayTasks}
+            tasks={filteredTodayTasks}
             projects={projects}
             organizations={organizations}
             title="Today"
             showFilters={true}
             hideDueColumn={true}
-            defaultDueDate={new Date().toISOString().split('T')[0]}
+            defaultDueDate={format(new Date(), "yyyy-MM-dd")}
             onTaskClick={handleTaskClick}
             onNewTask={handleNewTodayTask}
             onStatusChange={handleStatusChange}
@@ -206,12 +195,13 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
           />
 
           <TaskTable
-            tasks={nextTasks}
+            tasks={filteredNextTasks}
             projects={projects}
             organizations={organizations}
             title="Next"
             showFilters={false}
             hideDueColumn={true}
+            defaultDueDate={format(addDays(new Date(), 1), "yyyy-MM-dd")}
             onTaskClick={handleTaskClick}
             onNewTask={handleNewNextTask}
             onStatusChange={handleStatusChange}
@@ -223,10 +213,9 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
         {/* Right Column - Week View with Time (hidden on mobile) */}
         <div className="hidden lg:block h-[calc(100vh-180px)]">
           <TimeWeekCalendar 
-            tasks={weekTasks} 
+            tasks={filteredWeekTasks} 
             onTaskClick={handleTaskClick}
             onTaskMove={handleTaskMove}
-            onTaskResize={handleTaskResize}
           />
         </div>
       </div>
