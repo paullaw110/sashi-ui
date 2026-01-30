@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, Building2, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TaskModal } from "./TaskModal";
+import { OrganizationModal } from "./OrganizationModal";
 import { MonthCalendar } from "./MonthCalendar";
 import OrganizationManager from "./OrganizationManager";
 import MigrationWizard from "./MigrationWizard";
@@ -141,6 +142,12 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
   const [showOrganizations, setShowOrganizations] = useState(false);
   const [showMigrationWizard, setShowMigrationWizard] = useState(false);
 
+  // Organization modal state
+  const [selectedOrgForEdit, setSelectedOrgForEdit] = useState<Organization | null>(null);
+  const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
+  const [isCreatingOrg, setIsCreatingOrg] = useState(false);
+  const [orgRefreshTrigger, setOrgRefreshTrigger] = useState(0);
+
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
       // Status filter
@@ -202,10 +209,20 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
   }, [router]);
 
   const handleDelete = useCallback(async (id: string) => {
-    await fetch(`/api/tasks/${id}`, {
-      method: "DELETE",
-    });
-    router.refresh();
+    try {
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Delete failed: ${response.status}`);
+      }
+      
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      throw error; // Re-throw so the modal can handle it
+    }
   }, [router]);
 
   const handleStatusChange = useCallback(async (taskId: string, newStatus: string) => {
@@ -248,6 +265,78 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
     router.refresh();
   }, [router]);
 
+  // Organization handlers
+  const handleCreateOrganization = useCallback(() => {
+    setSelectedOrgForEdit(null);
+    setIsCreatingOrg(true);
+    setIsOrgModalOpen(true);
+  }, []);
+
+  const handleEditOrganization = useCallback((organization: Organization) => {
+    setSelectedOrgForEdit(organization);
+    setIsCreatingOrg(false);
+    setIsOrgModalOpen(true);
+  }, []);
+
+  const handleCloseOrgModal = useCallback(() => {
+    setIsOrgModalOpen(false);
+    setSelectedOrgForEdit(null);
+    setIsCreatingOrg(false);
+  }, []);
+
+  const handleSaveOrganization = useCallback(async (orgData: { id?: string; name: string; description?: string }) => {
+    try {
+      if (orgData.id) {
+        // Update existing organization
+        const response = await fetch(`/api/organizations/${orgData.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: orgData.name, description: orgData.description }),
+        });
+        if (!response.ok) throw new Error(`Update failed: ${response.status}`);
+      } else {
+        // Create new organization
+        const response = await fetch("/api/organizations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: orgData.name, description: orgData.description }),
+        });
+        if (!response.ok) throw new Error(`Create failed: ${response.status}`);
+      }
+      
+      // Trigger refresh
+      setOrgRefreshTrigger(prev => prev + 1);
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to save organization:", error);
+      throw error; // Re-throw so modal can handle it
+    }
+  }, [router]);
+
+  const handleDeleteOrganization = useCallback(async (id: string) => {
+    try {
+      const response = await fetch(`/api/organizations/${id}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Delete failed: ${response.status}`);
+      }
+      
+      // If the deleted org was selected, clear the selection
+      if (selectedOrganization?.id === id) {
+        setSelectedOrganization(null);
+      }
+      
+      // Trigger refresh
+      setOrgRefreshTrigger(prev => prev + 1);
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to delete organization:", error);
+      throw error; // Re-throw so modal can handle it
+    }
+  }, [selectedOrganization, router]);
+
   const clearAllFilters = useCallback(() => {
     setSearchQuery("");
     setFilterStatus(null);
@@ -265,6 +354,9 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
           <OrganizationManager
             onOrganizationSelect={setSelectedOrganization}
             selectedOrganizationId={selectedOrganization?.id || null}
+            onCreateClick={handleCreateOrganization}
+            onEditClick={handleEditOrganization}
+            onRefresh={orgRefreshTrigger}
           />
         </div>
       )}
@@ -492,6 +584,16 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
           onCancel={() => setShowMigrationWizard(false)}
         />
       )}
+
+      {/* Organization Modal */}
+      <OrganizationModal
+        organization={selectedOrgForEdit}
+        isOpen={isOrgModalOpen}
+        isCreating={isCreatingOrg}
+        onClose={handleCloseOrgModal}
+        onSave={handleSaveOrganization}
+        onDelete={handleDeleteOrganization}
+      />
     </div>
   );
 }

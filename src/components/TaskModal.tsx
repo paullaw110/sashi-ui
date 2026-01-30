@@ -149,8 +149,13 @@ export function TaskModal({
   const handleDelete = async () => {
     if (!task?.id) return;
     if (!confirm("Delete this task?")) return;
-    await onDelete(task.id);
-    onClose();
+    try {
+      await onDelete(task.id);
+      onClose();
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      alert("Failed to delete task. Please try again.");
+    }
   };
 
   const getStatusLabel = (s: string) => STATUSES.find(st => st.value === s)?.label || s;

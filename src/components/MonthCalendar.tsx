@@ -636,7 +636,10 @@ export function MonthCalendar({
 
       // Extract date key from drop zone ID (handles both "YYYY-MM-DD" and "YYYY-MM-YYYY-MM-DD" formats)
       const dateKeyMatch = targetDropZoneId.match(/(\d{4}-\d{2}-\d{2})$/);
-      if (!dateKeyMatch) return;
+      if (!dateKeyMatch) {
+        console.warn("Invalid drop zone ID:", targetDropZoneId);
+        return;
+      }
       
       const targetDateKey = dateKeyMatch[1];
       const newDate = new Date(targetDateKey + "T12:00:00");
