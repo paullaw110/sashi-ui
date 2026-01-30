@@ -100,6 +100,22 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     router.refresh();
   }, [router]);
 
+  const handleInlineCreate = useCallback(async (name: string, dueDate?: string) => {
+    const response = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        name, 
+        dueDate: dueDate || null,
+        status: "not_started" 
+      }),
+    });
+    
+    const data = await response.json();
+    router.refresh();
+    return data.task || null;
+  }, [router]);
+
   const handleTaskMove = useCallback(async (taskId: string, newDate: Date) => {
     // Wait for API to complete before refreshing to avoid race condition
     try {
@@ -146,9 +162,11 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
             organizations={organizations}
             title="Today"
             showFilters={true}
+            defaultDueDate={new Date().toISOString().split('T')[0]}
             onTaskClick={handleTaskClick}
             onNewTask={handleNewTodayTask}
             onStatusChange={handleStatusChange}
+            onInlineCreate={handleInlineCreate}
           />
 
           <TaskTable
@@ -160,6 +178,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
             onTaskClick={handleTaskClick}
             onNewTask={handleNewNextTask}
             onStatusChange={handleStatusChange}
+            onInlineCreate={handleInlineCreate}
           />
         </div>
 

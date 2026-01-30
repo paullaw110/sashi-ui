@@ -28,10 +28,12 @@ interface TaskTableProps {
   organizations?: Organization[];
   title: string;
   showFilters?: boolean;
+  defaultDueDate?: string; // ISO date string for new tasks (e.g., "today" section uses today's date)
   onTaskClick?: (task: Task) => void;
   onNewTask?: () => void;
   onStatusChange?: (taskId: string, status: string) => void;
   onTaskUpdate?: (taskId: string, field: string, value: string | null) => Promise<void>;
+  onInlineCreate?: (name: string, dueDate?: string) => Promise<Task | null>;
 }
 
 function getStatusIcon(status: string) {
@@ -146,14 +148,18 @@ export function TaskTable({
   organizations = [],
   title, 
   showFilters = true,
+  defaultDueDate,
   onTaskClick,
   onNewTask,
   onStatusChange,
   onTaskUpdate,
+  onInlineCreate,
 }: TaskTableProps) {
   const router = useRouter();
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newTaskName, setNewTaskName] = useState("");
 
   // Handler for inline updates (org/project)
   const handleInlineUpdate = useCallback(async (taskId: string, field: string, value: string | null) => {
@@ -169,6 +175,29 @@ export function TaskTable({
       router.refresh();
     }
   }, [onTaskUpdate, router]);
+
+  // Handler for inline create
+  const handleInlineCreate = useCallback(async () => {
+    if (!newTaskName.trim() || !onInlineCreate) return;
+    
+    setIsCreating(true);
+    try {
+      await onInlineCreate(newTaskName.trim(), defaultDueDate || undefined);
+      setNewTaskName("");
+    } finally {
+      setIsCreating(false);
+    }
+  }, [newTaskName, onInlineCreate, defaultDueDate]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleInlineCreate();
+    }
+    if (e.key === "Escape") {
+      setNewTaskName("");
+    }
+  }, [handleInlineCreate]);
 
   const filteredTasks = tasks.filter((task) => {
     if (filterStatus && task.status !== filterStatus) return false;
@@ -340,7 +369,7 @@ export function TaskTable({
           </div>
         ))}
 
-        {filteredTasks.length === 0 && (
+        {filteredTasks.length === 0 && !onInlineCreate && (
           <div className="px-4 py-10 text-center text-[var(--text-quaternary)] text-xs">
             No tasks
           </div>
@@ -349,6 +378,33 @@ export function TaskTable({
         {filteredTasks.length > 25 && (
           <div className="px-4 py-2 text-center text-[#333] text-[10px]">
             +{filteredTasks.length - 25} more
+          </div>
+        )}
+
+        {/* Inline create row */}
+        {onInlineCreate && (
+          <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2.5 hover:bg-[var(--bg-surface)] transition-colors">
+            <div className="w-5 shrink-0 flex items-center justify-center">
+              <Plus size={14} className="text-[var(--text-quaternary)]" />
+            </div>
+            <input
+              type="text"
+              value={newTaskName}
+              onChange={(e) => setNewTaskName(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={() => {
+                if (newTaskName.trim()) handleInlineCreate();
+              }}
+              placeholder="New task"
+              disabled={isCreating}
+              className="flex-1 min-w-0 text-sm bg-transparent border-none outline-none placeholder:text-[var(--text-quaternary)] text-[var(--text-primary)] disabled:opacity-50"
+            />
+            {/* Spacer columns to match layout */}
+            <div className="w-20 sm:w-24 shrink-0 hidden md:block" />
+            <div className="w-20 sm:w-24 shrink-0 hidden lg:block" />
+            <div className="w-20 sm:w-24 shrink-0 hidden sm:block" />
+            <div className="w-16 sm:w-20 shrink-0 hidden sm:block" />
+            <div className="w-12 sm:w-16 shrink-0" />
           </div>
         )}
       </div>
