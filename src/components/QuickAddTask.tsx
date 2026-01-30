@@ -2,9 +2,23 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { X, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
 import { Organization, Project } from "@/lib/db/schema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface QuickAddTaskProps {
   isOpen: boolean;
@@ -39,7 +53,7 @@ export function QuickAddTask({
   // Focus input when modal opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
 
@@ -65,11 +79,9 @@ export function QuickAddTask({
 
   const fetchProjects = async () => {
     try {
-      // Fetch projects through tasks API to get project data
       const response = await fetch("/api/tasks?view=all");
       const data = await response.json();
       
-      // Extract unique projects
       const uniqueProjects = new Map<string, Project>();
       data.tasks?.forEach((task: any) => {
         if (task.project) {
@@ -82,20 +94,6 @@ export function QuickAddTask({
       console.error("Error fetching projects:", error);
     }
   };
-
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      return () => document.removeEventListener("keydown", handleEscape);
-    }
-  }, [isOpen, onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,95 +124,82 @@ export function QuickAddTask({
     }
   };
 
-  if (!isOpen) return null;
+  const filteredProjects = projects.filter(project => 
+    !selectedOrganizationId || 
+    project.organizationId === selectedOrganizationId ||
+    !project.organizationId
+  );
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="bg-[#111] border border-[#1a1a1a] rounded-lg shadow-xl w-full max-w-md">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-[#1a1a1a]">
-            <div className="flex items-center gap-2">
-              <Plus size={16} className="text-[#0c0c0c] bg-[#e5e5e5] rounded p-0.5" />
-              <h3 className="font-medium text-[#f5f5f5]">Quick Add Task</h3>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <div className="p-1 bg-primary rounded">
+              <Plus size={14} className="text-primary-foreground" />
             </div>
-            <button
-              onClick={onClose}
-              className="text-[#525252] hover:text-[#f5f5f5] transition-colors"
-            >
-              <X size={16} />
-            </button>
+            <DialogTitle>Quick Add Task</DialogTitle>
           </div>
+        </DialogHeader>
 
-          {/* Content */}
-          <form onSubmit={handleSubmit} className="p-4">
-            <div className="space-y-3">
-              <input
-                ref={inputRef}
-                type="text"
-                value={taskName}
-                onChange={(e) => setTaskName(e.target.value)}
-                placeholder="What needs to be done?"
-                className="w-full px-3 py-2 bg-[#0c0c0c] border border-[#1a1a1a] rounded-md text-[#f5f5f5] placeholder:text-[#525252] focus:outline-none focus:border-[#333] transition-colors"
-                disabled={isSubmitting}
-              />
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          <Input
+            ref={inputRef}
+            value={taskName}
+            onChange={(e) => setTaskName(e.target.value)}
+            placeholder="What needs to be done?"
+            disabled={isSubmitting}
+          />
 
-              <div className="grid grid-cols-2 gap-2">
-                <select
-                  value={selectedOrganizationId}
-                  onChange={(e) => setSelectedOrganizationId(e.target.value)}
-                  className="px-3 py-2 bg-[#0c0c0c] border border-[#1a1a1a] rounded-md text-[#f5f5f5] text-sm focus:outline-none focus:border-[#333] transition-colors"
-                  disabled={isSubmitting}
-                >
-                  <option value="">No Organization</option>
-                  {organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name}
-                    </option>
-                  ))}
-                </select>
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              value={selectedOrganizationId || "none"}
+              onValueChange={(value) => setSelectedOrganizationId(value === "none" ? "" : value)}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="No Organization" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Organization</SelectItem>
+                {organizations.map((org) => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-                <select
-                  value={selectedProjectId}
-                  onChange={(e) => setSelectedProjectId(e.target.value)}
-                  className="px-3 py-2 bg-[#0c0c0c] border border-[#1a1a1a] rounded-md text-[#f5f5f5] text-sm focus:outline-none focus:border-[#333] transition-colors"
-                  disabled={isSubmitting}
-                >
-                  <option value="">No Project</option>
-                  {projects
-                    .filter(project => 
-                      !selectedOrganizationId || 
-                      project.organizationId === selectedOrganizationId ||
-                      !project.organizationId
-                    )
-                    .map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-              
-              <div className="flex items-center justify-between text-xs text-[#525252]">
-                <div>
-                  Press <kbd className="px-1.5 py-0.5 bg-[#1a1a1a] rounded font-mono">Enter</kbd> to create
-                  • <kbd className="px-1.5 py-0.5 bg-[#1a1a1a] rounded font-mono">Esc</kbd> to cancel
-                </div>
-                {isSubmitting && (
-                  <span className="text-blue-400">Creating...</span>
-                )}
-              </div>
+            <Select
+              value={selectedProjectId || "none"}
+              onValueChange={(value) => setSelectedProjectId(value === "none" ? "" : value)}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="No Project" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Project</SelectItem>
+                {filteredProjects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-muted-foreground">
+              Press <kbd className="px-1.5 py-0.5 bg-secondary rounded font-mono text-[10px]">Enter</kbd> to create
+              • <kbd className="px-1.5 py-0.5 bg-secondary rounded font-mono text-[10px]">Esc</kbd> to cancel
             </div>
-          </form>
-        </div>
-      </div>
-    </>
+            <Button type="submit" size="sm" disabled={!taskName.trim() || isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
