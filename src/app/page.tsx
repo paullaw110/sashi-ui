@@ -1,7 +1,7 @@
 import { db, schema } from "@/lib/db";
 import { Dashboard } from "@/components/Dashboard";
 import { AppLayout } from "@/components/AppLayout";
-import { eq, and, gte, lte, not } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
 import { startOfWeek, endOfWeek } from "date-fns";
 
 export const metadata = { title: "Dashboard" };
@@ -42,10 +42,9 @@ async function getTasks() {
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
 
-  // Today's tasks (explicitly due today, not done)
+  // Today's tasks (explicitly due today, including done - they show grayed out)
   const todayTasksRaw = await db.query.tasks.findMany({
     where: and(
-      not(eq(schema.tasks.status, "done")),
       gte(schema.tasks.dueDate, startOfDay),
       lte(schema.tasks.dueDate, endOfDay)
     ),
@@ -56,12 +55,11 @@ async function getTasks() {
     orderBy: (tasks, { asc }) => [asc(tasks.dueTime)],
   });
 
-  // Tomorrow's tasks (next section)
+  // Tomorrow's tasks (next section, including done)
   const startOfTomorrow = new Date(endOfDay.getTime() + 1);
   const endOfTomorrow = new Date(startOfTomorrow.getTime() + 24 * 60 * 60 * 1000 - 1);
   const nextTasksRaw = await db.query.tasks.findMany({
     where: and(
-      not(eq(schema.tasks.status, "done")),
       gte(schema.tasks.dueDate, startOfTomorrow),
       lte(schema.tasks.dueDate, endOfTomorrow)
     ),

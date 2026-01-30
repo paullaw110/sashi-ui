@@ -43,7 +43,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
   const deleteTask = useDeleteTask();
   const moveTask = useMoveTask();
 
-  // Filter tasks for today (due today, not done)
+  // Filter tasks for today (due today, including done - they show grayed out)
   const filteredTodayTasks = useMemo((): TableTask[] => {
     if (!allTasks) return todayTasks as TableTask[];
     const now = new Date();
@@ -51,14 +51,13 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     const dayEnd = endOfDay(now);
     
     return (allTasks.filter(task => {
-      if (task.status === "done") return false;
       if (!task.dueDate) return false;
       const due = new Date(task.dueDate);
       return due >= dayStart && due <= dayEnd;
     }) as TableTask[]);
   }, [allTasks, todayTasks]);
 
-  // Filter tasks for next (tomorrow, not done)
+  // Filter tasks for next (tomorrow, including done)
   const filteredNextTasks = useMemo((): TableTask[] => {
     if (!allTasks) return nextTasks as TableTask[];
     const tomorrow = addDays(new Date(), 1);
@@ -66,7 +65,6 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     const dayEnd = endOfDay(tomorrow);
     
     return (allTasks.filter(task => {
-      if (task.status === "done") return false;
       if (!task.dueDate) return false;
       const due = new Date(task.dueDate);
       return due >= dayStart && due <= dayEnd;
