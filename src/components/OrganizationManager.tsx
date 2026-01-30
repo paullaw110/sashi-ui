@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { Organization } from "@/lib/db/schema";
 import { Building2, Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface OrganizationManagerProps {
   onOrganizationSelect?: (organization: Organization | null) => void;
@@ -68,7 +71,7 @@ export default function OrganizationManager({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="text-xs text-[#525252]">Loading organizations...</div>
+        <div className="text-xs text-muted-foreground">Loading organizations...</div>
       </div>
     );
   }
@@ -78,72 +81,80 @@ export default function OrganizationManager({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Building2 size={16} className="text-[#525252]" />
-          <h3 className="text-sm font-medium text-[#f5f5f5]">Organizations</h3>
-          <span className="text-xs text-[#404040]">({organizations.length})</span>
+          <Building2 size={16} className="text-muted-foreground" />
+          <h3 className="text-sm font-medium">Organizations</h3>
+          <span className="text-xs text-muted-foreground">({organizations.length})</span>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onCreateClick}
-          className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          className="text-blue-400 hover:text-blue-300"
         >
-          <Plus size={14} />
+          <Plus size={14} className="mr-1.5" />
           Add Organization
-        </button>
+        </Button>
       </div>
 
       {/* Organization Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {/* All Organizations Card */}
-        <button
+        <Card
           onClick={() => onOrganizationSelect?.(null)}
-          className={`flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
+          className={cn(
+            "flex items-center gap-3 p-3 cursor-pointer transition-all",
             !selectedOrganizationId 
-              ? "bg-[#1a1a1a] border-[#333] ring-1 ring-blue-500/30" 
-              : "bg-[#0c0c0c] border-[#1a1a1a] hover:border-[#222] hover:bg-[#111]"
-          }`}
+              ? "bg-secondary ring-1 ring-blue-500/30" 
+              : "hover:bg-secondary/50"
+          )}
         >
-          <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
-            !selectedOrganizationId ? "bg-blue-500/20" : "bg-[#1a1a1a]"
-          }`}>
-            <Building2 size={16} className={!selectedOrganizationId ? "text-blue-400" : "text-[#525252]"} />
+          <div className={cn(
+            "w-8 h-8 rounded-md flex items-center justify-center",
+            !selectedOrganizationId ? "bg-blue-500/20" : "bg-secondary"
+          )}>
+            <Building2 size={16} className={!selectedOrganizationId ? "text-blue-400" : "text-muted-foreground"} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className={`text-sm font-medium truncate ${
-              !selectedOrganizationId ? "text-[#f5f5f5]" : "text-[#a3a3a3]"
-            }`}>
+            <div className={cn(
+              "text-sm font-medium truncate",
+              !selectedOrganizationId ? "text-foreground" : "text-muted-foreground"
+            )}>
               All Organizations
             </div>
-            <div className="text-[10px] text-[#525252]">
+            <div className="text-[10px] text-muted-foreground">
               View all tasks
             </div>
           </div>
-          <ChevronRight size={14} className="text-[#333] shrink-0" />
-        </button>
+          <ChevronRight size={14} className="text-muted-foreground/50 shrink-0" />
+        </Card>
 
         {/* Organization Cards */}
         {organizations.map((org) => (
-          <div
+          <Card
             key={org.id}
             onClick={() => onOrganizationSelect?.(org)}
-            className={`group flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
+            className={cn(
+              "group flex items-center gap-3 p-3 cursor-pointer transition-all",
               selectedOrganizationId === org.id 
-                ? "bg-[#1a1a1a] border-[#333] ring-1 ring-blue-500/30" 
-                : "bg-[#0c0c0c] border-[#1a1a1a] hover:border-[#222] hover:bg-[#111]"
-            }`}
+                ? "bg-secondary ring-1 ring-blue-500/30" 
+                : "hover:bg-secondary/50"
+            )}
           >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
-              selectedOrganizationId === org.id ? "bg-blue-500/20" : "bg-[#1a1a1a]"
-            }`}>
-              <Building2 size={16} className={selectedOrganizationId === org.id ? "text-blue-400" : "text-[#525252]"} />
+            <div className={cn(
+              "w-8 h-8 rounded-md flex items-center justify-center",
+              selectedOrganizationId === org.id ? "bg-blue-500/20" : "bg-secondary"
+            )}>
+              <Building2 size={16} className={selectedOrganizationId === org.id ? "text-blue-400" : "text-muted-foreground"} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className={`text-sm font-medium truncate ${
-                selectedOrganizationId === org.id ? "text-[#f5f5f5]" : "text-[#a3a3a3]"
-              }`}>
+              <div className={cn(
+                "text-sm font-medium truncate",
+                selectedOrganizationId === org.id ? "text-foreground" : "text-muted-foreground"
+              )}>
                 {org.name}
               </div>
               {org.description && (
-                <div className="text-[10px] text-[#525252] truncate">
+                <div className="text-[10px] text-muted-foreground truncate">
                   {org.description}
                 </div>
               )}
@@ -151,41 +162,47 @@ export default function OrganizationManager({
             
             {/* Action buttons - show on hover */}
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEditClick?.(org);
                 }}
-                className="p-1.5 rounded hover:bg-[#222] text-[#525252] hover:text-[#a3a3a3] transition-colors"
                 title="Edit organization"
               >
                 <Pencil size={12} />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
                 onClick={(e) => deleteOrganization(e, org.id)}
-                className="p-1.5 rounded hover:bg-red-500/10 text-[#525252] hover:text-red-400 transition-colors"
                 title="Delete organization"
               >
                 <Trash2 size={12} />
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Empty State */}
       {organizations.length === 0 && (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <Building2 size={32} className="text-[#333] mb-3" />
-          <p className="text-sm text-[#525252] mb-1">No organizations yet</p>
-          <p className="text-xs text-[#404040] mb-4">Create an organization to group your projects</p>
-          <button
+          <Building2 size={32} className="text-muted-foreground/30 mb-3" />
+          <p className="text-sm text-muted-foreground mb-1">No organizations yet</p>
+          <p className="text-xs text-muted-foreground/70 mb-4">Create an organization to group your projects</p>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onCreateClick}
-            className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+            className="text-blue-400 hover:text-blue-300"
           >
-            <Plus size={14} />
+            <Plus size={14} className="mr-1.5" />
             Create your first organization
-          </button>
+          </Button>
         </div>
       )}
     </div>

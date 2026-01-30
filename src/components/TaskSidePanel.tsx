@@ -1,10 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { RichEditor } from "./RichEditor";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Task = {
   id: string;
@@ -13,7 +29,7 @@ type Task = {
   organizationId: string | null;
   priority: string | null;
   status: string;
-  dueDate: string | null  // ISO string from server;
+  dueDate: string | null;
   dueTime: string | null;
   tags: string | null;
   description?: string | null;
@@ -90,20 +106,9 @@ export function TaskSidePanel({
     }
   }, [task, isCreating, defaultDate]);
 
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    if (isOpen) {
-      document.addEventListener("keydown", handleEsc);
-      return () => document.removeEventListener("keydown", handleEsc);
-    }
-  }, [isOpen, onClose]);
-
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Ensure tasks created from Today section get today's date if no date is set
       let finalDueDate = dueDate || null;
       if (isCreating && !finalDueDate && defaultDate) {
         finalDueDate = format(defaultDate, "yyyy-MM-dd");
@@ -114,7 +119,7 @@ export function TaskSidePanel({
         name,
         priority,
         status,
-        dueDate: finalDueDate,  // Keep as string, API handles conversion
+        dueDate: finalDueDate,
         dueTime: dueTime || null,
         description: description || null,
       });
@@ -135,105 +140,90 @@ export function TaskSidePanel({
   const getPriorityLabel = (p: string | null) => PRIORITIES.find(pr => pr.value === p)?.label || "None";
 
   return (
-    <>
-      {/* Backdrop */}
-      <div 
-        className={cn(
-          "fixed inset-0 bg-black/60 z-40 transition-opacity duration-300",
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        )}
-        onClick={onClose}
-      />
-      
-      {/* Panel */}
-      <div className={cn(
-        "fixed right-0 top-0 h-full w-full sm:w-[420px] bg-[#0c0c0c] border-l border-[#1a1a1a] z-50 transform transition-transform duration-300 ease-out overflow-y-auto",
-        isOpen ? "translate-x-0" : "translate-x-full"
-      )}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-[#1a1a1a] sticky top-0 bg-[#0c0c0c] z-10">
-          <span className="font-display text-lg text-[#f5f5f5]">
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent className="w-full sm:w-[420px] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>
             {isCreating ? "New Task" : isEditing ? "Edit Task" : "Task Details"}
-          </span>
-          <button 
-            onClick={onClose}
-            className="p-1.5 text-[#404040] hover:text-[#737373] hover:bg-[#1a1a1a] rounded transition-colors"
-          >
-            <X size={18} />
-          </button>
-        </div>
+          </SheetTitle>
+        </SheetHeader>
 
         {/* Body */}
-        <div className="p-6 space-y-6">
+        <div className="py-6 space-y-6">
           {isEditing || isCreating ? (
             <>
               {/* Name */}
-              <div>
-                <label className="block text-[10px] text-[#404040] uppercase tracking-widest mb-2">Task Name</label>
-                <input
-                  type="text"
+              <div className="space-y-2">
+                <Label>Task Name</Label>
+                <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="What needs to be done?"
-                  className="w-full px-4 py-3 bg-[#111] border border-[#222] rounded-lg text-[#f5f5f5] text-sm placeholder:text-[#333] focus:outline-none focus:border-[#404040] transition-colors"
                   autoFocus
                 />
               </div>
 
               {/* Status & Priority */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] text-[#404040] uppercase tracking-widest mb-2">Status</label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#111] border border-[#222] rounded-lg text-[#a3a3a3] text-sm focus:outline-none focus:border-[#404040] transition-colors"
-                  >
-                    {STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
-                    ))}
-                  </select>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUSES.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>
+                          {s.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <label className="block text-[10px] text-[#404040] uppercase tracking-widest mb-2">Priority</label>
-                  <select
-                    value={priority || ""}
-                    onChange={(e) => setPriority(e.target.value || null)}
-                    className="w-full px-4 py-3 bg-[#111] border border-[#222] rounded-lg text-[#a3a3a3] text-sm focus:outline-none focus:border-[#404040] transition-colors"
+                <div className="space-y-2">
+                  <Label>Priority</Label>
+                  <Select
+                    value={priority || "none"}
+                    onValueChange={(value) => setPriority(value === "none" ? null : value)}
                   >
-                    <option value="">None</option>
-                    {PRIORITIES.map((p) => (
-                      <option key={p.value} value={p.value}>{p.label}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="None" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {PRIORITIES.map((p) => (
+                        <SelectItem key={p.value} value={p.value}>
+                          {p.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               {/* Date & Time */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] text-[#404040] uppercase tracking-widest mb-2">Due Date</label>
-                  <input
+                <div className="space-y-2">
+                  <Label>Due Date</Label>
+                  <Input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#111] border border-[#222] rounded-lg text-[#a3a3a3] text-sm focus:outline-none focus:border-[#404040] transition-colors"
                   />
                 </div>
-                <div>
-                  <label className="block text-[10px] text-[#404040] uppercase tracking-widest mb-2">Time</label>
-                  <input
+                <div className="space-y-2">
+                  <Label>Time</Label>
+                  <Input
                     type="time"
                     value={dueTime}
                     onChange={(e) => setDueTime(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#111] border border-[#222] rounded-lg text-[#a3a3a3] text-sm focus:outline-none focus:border-[#404040] transition-colors"
                   />
                 </div>
               </div>
 
               {/* Description */}
-              <div>
-                <label className="block text-[10px] text-[#404040] uppercase tracking-widest mb-2">Description</label>
+              <div className="space-y-2">
+                <Label>Description</Label>
                 <RichEditor
                   content={description}
                   placeholder="Add details, notes, or context..."
@@ -245,60 +235,60 @@ export function TaskSidePanel({
             <>
               {/* View Mode */}
               <div>
-                <h2 className="font-display text-xl text-[#f5f5f5] mb-4">{task.name}</h2>
+                <h2 className="text-xl font-semibold mb-4">{task.name}</h2>
                 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
-                    <span className="text-[11px] text-[#525252] uppercase tracking-wider">Status</span>
+                  <div className="flex items-center justify-between py-3 border-b">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Status</span>
                     <span className={cn(
                       "text-xs px-2 py-1 rounded",
                       task.status === "done" && "bg-green-500/10 text-green-400",
                       task.status === "in_progress" && "bg-blue-500/10 text-blue-400",
                       task.status === "waiting" && "bg-amber-500/10 text-amber-400",
-                      task.status === "not_started" && "bg-[#1a1a1a] text-[#737373]"
+                      task.status === "not_started" && "bg-secondary text-muted-foreground"
                     )}>
                       {getStatusLabel(task.status)}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
-                    <span className="text-[11px] text-[#525252] uppercase tracking-wider">Priority</span>
+                  <div className="flex items-center justify-between py-3 border-b">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Priority</span>
                     <span className={cn(
                       "text-xs px-2 py-1 rounded",
                       task.priority === "critical" && "bg-red-500/10 text-red-400",
                       task.priority === "high" && "bg-amber-500/10 text-amber-400",
                       task.priority === "medium" && "bg-blue-500/10 text-blue-400",
-                      !task.priority && "text-[#525252]"
+                      !task.priority && "text-muted-foreground"
                     )}>
                       {getPriorityLabel(task.priority)}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
-                    <span className="text-[11px] text-[#525252] uppercase tracking-wider">Due Date</span>
-                    <span className="text-sm text-[#a3a3a3]">
+                  <div className="flex items-center justify-between py-3 border-b">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Due Date</span>
+                    <span className="text-sm text-muted-foreground">
                       {task.dueDate ? format(new Date(task.dueDate), "MMM d, yyyy") : "—"}
                     </span>
                   </div>
 
                   {task.dueTime && (
-                    <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
-                      <span className="text-[11px] text-[#525252] uppercase tracking-wider">Time</span>
-                      <span className="text-sm text-[#a3a3a3]">{task.dueTime}</span>
+                    <div className="flex items-center justify-between py-3 border-b">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider">Time</span>
+                      <span className="text-sm text-muted-foreground">{task.dueTime}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Description Section */}
-                <div className="mt-8 pt-6 border-t border-[#1a1a1a]">
-                  <span className="text-[11px] text-[#525252] uppercase tracking-wider block mb-3">Description</span>
+                <div className="mt-8 pt-6 border-t">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-3">Description</span>
                   {task.description ? (
                     <div 
-                      className="text-sm prose prose-invert prose-sm max-w-none [&_p]:text-[#a3a3a3] [&_li]:text-[#a3a3a3] [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                      className="text-sm prose prose-invert prose-sm max-w-none"
                       dangerouslySetInnerHTML={{ __html: task.description }}
                     />
                   ) : (
-                    <p className="text-sm text-[#333] italic">No description</p>
+                    <p className="text-sm text-muted-foreground italic">No description</p>
                   )}
                 </div>
               </div>
@@ -307,22 +297,25 @@ export function TaskSidePanel({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-[#0c0c0c] border-t border-[#1a1a1a] px-6 py-4">
+        <div className="sticky bottom-0 bg-background border-t pt-4">
           {isEditing || isCreating ? (
             <div className="flex items-center justify-between">
               {task && !isCreating ? (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleDelete}
-                  className="flex items-center gap-1.5 text-[11px] text-[#525252] hover:text-red-400 transition-colors"
+                  className="text-destructive hover:text-destructive"
                 >
-                  <Trash2 size={13} />
+                  <Trash2 size={14} className="mr-1.5" />
                   Delete
-                </button>
+                </Button>
               ) : (
                 <div />
               )}
               <div className="flex items-center gap-3">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => {
                     if (isCreating) {
                       onClose();
@@ -330,38 +323,35 @@ export function TaskSidePanel({
                       setIsEditing(false);
                     }
                   }}
-                  className="text-[11px] text-[#525252] hover:text-[#a3a3a3] px-4 py-2 transition-colors"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleSave}
                   disabled={!name.trim() || saving}
-                  className="text-[11px] text-[#0c0c0c] bg-[#e5e5e5] hover:bg-[#f5f5f5] disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2 rounded-lg transition-colors font-medium"
                 >
                   {saving ? "Saving..." : isCreating ? "Create" : "Save"}
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleDelete}
-                className="flex items-center gap-1.5 text-[11px] text-[#525252] hover:text-red-400 transition-colors"
+                className="text-destructive hover:text-destructive"
               >
-                <Trash2 size={13} />
+                <Trash2 size={14} className="mr-1.5" />
                 Delete
-              </button>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="text-[11px] text-[#0c0c0c] bg-[#e5e5e5] hover:bg-[#f5f5f5] px-5 py-2 rounded-lg transition-colors font-medium"
-              >
+              </Button>
+              <Button onClick={() => setIsEditing(true)}>
                 Edit Task
-              </button>
+              </Button>
             </div>
           )}
         </div>
-      </div>
-    </>
+      </SheetContent>
+    </Sheet>
   );
 }

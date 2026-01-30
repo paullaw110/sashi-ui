@@ -1,11 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Trash2, Building2, Folder } from "lucide-react";
+import { Trash2, Building2, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { RichEditor } from "./RichEditor";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Task = {
   id: string;
@@ -14,7 +30,7 @@ type Task = {
   organizationId: string | null;
   priority: string | null;
   status: string;
-  dueDate: string | null  // ISO string from server;
+  dueDate: string | null;
   dueTime: string | null;
   tags: string | null;
   description?: string | null;
@@ -110,20 +126,9 @@ export function TaskModal({
     }
   }, [organizationId, projectId, projects]);
 
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    if (isOpen) {
-      document.addEventListener("keydown", handleEsc);
-      return () => document.removeEventListener("keydown", handleEsc);
-    }
-  }, [isOpen, onClose]);
-
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Ensure tasks created from Today section get today's date if no date is set
       let finalDueDate = dueDate || null;
       if (isCreating && !finalDueDate && defaultDate) {
         finalDueDate = format(defaultDate, "yyyy-MM-dd");
@@ -136,7 +141,7 @@ export function TaskModal({
         projectId,
         priority,
         status,
-        dueDate: finalDueDate,  // Keep as string, API handles conversion
+        dueDate: finalDueDate,
         dueTime: dueTime || null,
         description: description || null,
       });
@@ -161,117 +166,108 @@ export function TaskModal({
   const getStatusLabel = (s: string) => STATUSES.find(st => st.value === s)?.label || s;
   const getPriorityLabel = (p: string | null) => PRIORITIES.find(pr => pr.value === p)?.label || "None";
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className="relative bg-[#0c0c0c] border border-[#1a1a1a] rounded-lg shadow-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a1a] sticky top-0 bg-[#0c0c0c] z-10">
-          <div>
-            <h2 className="font-display text-lg text-[#f5f5f5]">
-              {isCreating ? "New Task" : isEditing ? "Edit Task" : "Task Details"}
-            </h2>
-            {/* Context breadcrumb */}
-            {(task?.organization || organizationId) && (
-              <div className="flex items-center gap-1 mt-1 text-xs text-[#737373]">
-                <Building2 size={12} />
-                <span>{task?.organization?.name || organizations.find(o => o.id === organizationId)?.name}</span>
-                {(task?.project || projectId) && (
-                  <>
-                    <span>/</span>
-                    <Folder size={12} />
-                    <span>{task?.project?.name || projects.find(p => p.id === projectId)?.name}</span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle>
+                {isCreating ? "New Task" : isEditing ? "Edit Task" : "Task Details"}
+              </DialogTitle>
+              {/* Context breadcrumb */}
+              {(task?.organization || organizationId) && (
+                <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                  <Building2 size={12} />
+                  <span>{task?.organization?.name || organizations.find(o => o.id === organizationId)?.name}</span>
+                  {(task?.project || projectId) && (
+                    <>
+                      <span>/</span>
+                      <Folder size={12} />
+                      <span>{task?.project?.name || projects.find(p => p.id === projectId)?.name}</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            
             {task && !isEditing && (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsEditing(true)}
-                className="text-xs text-[#737373] hover:text-[#a3a3a3] px-3 py-1.5 rounded transition-colors"
               >
                 Edit
-              </button>
+              </Button>
             )}
-            <button
-              onClick={onClose}
-              className="text-[#737373] hover:text-[#a3a3a3] transition-colors"
-            >
-              <X size={20} />
-            </button>
           </div>
-        </div>
+        </DialogHeader>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
+        <div className="space-y-4 py-4">
           {/* Task Name */}
-          <div>
-            <label className="block text-xs text-[#737373] mb-2 uppercase tracking-wider">Task Name</label>
+          <div className="space-y-2">
+            <Label>Task Name</Label>
             {isEditing ? (
-              <input
-                type="text"
+              <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full text-sm text-[#f5f5f5] bg-[#111] border border-[#222] px-3 py-2 rounded focus:border-[#404040] focus:outline-none transition-colors"
                 placeholder="Enter task name..."
               />
             ) : (
-              <p className="text-sm text-[#f5f5f5] font-medium">{name}</p>
+              <p className="text-sm font-medium">{name}</p>
             )}
           </div>
 
           {/* Organization & Project */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-[#737373] mb-2 uppercase tracking-wider">Organization</label>
+            <div className="space-y-2">
+              <Label>Organization</Label>
               {isEditing ? (
-                <select
-                  value={organizationId || ""}
-                  onChange={(e) => setOrganizationId(e.target.value || null)}
-                  className="w-full text-xs text-[#f5f5f5] bg-[#111] border border-[#222] px-3 py-2 rounded focus:border-[#404040] focus:outline-none transition-colors"
+                <Select
+                  value={organizationId || "none"}
+                  onValueChange={(value) => setOrganizationId(value === "none" ? null : value)}
                 >
-                  <option value="">Select organization...</option>
-                  {organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select organization..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {organizations.map((org) => (
+                      <SelectItem key={org.id} value={org.id}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
-                <p className="text-xs text-[#a3a3a3]">
+                <p className="text-xs text-muted-foreground">
                   {task?.organization?.name || "None"}
                 </p>
               )}
             </div>
 
-            <div>
-              <label className="block text-xs text-[#737373] mb-2 uppercase tracking-wider">Project</label>
+            <div className="space-y-2">
+              <Label>Project</Label>
               {isEditing ? (
-                <select
-                  value={projectId || ""}
-                  onChange={(e) => setProjectId(e.target.value || null)}
-                  className="w-full text-xs text-[#f5f5f5] bg-[#111] border border-[#222] px-3 py-2 rounded focus:border-[#404040] focus:outline-none transition-colors"
+                <Select
+                  value={projectId || "none"}
+                  onValueChange={(value) => setProjectId(value === "none" ? null : value)}
                 >
-                  <option value="">Select project...</option>
-                  {filteredProjects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select project..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {filteredProjects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
-                <p className="text-xs text-[#a3a3a3]">
+                <p className="text-xs text-muted-foreground">
                   {task?.project?.name || "None"}
                 </p>
               )}
@@ -280,75 +276,78 @@ export function TaskModal({
 
           {/* Status & Priority */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-[#737373] mb-2 uppercase tracking-wider">Status</label>
+            <div className="space-y-2">
+              <Label>Status</Label>
               {isEditing ? (
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full text-xs text-[#f5f5f5] bg-[#111] border border-[#222] px-3 py-2 rounded focus:border-[#404040] focus:outline-none transition-colors"
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>
+                        {s.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
-                <p className="text-xs text-[#a3a3a3]">{getStatusLabel(status)}</p>
+                <p className="text-xs text-muted-foreground">{getStatusLabel(status)}</p>
               )}
             </div>
 
-            <div>
-              <label className="block text-xs text-[#737373] mb-2 uppercase tracking-wider">Priority</label>
+            <div className="space-y-2">
+              <Label>Priority</Label>
               {isEditing ? (
-                <select
-                  value={priority || ""}
-                  onChange={(e) => setPriority(e.target.value || null)}
-                  className="w-full text-xs text-[#f5f5f5] bg-[#111] border border-[#222] px-3 py-2 rounded focus:border-[#404040] focus:outline-none transition-colors"
+                <Select
+                  value={priority || "none"}
+                  onValueChange={(value) => setPriority(value === "none" ? null : value)}
                 >
-                  <option value="">None</option>
-                  {PRIORITIES.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {PRIORITIES.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
-                <p className="text-xs text-[#a3a3a3]">{getPriorityLabel(priority)}</p>
+                <p className="text-xs text-muted-foreground">{getPriorityLabel(priority)}</p>
               )}
             </div>
           </div>
 
           {/* Due Date & Time */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-[#737373] mb-2 uppercase tracking-wider">Due Date</label>
+            <div className="space-y-2">
+              <Label>Due Date</Label>
               {isEditing ? (
-                <input
+                <Input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full text-xs text-[#f5f5f5] bg-[#111] border border-[#222] px-3 py-2 rounded focus:border-[#404040] focus:outline-none transition-colors"
                 />
               ) : (
-                <p className="text-xs text-[#a3a3a3]">
+                <p className="text-xs text-muted-foreground">
                   {dueDate ? format(new Date(dueDate), "MMM dd, yyyy") : "None"}
                 </p>
               )}
             </div>
 
-            <div>
-              <label className="block text-xs text-[#737373] mb-2 uppercase tracking-wider">Due Time</label>
+            <div className="space-y-2">
+              <Label>Due Time</Label>
               {isEditing ? (
-                <input
+                <Input
                   type="time"
                   value={dueTime}
                   onChange={(e) => setDueTime(e.target.value)}
-                  className="w-full text-xs text-[#f5f5f5] bg-[#111] border border-[#222] px-3 py-2 rounded focus:border-[#404040] focus:outline-none transition-colors"
                 />
               ) : (
-                <p className="text-xs text-[#a3a3a3]">
+                <p className="text-xs text-muted-foreground">
                   {dueTime || "None"}
                 </p>
               )}
@@ -356,8 +355,8 @@ export function TaskModal({
           </div>
 
           {/* Description */}
-          <div>
-            <label className="block text-xs text-[#737373] mb-2 uppercase tracking-wider">Description</label>
+          <div className="space-y-2">
+            <Label>Description</Label>
             {isEditing ? (
               <RichEditor
                 content={description}
@@ -366,7 +365,7 @@ export function TaskModal({
                 className="min-h-[120px]"
               />
             ) : (
-              <div className="text-xs text-[#a3a3a3] prose prose-sm prose-invert max-w-none">
+              <div className="text-xs text-muted-foreground prose prose-sm prose-invert max-w-none">
                 {description ? (
                   <div dangerouslySetInnerHTML={{ __html: description }} />
                 ) : (
@@ -379,21 +378,24 @@ export function TaskModal({
 
         {/* Actions */}
         {isEditing && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-[#1a1a1a] bg-[#0a0a0a]">
+          <div className="flex items-center justify-between pt-4 border-t">
             <div>
               {task && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleDelete}
-                  className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition-colors"
+                  className="text-destructive hover:text-destructive"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={14} className="mr-2" />
                   Delete
-                </button>
+                </Button>
               )}
             </div>
             
             <div className="flex items-center gap-3">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => {
                   if (isCreating) {
                     onClose();
@@ -401,21 +403,19 @@ export function TaskModal({
                     setIsEditing(false);
                   }
                 }}
-                className="text-xs text-[#737373] hover:text-[#a3a3a3] px-4 py-2 rounded transition-colors"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleSave}
                 disabled={saving || !name.trim()}
-                className="flex items-center gap-2 text-xs text-[#0c0c0c] bg-[#f5f5f5] hover:bg-[#e5e5e5] disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded font-medium transition-colors"
               >
                 {saving ? "Saving..." : isCreating ? "Create" : "Save"}
-              </button>
+              </Button>
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
