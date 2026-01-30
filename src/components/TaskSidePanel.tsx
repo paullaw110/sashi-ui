@@ -103,12 +103,18 @@ export function TaskSidePanel({
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Ensure tasks created from Today section get today's date if no date is set
+      let finalDueDate = dueDate || null;
+      if (isCreating && !finalDueDate && defaultDate) {
+        finalDueDate = format(defaultDate, "yyyy-MM-dd");
+      }
+      
       await onSave({
         id: task?.id,
         name,
         priority,
         status,
-        dueDate: dueDate || null,  // Keep as string, API handles conversion
+        dueDate: finalDueDate,  // Keep as string, API handles conversion
         dueTime: dueTime || null,
         description: description || null,
       });
