@@ -174,6 +174,11 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     }
   }, [moveTask, updateTask]);
 
+  // Use React Query mutation for instant resize (duration change)
+  const handleTaskResize = useCallback(async (taskId: string, newDuration: number) => {
+    await updateTask.mutateAsync({ id: taskId, duration: newDuration } as { id: string; duration: number } & Partial<Task>);
+  }, [updateTask]);
+
   return (
     <>
       <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -216,6 +221,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
             tasks={filteredWeekTasks} 
             onTaskClick={handleTaskClick}
             onTaskMove={handleTaskMove}
+            onTaskResize={handleTaskResize}
           />
         </div>
       </div>

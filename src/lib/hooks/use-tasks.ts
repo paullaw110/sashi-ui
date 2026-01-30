@@ -14,6 +14,7 @@ export type Task = {
   status: string;
   dueDate: string | null;
   dueTime: string | null;
+  duration?: number | null; // Duration in minutes
   tags: string | null;
   description?: string | null;
   project?: { id: string; name: string } | null;
