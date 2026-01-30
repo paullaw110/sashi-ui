@@ -153,6 +153,25 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     }
   }, [router]);
 
+  const handleTaskResize = useCallback(async (taskId: string, newDuration: number) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ duration: newDuration }),
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to resize task:', await response.text());
+      }
+      
+      router.refresh();
+    } catch (error) {
+      console.error('Error resizing task:', error);
+      router.refresh();
+    }
+  }, [router]);
+
   const handleTasksMove = useCallback(async (taskIds: string[], newDate: Date) => {
     await Promise.all(
       taskIds.map(taskId =>
@@ -207,6 +226,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
             tasks={weekTasks} 
             onTaskClick={handleTaskClick}
             onTaskMove={handleTaskMove}
+            onTaskResize={handleTaskResize}
           />
         </div>
       </div>

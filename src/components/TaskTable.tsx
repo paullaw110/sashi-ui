@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Circle, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -166,15 +166,22 @@ export function TaskTable({
   // Optimistic tasks - shown immediately while API call happens
   const [optimisticTasks, setOptimisticTasks] = useState<Task[]>([]);
 
-  // Clear optimistic tasks when real tasks change (server data arrived)
-  const prevTasksRef = useRef(tasks);
+  // Clear optimistic tasks when they appear in real tasks (server data arrived)
   useEffect(() => {
-    if (tasks !== prevTasksRef.current && optimisticTasks.length > 0) {
-      // Server data arrived, clear optimistic tasks
-      setOptimisticTasks([]);
+    if (optimisticTasks.length === 0) return;
+    
+    // Check if any optimistic task's name now exists in real tasks
+    // (since optimistic tasks have temp IDs, we match by name)
+    const realTaskNames = new Set(tasks.map(t => t.name.toLowerCase()));
+    const stillPending = optimisticTasks.filter(
+      opt => !realTaskNames.has(opt.name.toLowerCase())
+    );
+    
+    if (stillPending.length < optimisticTasks.length) {
+      // Some optimistic tasks are now in real data, clear them
+      setOptimisticTasks(stillPending);
     }
-    prevTasksRef.current = tasks;
-  }, [tasks, optimisticTasks.length]);
+  }, [tasks, optimisticTasks]);
 
   // Handler for inline updates (org/project)
   const handleInlineUpdate = useCallback(async (taskId: string, field: string, value: string | null) => {

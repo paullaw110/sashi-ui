@@ -34,6 +34,7 @@ type Task = {
   status: string;
   dueDate: string | null;
   dueTime: string | null;
+  duration?: number | null; // Duration in minutes
   tags: string | null;
   description?: string | null;
 };
@@ -42,6 +43,7 @@ interface TimeWeekCalendarProps {
   tasks: Task[];
   onTaskClick?: (task: Task) => void;
   onTaskMove?: (taskId: string, newDate: Date, newTime?: string) => void;
+  onTaskResize?: (taskId: string, newDuration: number) => void;
 }
 
 // Hours to display (6am to 10pm)
@@ -63,37 +65,98 @@ function getTopPosition(time: string | null): number {
   return ((minutes - startMinutes) / 60) * HOUR_HEIGHT;
 }
 
-// Draggable timed task (positioned absolutely in hour grid)
+// Calculate height from duration
+function getHeightFromDuration(duration: number | null | undefined): number {
+  const mins = duration || 30; // Default 30 min
+  return (mins / 60) * HOUR_HEIGHT;
+}
+
+// Draggable timed task with resize (positioned absolutely in hour grid)
 function TimedTask({
   task,
   onClick,
+  onResize,
   style,
 }: {
   task: Task;
   onClick?: () => void;
+  onResize?: (taskId: string, newDuration: number) => void;
   style?: React.CSSProperties;
 }) {
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStartY, setResizeStartY] = useState(0);
+  const [initialDuration, setInitialDuration] = useState(task.duration || 30);
+  const justResizedRef = useRef(false);
+
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: task.id,
     data: { task },
+    disabled: isResizing,
   });
+
+  const height = getHeightFromDuration(task.duration);
+
+  const handleResizeStart = (e: React.MouseEvent | React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    justResizedRef.current = true;
+    setResizeStartY(e.clientY);
+    setInitialDuration(task.duration || 30);
+  };
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = e.clientY - resizeStartY;
+      // Convert pixels to minutes (HOUR_HEIGHT px = 60 min)
+      const deltaMinutes = (deltaY / HOUR_HEIGHT) * 60;
+      // Snap to 15 min increments, min 15 min
+      const newDuration = Math.max(15, Math.round((initialDuration + deltaMinutes) / 15) * 15);
+      
+      if (onResize && newDuration !== task.duration) {
+        onResize(task.id, newDuration);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      setTimeout(() => {
+        justResizedRef.current = false;
+      }, 100);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing, resizeStartY, initialDuration, task.id, task.duration, onResize]);
 
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
+      {...(isResizing ? {} : listeners)}
       {...attributes}
       onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
+        if (!isResizing && !justResizedRef.current) {
+          e.stopPropagation();
+          onClick?.();
+        }
       }}
-      style={style}
+      style={{ ...style, height: `${height}px`, minHeight: "28px" }}
       className={cn(
-        "absolute left-0.5 right-0.5 px-1.5 py-1 rounded text-xs cursor-grab active:cursor-grabbing touch-none overflow-hidden",
+        "absolute left-0.5 right-0.5 px-1.5 py-1 rounded text-xs cursor-grab active:cursor-grabbing touch-none overflow-hidden group",
         "bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--border-strong)]",
         task.status === "done" && "opacity-50",
         task.priority === "non-negotiable" && "border-l-2 border-l-red-500",
-        isDragging && "opacity-30 z-50"
+        task.priority === "critical" && "border-l-2 border-l-red-500",
+        task.priority === "high" && "border-l-2 border-l-amber-500",
+        isDragging && "opacity-30 z-50",
+        isResizing && "z-50 ring-2 ring-blue-500/50"
       )}
     >
       <div className="font-medium truncate text-[var(--text-primary)] text-[11px]">
@@ -102,6 +165,22 @@ function TimedTask({
       {task.dueTime && (
         <div className="text-[10px] text-[var(--text-tertiary)]">
           {task.dueTime.substring(0, 5)}
+        </div>
+      )}
+      
+      {/* Resize handle */}
+      {onResize && (
+        <div 
+          onMouseDown={handleResizeStart}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            handleResizeStart(e);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize bg-transparent hover:bg-blue-500/10 transition-all z-20 touch-none group/resize"
+        >
+          {/* Resize indicator bar */}
+          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-[var(--border-default)] opacity-0 group-hover:opacity-100 group-hover/resize:bg-blue-400 transition-opacity" />
         </div>
       )}
     </div>
@@ -201,6 +280,7 @@ export function TimeWeekCalendar({
   tasks,
   onTaskClick,
   onTaskMove,
+  onTaskResize,
 }: TimeWeekCalendarProps) {
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -475,9 +555,9 @@ export function TimeWeekCalendar({
                         key={task.id}
                         task={task}
                         onClick={() => onTaskClick?.(task)}
+                        onResize={onTaskResize}
                         style={{
                           top: `${top}px`,
-                          minHeight: "32px",
                         }}
                       />
                     );
