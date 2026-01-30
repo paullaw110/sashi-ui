@@ -23,10 +23,6 @@ import {
   addWeeks,
   subWeeks,
   setHours,
-  setMinutes,
-  getHours,
-  getMinutes,
-  isSameDay,
 } from "date-fns";
 
 type Task = {
@@ -59,13 +55,6 @@ function parseTimeToMinutes(time: string | null): number | null {
   return hours * 60 + minutes;
 }
 
-// Format minutes to time string
-function formatMinutesToTime(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-}
-
 // Calculate top position for a time
 function getTopPosition(time: string | null): number {
   const minutes = parseTimeToMinutes(time);
@@ -74,8 +63,8 @@ function getTopPosition(time: string | null): number {
   return ((minutes - startMinutes) / 60) * HOUR_HEIGHT;
 }
 
-// Draggable task component
-function TaskItem({
+// Draggable timed task (positioned absolutely in hour grid)
+function TimedTask({
   task,
   onClick,
   style,
@@ -89,8 +78,6 @@ function TaskItem({
     data: { task },
   });
 
-  const hasTime = !!task.dueTime;
-
   return (
     <div
       ref={setNodeRef}
@@ -102,26 +89,26 @@ function TaskItem({
       }}
       style={style}
       className={cn(
-        "absolute left-1 right-1 px-2 py-1 rounded text-xs cursor-grab active:cursor-grabbing touch-none transition-colors",
+        "absolute left-0.5 right-0.5 px-1.5 py-1 rounded text-xs cursor-grab active:cursor-grabbing touch-none overflow-hidden",
         "bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--border-strong)]",
-        task.status === "done" && "opacity-50 line-through",
+        task.status === "done" && "opacity-50",
         task.priority === "non-negotiable" && "border-l-2 border-l-red-500",
         isDragging && "opacity-30 z-50"
       )}
     >
-      <div className="font-medium truncate text-[var(--text-primary)]">
+      <div className="font-medium truncate text-[var(--text-primary)] text-[11px]">
         {task.name}
       </div>
-      {hasTime && (
-        <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
-          {task.dueTime?.substring(0, 5)}
+      {task.dueTime && (
+        <div className="text-[10px] text-[var(--text-tertiary)]">
+          {task.dueTime.substring(0, 5)}
         </div>
       )}
     </div>
   );
 }
 
-// All-day / no-time tasks section
+// All-day task (in the all-day row)
 function AllDayTask({
   task,
   onClick,
@@ -144,14 +131,14 @@ function AllDayTask({
         onClick?.();
       }}
       className={cn(
-        "px-2 py-1 mb-1 rounded text-xs cursor-grab active:cursor-grabbing touch-none",
+        "px-1.5 py-0.5 mb-0.5 rounded text-[11px] cursor-grab active:cursor-grabbing touch-none truncate",
         "bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--border-strong)]",
-        task.status === "done" && "opacity-50 line-through",
+        task.status === "done" && "opacity-50",
         task.priority === "non-negotiable" && "border-l-2 border-l-red-500",
         isDragging && "opacity-30"
       )}
     >
-      <span className="truncate text-[var(--text-primary)]">{task.name}</span>
+      <span className="text-[var(--text-primary)]">{task.name}</span>
     </div>
   );
 }
@@ -160,11 +147,9 @@ function AllDayTask({
 function HourSlot({
   dateKey,
   hour,
-  children,
 }: {
   dateKey: string;
   hour: number;
-  children?: React.ReactNode;
 }) {
   const slotId = `${dateKey}-${hour}`;
   const { setNodeRef, isOver } = useDroppable({ id: slotId });
@@ -173,98 +158,41 @@ function HourSlot({
     <div
       ref={setNodeRef}
       className={cn(
-        "border-t border-[var(--border-subtle)] relative",
+        "border-t border-[var(--border-subtle)]",
         isOver && "bg-blue-500/10"
       )}
       style={{ height: HOUR_HEIGHT }}
-    >
-      {children}
-    </div>
+    />
   );
 }
 
-// Day column with hour slots
-function DayColumn({
-  day,
-  timedTasks,
-  allDayTasks,
-  isCurrentDay,
+// Droppable all-day cell
+function AllDayCell({
+  dateKey,
+  tasks,
   onTaskClick,
 }: {
-  day: Date;
-  timedTasks: Task[];
-  allDayTasks: Task[];
-  isCurrentDay: boolean;
+  dateKey: string;
+  tasks: Task[];
   onTaskClick?: (task: Task) => void;
 }) {
-  const dateKey = format(day, "yyyy-MM-dd");
-  const { setNodeRef: setAllDayRef, isOver: isOverAllDay } = useDroppable({
-    id: `${dateKey}-allday`,
-  });
+  const { setNodeRef, isOver } = useDroppable({ id: `${dateKey}-allday` });
 
   return (
-    <div className="flex-1 min-w-0 border-r border-[var(--border-subtle)] last:border-r-0">
-      {/* Day header */}
-      <div
-        className={cn(
-          "sticky top-0 z-10 px-2 py-2 text-center border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)]",
-          isCurrentDay && "bg-[var(--bg-surface)]"
-        )}
-      >
-        <div className="text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest">
-          {format(day, "EEE")}
-        </div>
-        <div
-          className={cn(
-            "text-lg font-display",
-            isCurrentDay
-              ? "text-[var(--text-primary)] font-semibold"
-              : "text-[var(--text-tertiary)]"
-          )}
-        >
-          {format(day, "d")}
-        </div>
-      </div>
-
-      {/* All-day section */}
-      <div
-        ref={setAllDayRef}
-        className={cn(
-          "min-h-[40px] px-1 py-1 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]",
-          isOverAllDay && "bg-blue-500/10"
-        )}
-      >
-        {allDayTasks.map((task) => (
-          <AllDayTask
-            key={task.id}
-            task={task}
-            onClick={() => onTaskClick?.(task)}
-          />
-        ))}
-      </div>
-
-      {/* Hour slots */}
-      <div className="relative">
-        {HOURS.map((hour) => (
-          <HourSlot key={hour} dateKey={dateKey} hour={hour} />
-        ))}
-
-        {/* Positioned timed tasks */}
-        {timedTasks.map((task) => {
-          const top = getTopPosition(task.dueTime);
-          return (
-            <TaskItem
-              key={task.id}
-              task={task}
-              onClick={() => onTaskClick?.(task)}
-              style={{
-                top: `${top}px`,
-                minHeight: "28px",
-              }}
-            />
-          );
-        })}
-      </div>
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "flex-1 min-w-0 border-r border-[var(--border-subtle)] last:border-r-0 px-0.5 py-0.5",
+        isOver && "bg-blue-500/10"
+      )}
+    >
+      {tasks.map((task) => (
+        <AllDayTask
+          key={task.id}
+          task={task}
+          onClick={() => onTaskClick?.(task)}
+        />
+      ))}
     </div>
   );
 }
@@ -291,7 +219,7 @@ export function TimeWeekCalendar({
 
   // Scroll to 8am on mount
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && currentDate) {
       const scrollTo = (8 - 6) * HOUR_HEIGHT; // 8am position
       scrollRef.current.scrollTop = scrollTo;
     }
@@ -307,10 +235,7 @@ export function TimeWeekCalendar({
 
   // Group tasks by date and time
   const tasksByDate = useMemo(() => {
-    const map = new Map<
-      string,
-      { timed: Task[]; allDay: Task[] }
-    >();
+    const map = new Map<string, { timed: Task[]; allDay: Task[] }>();
 
     weekDays.forEach((day) => {
       map.set(format(day, "yyyy-MM-dd"), { timed: [], allDay: [] });
@@ -332,6 +257,23 @@ export function TimeWeekCalendar({
     return map;
   }, [tasks, weekDays]);
 
+  // Check if any day has all-day tasks
+  const hasAllDayTasks = useMemo(() => {
+    for (const [, data] of tasksByDate) {
+      if (data.allDay.length > 0) return true;
+    }
+    return false;
+  }, [tasksByDate]);
+
+  // Get max number of all-day tasks for any day
+  const maxAllDayTasks = useMemo(() => {
+    let max = 0;
+    for (const [, data] of tasksByDate) {
+      max = Math.max(max, data.allDay.length);
+    }
+    return max;
+  }, [tasksByDate]);
+
   const activeTask = useMemo(
     () => tasks.find((t) => t.id === activeId) || null,
     [activeId, tasks]
@@ -351,8 +293,7 @@ export function TimeWeekCalendar({
       const taskId = active.id as string;
       const overId = over.id as string;
 
-      // Parse the drop target
-      // Format: "YYYY-MM-DD-HH" or "YYYY-MM-DD-allday"
+      // Parse the drop target: "YYYY-MM-DD-HH" or "YYYY-MM-DD-allday"
       const parts = overId.split("-");
       if (parts.length < 4) return;
 
@@ -362,7 +303,8 @@ export function TimeWeekCalendar({
       const newDate = new Date(dateKey + "T12:00:00");
 
       if (hourOrAllDay === "allday") {
-        onTaskMove(taskId, newDate, undefined);
+        // Dropped on all-day section - clear time
+        onTaskMove(taskId, newDate, "");
       } else {
         const hour = parseInt(hourOrAllDay, 10);
         const newTime = `${hour.toString().padStart(2, "0")}:00`;
@@ -383,9 +325,14 @@ export function TimeWeekCalendar({
 
   if (!currentDate) {
     return (
-      <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)] h-[600px] animate-pulse" />
+      <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)] h-full animate-pulse" />
     );
   }
+
+  // Calculate all-day section height based on content
+  const allDayHeight = hasAllDayTasks
+    ? Math.min(Math.max(maxAllDayTasks * 24 + 8, 40), 120) // min 40px, max 120px
+    : 0;
 
   return (
     <DndContext
@@ -421,16 +368,74 @@ export function TimeWeekCalendar({
           </div>
         </div>
 
-        {/* Scrollable grid */}
+        {/* Day headers (sticky) */}
+        <div className="flex border-b border-[var(--border-subtle)] shrink-0">
+          {/* Time column spacer */}
+          <div className="w-12 shrink-0 border-r border-[var(--border-subtle)]" />
+          
+          {/* Day headers */}
+          {weekDays.map((day) => {
+            const isCurrentDay = isToday(day);
+            return (
+              <div
+                key={format(day, "yyyy-MM-dd")}
+                className={cn(
+                  "flex-1 min-w-0 px-2 py-2 text-center border-r border-[var(--border-subtle)] last:border-r-0",
+                  isCurrentDay && "bg-[var(--bg-surface)]"
+                )}
+              >
+                <div className="text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest">
+                  {format(day, "EEE")}
+                </div>
+                <div
+                  className={cn(
+                    "text-lg font-display",
+                    isCurrentDay
+                      ? "text-[var(--text-primary)] font-semibold"
+                      : "text-[var(--text-tertiary)]"
+                  )}
+                >
+                  {format(day, "d")}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* All-day section (if there are any all-day tasks) */}
+        {hasAllDayTasks && (
+          <div className="flex border-b border-[var(--border-subtle)] shrink-0 bg-[var(--bg-base)]">
+            {/* Label */}
+            <div className="w-12 shrink-0 border-r border-[var(--border-subtle)] px-1 py-1 text-[10px] text-[var(--text-quaternary)]">
+              All day
+            </div>
+            
+            {/* All-day cells with scrollable content */}
+            <div 
+              className="flex flex-1 overflow-y-auto"
+              style={{ maxHeight: `${allDayHeight}px` }}
+            >
+              {weekDays.map((day) => {
+                const dateKey = format(day, "yyyy-MM-dd");
+                const dayData = tasksByDate.get(dateKey);
+                return (
+                  <AllDayCell
+                    key={dateKey}
+                    dateKey={dateKey}
+                    tasks={dayData?.allDay || []}
+                    onTaskClick={onTaskClick}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Scrollable time grid */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
           <div className="flex min-w-0">
             {/* Time labels */}
             <div className="w-12 shrink-0 border-r border-[var(--border-subtle)]">
-              {/* Header spacer */}
-              <div className="h-[52px] border-b border-[var(--border-subtle)]" />
-              {/* All-day spacer */}
-              <div className="h-[40px] border-b border-[var(--border-subtle)]" />
-              {/* Hour labels */}
               {HOURS.map((hour) => (
                 <div
                   key={hour}
@@ -445,20 +450,39 @@ export function TimeWeekCalendar({
             {/* Day columns */}
             {weekDays.map((day) => {
               const dateKey = format(day, "yyyy-MM-dd");
-              const dayData = tasksByDate.get(dateKey) || {
-                timed: [],
-                allDay: [],
-              };
+              const dayData = tasksByDate.get(dateKey);
+              const timedTasks = dayData?.timed || [];
+              const isCurrentDay = isToday(day);
 
               return (
-                <DayColumn
+                <div
                   key={dateKey}
-                  day={day}
-                  timedTasks={dayData.timed}
-                  allDayTasks={dayData.allDay}
-                  isCurrentDay={isToday(day)}
-                  onTaskClick={onTaskClick}
-                />
+                  className={cn(
+                    "flex-1 min-w-0 border-r border-[var(--border-subtle)] last:border-r-0 relative",
+                    isCurrentDay && "bg-[var(--bg-surface)]/30"
+                  )}
+                >
+                  {/* Hour slots (for drop targets) */}
+                  {HOURS.map((hour) => (
+                    <HourSlot key={hour} dateKey={dateKey} hour={hour} />
+                  ))}
+
+                  {/* Positioned timed tasks */}
+                  {timedTasks.map((task) => {
+                    const top = getTopPosition(task.dueTime);
+                    return (
+                      <TimedTask
+                        key={task.id}
+                        task={task}
+                        onClick={() => onTaskClick?.(task)}
+                        style={{
+                          top: `${top}px`,
+                          minHeight: "32px",
+                        }}
+                      />
+                    );
+                  })}
+                </div>
               );
             })}
           </div>
@@ -468,7 +492,7 @@ export function TimeWeekCalendar({
       {/* Drag overlay */}
       <DragOverlay>
         {activeTask ? (
-          <div className="px-3 py-2 rounded bg-[var(--bg-active)] shadow-xl border border-[var(--border-strong)] text-sm text-[var(--text-primary)] cursor-grabbing font-medium">
+          <div className="px-3 py-2 rounded bg-[var(--bg-active)] shadow-xl border border-[var(--border-strong)] text-xs text-[var(--text-primary)] cursor-grabbing font-medium max-w-[150px] truncate">
             {activeTask.name}
           </div>
         ) : null}
