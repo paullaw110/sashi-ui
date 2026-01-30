@@ -45,7 +45,7 @@ interface WeekCalendarProps {
   onTasksMove?: (taskIds: string[], newDate: Date) => void;
 }
 
-// Get status display text for badge
+// Get status display text
 function getStatusDisplayText(status: string) {
   switch (status) {
     case "done":
@@ -53,23 +53,9 @@ function getStatusDisplayText(status: string) {
     case "in_progress":
       return "In Progress";
     case "waiting":
-      return "Waiting On Client";
+      return "Waiting";
     default:
       return "Not Started";
-  }
-}
-
-// Get status badge background color
-function getStatusBgColor(status: string) {
-  switch (status) {
-    case "done":
-      return "bg-green-500/20 text-green-400";
-    case "in_progress":
-      return "bg-blue-500/20 text-blue-400";
-    case "waiting":
-      return "bg-amber-500/20 text-amber-400";
-    default:
-      return "bg-neutral-500/20 text-neutral-400";
   }
 }
 
@@ -155,12 +141,10 @@ function TaskItem({
         }
       }}
       className={cn(
-        "text-sm px-2 py-2 rounded bg-[var(--bg-surface)] hover:bg-[var(--bg-active)] cursor-grab active:cursor-grabbing text-[var(--text-primary)] transition-colors border border-[var(--border-default)] touch-none",
+        "text-sm px-2 py-2 rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] cursor-grab active:cursor-grabbing text-[var(--text-primary)] transition-colors border border-transparent touch-none",
         task.status === "done" && "line-through text-[var(--text-tertiary)]",
-        task.priority === "critical" && "border-l-2 border-l-red-500/30",
-        task.priority === "high" && "border-l-2 border-l-amber-500/30",
-        task.priority === "medium" && "border-l-2 border-l-blue-500/30",
-        !isSelected && !task.priority && "hover:border-[#2a2a2a]",
+        // Only non-negotiable gets a highlight
+        task.priority === "non-negotiable" && "border-l-2 border-l-red-500/50",
         isSelected && "border-blue-500/30 bg-blue-500/10",
         (isDragging || isDraggedAlong) && "opacity-30"
       )}
@@ -174,7 +158,7 @@ function TaskItem({
             </span>
           )}
         </div>
-        <span className={cn("text-xs px-1.5 py-0.5 rounded w-fit", getStatusBgColor(task.status))}>
+        <span className="text-xs text-[var(--text-quaternary)]">
           {getStatusDisplayText(task.status)}
         </span>
       </div>
