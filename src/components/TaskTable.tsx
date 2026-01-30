@@ -266,7 +266,7 @@ export function TaskTable({
         <div className="w-20 sm:w-24 hidden md:block">Organization</div>
         <div className="w-20 sm:w-24 hidden lg:block">Project</div>
         <div className="w-20 sm:w-24 hidden sm:block">Priority</div>
-        <div className="w-16 sm:w-20 hidden sm:block">Status</div>
+        <div className="w-20 sm:w-24 hidden sm:block">Status</div>
         <div className="w-12 sm:w-16 text-right">Due</div>
       </div>
 
@@ -346,7 +346,7 @@ export function TaskTable({
 
             {/* Status - hidden on mobile */}
             <div 
-              className="w-16 sm:w-20 shrink-0 hidden sm:block"
+              className="w-20 sm:w-24 shrink-0 hidden sm:block"
               onClick={(e) => e.stopPropagation()}
             >
               <InlineSelectCell
@@ -403,7 +403,7 @@ export function TaskTable({
             <div className="w-20 sm:w-24 shrink-0 hidden md:block" />
             <div className="w-20 sm:w-24 shrink-0 hidden lg:block" />
             <div className="w-20 sm:w-24 shrink-0 hidden sm:block" />
-            <div className="w-16 sm:w-20 shrink-0 hidden sm:block" />
+            <div className="w-20 sm:w-24 shrink-0 hidden sm:block" />
             <div className="w-12 sm:w-16 shrink-0" />
           </div>
         )}
