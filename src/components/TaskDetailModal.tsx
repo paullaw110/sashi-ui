@@ -221,18 +221,7 @@ export function TaskDetailModal({
           <PropertyRow icon={CircleDot} label="Status">
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className="h-8 w-auto border-none bg-transparent hover:bg-[#1a1a1a] px-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "w-2 h-2 rounded-full",
-                      status === "done" && "bg-green-400",
-                      status === "in_progress" && "bg-blue-400",
-                      status === "waiting" && "bg-amber-400",
-                      status === "not_started" && "bg-[#525252]"
-                    )}
-                  />
-                  <SelectValue />
-                </div>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {STATUSES.map((s) => (
