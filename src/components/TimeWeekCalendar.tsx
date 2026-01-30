@@ -113,10 +113,14 @@ function TimedTask({
   style?: React.CSSProperties;
 }) {
   const [isResizing, setIsResizing] = useState(false);
-  const [resizeStartY, setResizeStartY] = useState(0);
-  const [initialDuration, setInitialDuration] = useState(task.duration || 30);
   const [previewDuration, setPreviewDuration] = useState<number | null>(null);
   const justResizedRef = useRef(false);
+  const resizeRef = useRef<{
+    startY: number;
+    initialDuration: number;
+    pointerId: number;
+  } | null>(null);
+  const handleRef = useRef<HTMLDivElement>(null);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: task.id,
@@ -127,51 +131,60 @@ function TimedTask({
   const displayDuration = previewDuration ?? task.duration ?? 30;
   const height = getHeightFromDuration(displayDuration);
 
-  const handleResizeStart = (e: React.MouseEvent | React.PointerEvent) => {
+  // Pointer-based resize for proper drag behavior
+  const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Capture pointer for reliable tracking
+    if (handleRef.current) {
+      handleRef.current.setPointerCapture(e.pointerId);
+    }
+    
+    resizeRef.current = {
+      startY: e.clientY,
+      initialDuration: task.duration || 30,
+      pointerId: e.pointerId,
+    };
     setIsResizing(true);
     justResizedRef.current = true;
-    setResizeStartY(e.clientY);
-    setInitialDuration(task.duration || 30);
   };
 
-  useEffect(() => {
-    if (!isResizing) return;
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!resizeRef.current || !isResizing) return;
+    
+    const deltaY = e.clientY - resizeRef.current.startY;
+    // Convert pixels to minutes (HOUR_HEIGHT px = 60 min)
+    const deltaMinutes = (deltaY / HOUR_HEIGHT) * 60;
+    // Snap to 15 min increments, min 15 min
+    const newDuration = Math.max(15, Math.round((resizeRef.current.initialDuration + deltaMinutes) / 15) * 15);
+    
+    setPreviewDuration(newDuration);
+    onResizePreview?.(task.id, newDuration);
+  };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaY = e.clientY - resizeStartY;
-      // Convert pixels to minutes (HOUR_HEIGHT px = 60 min)
-      const deltaMinutes = (deltaY / HOUR_HEIGHT) * 60;
-      // Snap to 15 min increments, min 15 min
-      const newDuration = Math.max(15, Math.round((initialDuration + deltaMinutes) / 15) * 15);
-      
-      // Update preview
-      setPreviewDuration(newDuration);
-      onResizePreview?.(task.id, newDuration);
-    };
-
-    const handleMouseUp = () => {
-      // Commit the resize
-      if (previewDuration && onResize && previewDuration !== task.duration) {
-        onResize(task.id, previewDuration);
-      }
-      setIsResizing(false);
-      setPreviewDuration(null);
-      onResizePreview?.(task.id, null);
-      setTimeout(() => {
-        justResizedRef.current = false;
-      }, 100);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isResizing, resizeStartY, initialDuration, task.id, task.duration, onResize, previewDuration, onResizePreview]);
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!resizeRef.current) return;
+    
+    // Release pointer capture
+    if (handleRef.current) {
+      handleRef.current.releasePointerCapture(e.pointerId);
+    }
+    
+    // Commit the resize if duration changed
+    if (previewDuration !== null && onResize && previewDuration !== task.duration) {
+      onResize(task.id, previewDuration);
+    }
+    
+    resizeRef.current = null;
+    setIsResizing(false);
+    setPreviewDuration(null);
+    onResizePreview?.(task.id, null);
+    
+    setTimeout(() => {
+      justResizedRef.current = false;
+    }, 100);
+  };
 
   // Calculate end time for display
   const startMinutes = parseTimeToMinutes(task.dueTime) || 0;
@@ -217,11 +230,11 @@ function TimedTask({
       {/* Resize handle with visual indicator */}
       {onResize && (
         <div 
-          onMouseDown={handleResizeStart}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            handleResizeStart(e);
-          }}
+          ref={handleRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
           onClick={(e) => e.stopPropagation()}
           className="absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize bg-transparent hover:bg-blue-500/10 transition-all z-20 touch-none group/resize flex items-end justify-center"
         >
