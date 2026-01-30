@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Calendar,
@@ -13,6 +13,7 @@ import {
   CircleDot,
   CalendarDays,
   Plus,
+  MoreHorizontal,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import {
   Command,
@@ -119,8 +125,12 @@ export function TaskDetailModal({
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [projectId, setProjectId] = useState<string | null>(null);
   const [description, setDescription] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Track if this is a newly created task (so we know when to auto-save)
+  const [localTaskId, setLocalTaskId] = useState<string | null>(null);
+  const hasCreatedRef = useRef(false);
 
   // Local lists (for inline creates)
   const [organizations, setOrganizations] = useState(initialOrganizations);
@@ -157,6 +167,8 @@ export function TaskDetailModal({
       setOrganizationId(task.organizationId);
       setProjectId(task.projectId);
       setDescription(task.description || "");
+      setLocalTaskId(task.id);
+      hasCreatedRef.current = true;
     } else {
       // Reset for new task
       setName("");
@@ -167,8 +179,149 @@ export function TaskDetailModal({
       setOrganizationId(null);
       setProjectId(null);
       setDescription("");
+      setLocalTaskId(null);
+      hasCreatedRef.current = false;
     }
   }, [task, isOpen]);
+
+  // Auto-save function for existing tasks
+  const autoSave = useCallback(async (updates: Partial<Task>) => {
+    const taskId = localTaskId || task?.id;
+    if (!taskId) return;
+
+    setIsSaving(true);
+    try {
+      await onSave({ id: taskId, ...updates });
+    } catch (error) {
+      toast.error("Failed to save");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [localTaskId, task?.id, onSave]);
+
+  // Create new task when name is entered
+  const createTask = useCallback(async (taskName: string) => {
+    if (!taskName.trim() || hasCreatedRef.current) return;
+
+    hasCreatedRef.current = true;
+    setIsSaving(true);
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: taskName.trim(),
+          status,
+          priority,
+          dueDate: dueDate ? `${format(dueDate, "yyyy-MM-dd")}T12:00:00.000Z` : null,
+          dueTime: dueTime || null,
+          organizationId,
+          projectId,
+          description: description || null,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to create task");
+
+      const { task: newTask } = await response.json();
+      setLocalTaskId(newTask.id);
+      router.refresh();
+    } catch (error) {
+      hasCreatedRef.current = false;
+      toast.error("Failed to create task");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [status, priority, dueDate, dueTime, organizationId, projectId, description, router]);
+
+  // Handle name blur - create task if new, or save if existing
+  const handleNameBlur = useCallback(() => {
+    if (isCreating && !hasCreatedRef.current && name.trim()) {
+      createTask(name);
+    } else if (hasCreatedRef.current && name.trim()) {
+      autoSave({ name: name.trim() });
+    }
+  }, [isCreating, name, createTask, autoSave]);
+
+  // Handle field changes with auto-save
+  const handleStatusChange = useCallback((newStatus: string) => {
+    setStatus(newStatus);
+    if (hasCreatedRef.current) {
+      autoSave({ status: newStatus });
+    }
+  }, [autoSave]);
+
+  const handlePriorityChange = useCallback((newPriority: string | null) => {
+    setPriority(newPriority);
+    if (hasCreatedRef.current) {
+      autoSave({ priority: newPriority });
+    }
+  }, [autoSave]);
+
+  const handleDateChange = useCallback((newDate: Date | undefined) => {
+    setDueDate(newDate);
+    if (hasCreatedRef.current) {
+      autoSave({ 
+        dueDate: newDate ? `${format(newDate, "yyyy-MM-dd")}T12:00:00.000Z` : null 
+      });
+    }
+  }, [autoSave]);
+
+  const handleTimeChange = useCallback((newTime: string) => {
+    setDueTime(newTime);
+    if (hasCreatedRef.current) {
+      autoSave({ dueTime: newTime || null });
+    }
+  }, [autoSave]);
+
+  const handleOrgChange = useCallback((newOrgId: string | null) => {
+    setOrganizationId(newOrgId);
+    // Clear project if it doesn't belong to new org
+    if (newOrgId && projectId) {
+      const project = projects.find((p) => p.id === projectId);
+      if (project?.organizationId !== newOrgId) {
+        setProjectId(null);
+        if (hasCreatedRef.current) {
+          autoSave({ organizationId: newOrgId, projectId: null });
+          return;
+        }
+      }
+    }
+    if (hasCreatedRef.current) {
+      autoSave({ organizationId: newOrgId });
+    }
+  }, [projectId, projects, autoSave]);
+
+  const handleProjectChange = useCallback((newProjectId: string | null, projectOrgId?: string | null) => {
+    setProjectId(newProjectId);
+    // Auto-set organization if project has one
+    if (newProjectId && projectOrgId && !organizationId) {
+      setOrganizationId(projectOrgId);
+      if (hasCreatedRef.current) {
+        autoSave({ projectId: newProjectId, organizationId: projectOrgId });
+        return;
+      }
+    }
+    if (hasCreatedRef.current) {
+      autoSave({ projectId: newProjectId });
+    }
+  }, [organizationId, autoSave]);
+
+  // Debounced description save
+  const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const handleDescriptionChange = useCallback((newDescription: string) => {
+    setDescription(newDescription);
+    
+    if (descriptionTimeoutRef.current) {
+      clearTimeout(descriptionTimeoutRef.current);
+    }
+    
+    if (hasCreatedRef.current) {
+      descriptionTimeoutRef.current = setTimeout(() => {
+        autoSave({ description: newDescription || null });
+      }, 500);
+    }
+  }, [autoSave]);
 
   // Filter projects by selected organization
   const filteredProjects = organizationId
@@ -199,14 +352,11 @@ export function TaskDetailModal({
       
       const { organization: newOrg } = await response.json();
       
-      // Add to local list and select
       setOrganizations((prev) => [...prev, newOrg]);
-      setOrganizationId(newOrg.id);
+      handleOrgChange(newOrg.id);
       setOrgSearch("");
       setOrgOpen(false);
       toast.success(`Created "${newOrg.name}"`);
-      
-      // Refresh to update server state
       router.refresh();
     } catch (error) {
       toast.error("Failed to create organization");
@@ -234,14 +384,11 @@ export function TaskDetailModal({
       
       const { project: newProject } = await response.json();
       
-      // Add to local list and select
       setProjects((prev) => [...prev, newProject]);
-      setProjectId(newProject.id);
+      handleProjectChange(newProject.id, newProject.organizationId);
       setProjectSearch("");
       setProjectOpen(false);
       toast.success(`Created "${newProject.name}"`);
-      
-      // Refresh to update server state
       router.refresh();
     } catch (error) {
       toast.error("Failed to create project");
@@ -250,39 +397,13 @@ export function TaskDetailModal({
     }
   };
 
-  const handleSave = async () => {
-    if (!name.trim()) {
-      toast.error("Task name is required");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      await onSave({
-        id: task?.id,
-        name: name.trim(),
-        status,
-        priority,
-        dueDate: dueDate ? `${format(dueDate, "yyyy-MM-dd")}T12:00:00.000Z` : null,
-        dueTime: dueTime || null,
-        organizationId,
-        projectId,
-        description: description || null,
-      });
-      onClose();
-    } catch (error) {
-      toast.error("Failed to save task");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const handleDelete = async () => {
-    if (!task?.id || !onDelete) return;
+    const taskId = localTaskId || task?.id;
+    if (!taskId || !onDelete) return;
 
     setIsDeleting(true);
     try {
-      await onDelete(task.id);
+      await onDelete(taskId);
       onClose();
     } catch (error) {
       toast.error("Failed to delete task");
@@ -294,19 +415,57 @@ export function TaskDetailModal({
   const selectedOrg = organizations.find((o) => o.id === organizationId);
   const selectedProject = projects.find((p) => p.id === projectId);
   const selectedStatus = STATUSES.find((s) => s.value === status);
-  const selectedPriority = PRIORITIES.find((p) => p.value === priority);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4">
-          <DialogTitle className="sr-only">
-            {isCreating ? "New Task" : "Edit Task"}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="sr-only">
+              {isCreating ? "New Task" : "Edit Task"}
+            </DialogTitle>
+            {/* Saving indicator */}
+            {isSaving && (
+              <div className="flex items-center gap-1.5 text-xs text-[var(--text-quaternary)]">
+                <Loader2 size={12} className="animate-spin" />
+                Saving...
+              </div>
+            )}
+            {/* Three-dot menu for delete */}
+            {(task || localTaskId) && onDelete && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
+                    <MoreHorizontal size={16} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="text-red-400 focus:text-red-400"
+                  >
+                    {isDeleting ? (
+                      <Loader2 size={14} className="mr-2 animate-spin" />
+                    ) : (
+                      <Trash2 size={14} className="mr-2" />
+                    )}
+                    Delete task
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
           {/* Editable Title */}
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onBlur={handleNameBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
             placeholder="Task name..."
             className="text-xl font-semibold border-none bg-transparent px-0 h-auto focus-visible:ring-0 placeholder:text-[var(--text-quaternary)]"
           />
@@ -315,7 +474,7 @@ export function TaskDetailModal({
         <div className="space-y-1">
           {/* Status */}
           <PropertyRow icon={CircleDot} label="Status">
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-auto border-none bg-transparent hover:bg-[var(--bg-surface)] px-2">
                 <SelectValue />
               </SelectTrigger>
@@ -353,7 +512,7 @@ export function TaskDetailModal({
                   mode="single"
                   selected={dueDate}
                   onSelect={(date) => {
-                    setDueDate(date);
+                    handleDateChange(date);
                     setDateOpen(false);
                   }}
                   initialFocus
@@ -365,7 +524,7 @@ export function TaskDetailModal({
                       size="sm"
                       className="w-full text-red-400 hover:text-red-300 hover:bg-red-400/10"
                       onClick={() => {
-                        setDueDate(undefined);
+                        handleDateChange(undefined);
                         setDateOpen(false);
                       }}
                     >
@@ -403,14 +562,7 @@ export function TaskDetailModal({
                           key={org.id}
                           value={org.name}
                           onSelect={() => {
-                            setOrganizationId(org.id);
-                            // Clear project if it doesn't belong to new org
-                            if (projectId) {
-                              const project = projects.find((p) => p.id === projectId);
-                              if (project?.organizationId !== org.id) {
-                                setProjectId(null);
-                              }
-                            }
+                            handleOrgChange(org.id);
                             setOrgSearch("");
                             setOrgOpen(false);
                           }}
@@ -420,7 +572,6 @@ export function TaskDetailModal({
                         </CommandItem>
                       ))}
                     </CommandGroup>
-                    {/* Create new option */}
                     {orgSearch.trim() && !orgExists && (
                       <>
                         <CommandSeparator />
@@ -449,8 +600,7 @@ export function TaskDetailModal({
                         <CommandGroup>
                           <CommandItem
                             onSelect={() => {
-                              setOrganizationId(null);
-                              setProjectId(null);
+                              handleOrgChange(null);
                               setOrgSearch("");
                               setOrgOpen(false);
                             }}
@@ -493,11 +643,7 @@ export function TaskDetailModal({
                           key={project.id}
                           value={project.name}
                           onSelect={() => {
-                            setProjectId(project.id);
-                            // Auto-set organization if project has one
-                            if (project.organizationId && !organizationId) {
-                              setOrganizationId(project.organizationId);
-                            }
+                            handleProjectChange(project.id, project.organizationId);
                             setProjectSearch("");
                             setProjectOpen(false);
                           }}
@@ -507,7 +653,6 @@ export function TaskDetailModal({
                         </CommandItem>
                       ))}
                     </CommandGroup>
-                    {/* Create new option */}
                     {projectSearch.trim() && !projectExists && (
                       <>
                         <CommandSeparator />
@@ -536,7 +681,7 @@ export function TaskDetailModal({
                         <CommandGroup>
                           <CommandItem
                             onSelect={() => {
-                              setProjectId(null);
+                              handleProjectChange(null);
                               setProjectSearch("");
                               setProjectOpen(false);
                             }}
@@ -557,7 +702,7 @@ export function TaskDetailModal({
           <PropertyRow icon={Flag} label="Priority" isEmpty={!priority}>
             <Select
               value={priority || "none"}
-              onValueChange={(v) => setPriority(v === "none" ? null : v)}
+              onValueChange={(v) => handlePriorityChange(v === "none" ? null : v)}
             >
               <SelectTrigger className="h-8 w-auto border-none bg-transparent hover:bg-[var(--bg-surface)] px-2">
                 <SelectValue placeholder="Empty" />
@@ -580,7 +725,7 @@ export function TaskDetailModal({
             <Input
               type="time"
               value={dueTime}
-              onChange={(e) => setDueTime(e.target.value)}
+              onChange={(e) => handleTimeChange(e.target.value)}
               className="h-8 w-auto border-none bg-transparent hover:bg-[var(--bg-surface)] px-2"
               placeholder="--:-- --"
             />
@@ -605,44 +750,26 @@ export function TaskDetailModal({
           <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] min-h-[120px]">
             <RichEditor
               content={description}
-              onChange={setDescription}
+              onChange={handleDescriptionChange}
               placeholder="Add task description..."
               minimal
             />
           </div>
         </div>
 
-        {/* Footer */}
-        <DialogFooter className="mt-6 pt-4 border-t border-[var(--border-default)]">
-          <div className="flex items-center justify-between w-full">
-            {task && onDelete ? (
-              <Button
-                variant="ghost"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
-              >
-                {isDeleting ? (
-                  <Loader2 size={14} className="animate-spin mr-2" />
-                ) : (
-                  <Trash2 size={14} className="mr-2" />
-                )}
-                Delete
-              </Button>
-            ) : (
-              <div />
-            )}
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
-                {isSaving && <Loader2 size={14} className="animate-spin mr-2" />}
-                Save
-              </Button>
-            </div>
+        {/* Create button for new tasks without a name yet */}
+        {isCreating && !hasCreatedRef.current && (
+          <div className="mt-4 pt-4 border-t border-[var(--border-default)]">
+            <Button
+              onClick={() => name.trim() && createTask(name)}
+              disabled={!name.trim() || isSaving}
+              className="w-full"
+            >
+              {isSaving && <Loader2 size={14} className="animate-spin mr-2" />}
+              Create Task
+            </Button>
           </div>
-        </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );
