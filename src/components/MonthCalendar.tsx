@@ -9,7 +9,6 @@ import {
   DragStartEvent,
   DragEndEvent,
   PointerSensor,
-  TouchSensor,
   useSensor,
   useSensors,
   useDroppable,
@@ -93,13 +92,52 @@ function getStatusLabel(status: string) {
   }
 }
 
-// Enhanced draggable task component with status indicators
+// Selection box component for marquee selection
+function SelectionBox({
+  start,
+  end,
+  containerRef,
+}: {
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  if (!containerRef.current) return null;
+
+  const rect = containerRef.current.getBoundingClientRect();
+  const left = Math.min(start.x, end.x) - rect.left;
+  const top = Math.min(start.y, end.y) - rect.top;
+  const width = Math.abs(end.x - start.x);
+  const height = Math.abs(end.y - start.y);
+
+  return (
+    <div
+      className="absolute pointer-events-none border-2 border-blue-500/50 bg-blue-500/10 z-50 rounded"
+      style={{
+        left: `${left}px`,
+        top: `${top}px`,
+        width: `${width}px`,
+        height: `${height}px`,
+      }}
+    />
+  );
+}
+
+// Enhanced draggable task component with selection support
 const TaskItem = memo(function TaskItem({
   task,
+  isSelected,
+  isDraggedAlong,
+  onSelect,
   onClick,
+  registerRef,
 }: {
   task: Task;
+  isSelected: boolean;
+  isDraggedAlong: boolean;
+  onSelect: (e: React.MouseEvent) => void;
   onClick?: () => void;
+  registerRef?: (taskId: string, element: HTMLElement | null) => void;
 }) {
   const {
     attributes,
@@ -112,12 +150,28 @@ const TaskItem = memo(function TaskItem({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        registerRef?.(task.id, node);
+      }}
       {...listeners}
       {...attributes}
+      data-task-item
       onClick={(e) => {
         e.stopPropagation();
-        onClick?.();
+        // If shift/cmd/ctrl is held, handle selection
+        if (e.shiftKey || e.metaKey || e.ctrlKey) {
+          onSelect(e);
+        } else {
+          onClick?.();
+        }
+      }}
+      onMouseDown={(e) => {
+        // Handle selection on mousedown for multi-select drag
+        if (e.shiftKey || e.metaKey || e.ctrlKey) {
+          e.preventDefault();
+          onSelect(e);
+        }
       }}
       className={cn(
         "text-[10px] px-1.5 py-1 mb-1 rounded bg-[#1a1a1a] hover:bg-[#222] cursor-grab active:cursor-grabbing text-[#a3a3a3] transition-colors border border-transparent hover:border-[#333] touch-none",
@@ -125,7 +179,9 @@ const TaskItem = memo(function TaskItem({
         task.priority === "critical" && "border-l-2 border-l-red-500/50",
         task.priority === "high" && "border-l-2 border-l-amber-500/50",
         task.priority === "medium" && "border-l-2 border-l-blue-500/50",
-        isDragging && "opacity-30"
+        !isSelected && !task.priority && "hover:border-[#333]",
+        isSelected && "border-blue-500/30 bg-blue-500/10",
+        (isDragging || isDraggedAlong) && "opacity-30"
       )}
     >
       <div className="flex items-center gap-1">
@@ -152,14 +208,22 @@ const DayCell = memo(function DayCell({
   tasks,
   isCurrentDay,
   isInCurrentMonth,
+  selectedTasks,
+  draggingTaskIds,
+  onTaskSelect,
   onTaskClick,
+  registerRef,
   todayRef,
 }: {
   day: Date;
   tasks: Task[];
   isCurrentDay: boolean;
   isInCurrentMonth: boolean;
+  selectedTasks: Set<string>;
+  draggingTaskIds: Set<string>;
+  onTaskSelect: (taskId: string, e: React.MouseEvent) => void;
   onTaskClick?: (task: Task) => void;
+  registerRef: (taskId: string, element: HTMLElement | null) => void;
   todayRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   const dateKey = format(day, "yyyy-MM-dd");
@@ -201,7 +265,11 @@ const DayCell = memo(function DayCell({
           <TaskItem
             key={task.id}
             task={task}
+            isSelected={selectedTasks.has(task.id)}
+            isDraggedAlong={draggingTaskIds.has(task.id)}
+            onSelect={(e) => onTaskSelect(task.id, e)}
             onClick={() => onTaskClick?.(task)}
+            registerRef={registerRef}
           />
         ))}
         {tasks.length === 0 && isOver && (
@@ -218,12 +286,20 @@ const DayCell = memo(function DayCell({
 const SingleMonth = memo(function SingleMonth({
   month,
   tasksByDate,
+  selectedTasks,
+  draggingTaskIds,
+  onTaskSelect,
   onTaskClick,
+  registerRef,
   todayRef,
 }: {
   month: Date;
   tasksByDate: Map<string, Task[]>;
+  selectedTasks: Set<string>;
+  draggingTaskIds: Set<string>;
+  onTaskSelect: (taskId: string, e: React.MouseEvent) => void;
   onTaskClick?: (task: Task) => void;
+  registerRef: (taskId: string, element: HTMLElement | null) => void;
   todayRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   const monthStart = startOfMonth(month);
@@ -256,7 +332,11 @@ const SingleMonth = memo(function SingleMonth({
               tasks={dayTasks}
               isCurrentDay={isCurrentDay}
               isInCurrentMonth={isInCurrentMonth}
+              selectedTasks={selectedTasks}
+              draggingTaskIds={draggingTaskIds}
+              onTaskSelect={onTaskSelect}
               onTaskClick={onTaskClick}
+              registerRef={registerRef}
               todayRef={isCurrentDay ? todayRef : undefined}
             />
           );
@@ -270,9 +350,21 @@ export function MonthCalendar({
   tasks,
   onTaskClick,
   onTaskMove,
+  onTasksMove,
 }: MonthCalendarProps) {
   const [mounted, setMounted] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  const [draggingTaskIds, setDraggingTaskIds] = useState<Set<string>>(new Set());
+
+  // Marquee selection state
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
+  const [selectionEnd, setSelectionEnd] = useState<{ x: number; y: number } | null>(null);
+  const calendarGridRef = useRef<HTMLDivElement>(null);
+  const taskElementsRef = useRef<Map<string, HTMLElement>>(new Map());
+
+  // Optimistic updates: track moved tasks locally until server syncs
   const [optimisticMoves, setOptimisticMoves] = useState<Map<string, string>>(new Map());
 
   // Range of months to display
@@ -289,16 +381,143 @@ export function MonthCalendar({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
+        distance: 5,
       },
     })
   );
+
+  // Clear optimistic moves after a delay to allow server sync
+  const optimisticMovesRef = useRef(optimisticMoves);
+  optimisticMovesRef.current = optimisticMoves;
+
+  useEffect(() => {
+    if (optimisticMovesRef.current.size === 0) return;
+
+    const timer = setTimeout(() => {
+      setOptimisticMoves(new Map());
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [tasks]);
+
+  // Clear selection when tasks change (after server sync)
+  useEffect(() => {
+    setSelectedTasks(new Set());
+  }, [tasks]);
+
+  // Register task element for intersection detection
+  const registerTaskElement = useCallback((taskId: string, element: HTMLElement | null) => {
+    if (element) {
+      taskElementsRef.current.set(taskId, element);
+    } else {
+      taskElementsRef.current.delete(taskId);
+    }
+  }, []);
+
+  // Check if two rectangles intersect
+  const rectsIntersect = useCallback(
+    (selStart: { x: number; y: number }, selEnd: { x: number; y: number }, elementRect: DOMRect) => {
+      const selLeft = Math.min(selStart.x, selEnd.x);
+      const selRight = Math.max(selStart.x, selEnd.x);
+      const selTop = Math.min(selStart.y, selEnd.y);
+      const selBottom = Math.max(selStart.y, selEnd.y);
+
+      return !(
+        elementRect.right < selLeft ||
+        elementRect.left > selRight ||
+        elementRect.bottom < selTop ||
+        elementRect.top > selBottom
+      );
+    },
+    []
+  );
+
+  // Calculate which tasks are inside the selection box
+  const updateSelection = useCallback(
+    (start: { x: number; y: number }, end: { x: number; y: number }) => {
+      const newSelected = new Set<string>();
+
+      taskElementsRef.current.forEach((element, taskId) => {
+        const rect = element.getBoundingClientRect();
+        if (rectsIntersect(start, end, rect)) {
+          newSelected.add(taskId);
+        }
+      });
+
+      setSelectedTasks(newSelected);
+    },
+    [rectsIntersect]
+  );
+
+  // Marquee selection mouse handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only start selection on left click
+    if (e.button !== 0) return;
+
+    // Check if clicking on a task or interactive element
+    const target = e.target as HTMLElement;
+    if (
+      target.closest("[data-task-item]") ||
+      target.closest("button") ||
+      target.closest("[data-no-select]")
+    ) {
+      return;
+    }
+
+    // Start selection
+    setIsSelecting(true);
+    setSelectionStart({ x: e.clientX, y: e.clientY });
+    setSelectionEnd({ x: e.clientX, y: e.clientY });
+    setSelectedTasks(new Set());
+  }, []);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isSelecting || !selectionStart) return;
+
+      const newEnd = { x: e.clientX, y: e.clientY };
+      setSelectionEnd(newEnd);
+      updateSelection(selectionStart, newEnd);
+    },
+    [isSelecting, selectionStart, updateSelection]
+  );
+
+  const handleMouseUp = useCallback(() => {
+    if (isSelecting) {
+      setIsSelecting(false);
+      setSelectionStart(null);
+      setSelectionEnd(null);
+    }
+  }, [isSelecting]);
+
+  // Global mouse up listener
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isSelecting) {
+        setIsSelecting(false);
+        setSelectionStart(null);
+        setSelectionEnd(null);
+      }
+    };
+
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    return () => window.removeEventListener("mouseup", handleGlobalMouseUp);
+  }, [isSelecting]);
+
+  // Clear selection on escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedTasks(new Set());
+        setIsSelecting(false);
+        setSelectionStart(null);
+        setSelectionEnd(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Initialize on client only
   useEffect(() => {
@@ -322,11 +541,6 @@ export function MonthCalendar({
       return () => clearTimeout(timer);
     }
   }, [mounted]);
-
-  // Clear optimistic moves when tasks prop changes
-  useEffect(() => {
-    setOptimisticMoves(new Map());
-  }, [tasks]);
 
   // Generate list of months to render
   const monthsToRender = useMemo(() => {
@@ -356,31 +570,97 @@ export function MonthCalendar({
 
   const activeTask = useMemo(() => {
     if (!activeId) return null;
-    return tasks.find(t => t.id === activeId) || null;
+    return tasks.find((t) => t.id === activeId) || null;
   }, [activeId, tasks]);
 
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+  // Get the tasks being dragged (either just the active one, or all selected if active is selected)
+  const tasksBeingDragged = useMemo(() => {
+    if (!activeId) return [];
+    if (selectedTasks.has(activeId)) {
+      return tasks.filter((t) => selectedTasks.has(t.id));
+    }
+    return tasks.filter((t) => t.id === activeId);
+  }, [activeId, selectedTasks, tasks]);
+
+  const handleTaskSelect = useCallback((taskId: string, e: React.MouseEvent) => {
+    setSelectedTasks((prev) => {
+      const next = new Set(prev);
+      if (e.metaKey || e.ctrlKey) {
+        // Toggle individual selection
+        if (next.has(taskId)) {
+          next.delete(taskId);
+        } else {
+          next.add(taskId);
+        }
+      } else {
+        // Replace selection
+        next.clear();
+        next.add(taskId);
+      }
+      return next;
+    });
   }, []);
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveId(null);
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      const draggedId = event.active.id as string;
+      setActiveId(draggedId);
 
-    if (!over || !onTaskMove) return;
+      // If dragging a selected task, all selected tasks are being dragged
+      // If dragging an unselected task, only that task is being dragged
+      if (selectedTasks.has(draggedId)) {
+        setDraggingTaskIds(new Set(selectedTasks));
+      } else {
+        setDraggingTaskIds(new Set([draggedId]));
+      }
+    },
+    [selectedTasks]
+  );
 
-    const taskId = active.id as string;
-    const targetDateKey = over.id as string;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      setActiveId(null);
+      setDraggingTaskIds(new Set());
 
-    if (/^\d{4}-\d{2}-\d{2}$/.test(targetDateKey)) {
-      setOptimisticMoves(prev => new Map(prev).set(taskId, targetDateKey));
+      if (!over) return;
+
+      const draggedId = active.id as string;
+      const targetDateKey = over.id as string;
+
+      // Validate it's a date key (YYYY-MM-DD format)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDateKey)) return;
+
       const newDate = new Date(targetDateKey + "T12:00:00");
-      onTaskMove(taskId, newDate);
-    }
-  }, [onTaskMove]);
+
+      // Determine which tasks to move
+      const taskIdsToMove = selectedTasks.has(draggedId)
+        ? Array.from(selectedTasks)
+        : [draggedId];
+
+      // Optimistically update UI for all tasks being moved
+      setOptimisticMoves((prev) => {
+        const next = new Map(prev);
+        taskIdsToMove.forEach((id) => next.set(id, targetDateKey));
+        return next;
+      });
+
+      // Call the appropriate callback
+      if (taskIdsToMove.length > 1 && onTasksMove) {
+        onTasksMove(taskIdsToMove, newDate);
+      } else if (onTaskMove) {
+        onTaskMove(draggedId, newDate);
+      }
+
+      // Clear selection after move
+      setSelectedTasks(new Set());
+    },
+    [selectedTasks, onTaskMove, onTasksMove]
+  );
 
   const handleDragCancel = useCallback(() => {
     setActiveId(null);
+    setDraggingTaskIds(new Set());
   }, []);
 
   // Infinite scroll - load more months when approaching edges
@@ -488,7 +768,10 @@ export function MonthCalendar({
         {/* Scrollable Months Container */}
         <div
           ref={containerRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden"
+          className="flex-1 overflow-y-auto overflow-x-hidden relative"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
         >
           {/* Top Sentinel for loading previous months */}
           <div ref={topSentinelRef} className="h-px" />
@@ -499,26 +782,53 @@ export function MonthCalendar({
               key={format(month, 'yyyy-MM')}
               month={month}
               tasksByDate={tasksByDate}
+              selectedTasks={selectedTasks}
+              draggingTaskIds={draggingTaskIds}
+              onTaskSelect={handleTaskSelect}
               onTaskClick={onTaskClick}
+              registerRef={registerTaskElement}
               todayRef={isSameMonth(month, new Date()) ? todayRef : undefined}
             />
           ))}
 
           {/* Bottom Sentinel for loading next months */}
           <div ref={bottomSentinelRef} className="h-px" />
+
+          {/* Selection Box */}
+          {isSelecting && selectionStart && selectionEnd && (
+            <SelectionBox
+              start={selectionStart}
+              end={selectionEnd}
+              containerRef={containerRef}
+            />
+          )}
         </div>
       </div>
 
-      {/* Drag Overlay */}
+      {/* Drag Overlay - follows cursor */}
       <DragOverlay>
         {activeTask ? (
-          <div className="px-2 py-1.5 rounded bg-[#222] shadow-xl border border-[#444] text-[11px] text-[#f5f5f5] cursor-grabbing transform rotate-2 scale-105">
-            <div className="flex items-center gap-1.5">
-              <span className={cn("text-[10px] font-mono", getStatusColor(activeTask.status))}>
-                {getStatusIndicator(activeTask.status)}
-              </span>
-              <span>{activeTask.name}</span>
-            </div>
+          <div className="space-y-1">
+            {tasksBeingDragged.length > 1 ? (
+              // Show stacked preview for multiple tasks
+              <div className="relative">
+                <div className="px-2 py-1.5 rounded bg-[#222] shadow-xl border border-[#444] text-[11px] text-[#f5f5f5] cursor-grabbing">
+                  {activeTask.name}
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium">
+                  {tasksBeingDragged.length}
+                </div>
+              </div>
+            ) : (
+              <div className="px-2 py-1.5 rounded bg-[#222] shadow-xl border border-[#444] text-[11px] text-[#f5f5f5] cursor-grabbing">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn("text-[10px] font-mono", getStatusColor(activeTask.status))}>
+                    {getStatusIndicator(activeTask.status)}
+                  </span>
+                  <span>{activeTask.name}</span>
+                </div>
+              </div>
+            )}
           </div>
         ) : null}
       </DragOverlay>
