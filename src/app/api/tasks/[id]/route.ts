@@ -41,7 +41,15 @@ export async function PATCH(
     if (body.projectId !== undefined) updates.projectId = body.projectId;
     if (body.priority !== undefined) updates.priority = body.priority;
     if (body.status !== undefined) updates.status = body.status;
-    if (body.dueDate !== undefined) updates.dueDate = body.dueDate ? new Date(body.dueDate) : null;
+    if (body.dueDate !== undefined) {
+      // Parse date as noon local time to avoid timezone day-shift issues
+      if (body.dueDate) {
+        const dateStr = body.dueDate.includes("T") ? body.dueDate : body.dueDate + "T12:00:00";
+        updates.dueDate = new Date(dateStr);
+      } else {
+        updates.dueDate = null;
+      }
+    }
     if (body.dueTime !== undefined) updates.dueTime = body.dueTime;
     if (body.duration !== undefined) updates.duration = body.duration;
     if (body.tags !== undefined) updates.tags = body.tags ? JSON.stringify(body.tags) : null;

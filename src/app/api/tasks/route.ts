@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       organizationId: body.organizationId || null,
       priority: body.priority || null,
       status: body.status || "not_started",
-      dueDate: body.dueDate ? new Date(body.dueDate) : null,
+      dueDate: body.dueDate ? new Date(body.dueDate + "T12:00:00") : null,
       dueTime: body.dueTime || null,
       duration: body.duration || null,
       tags: body.tags ? JSON.stringify(body.tags) : null,
