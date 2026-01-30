@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, Building2, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TaskModal } from "./TaskModal";
+import { TaskDetailModal } from "./TaskDetailModal";
 import { OrganizationModal } from "./OrganizationModal";
 import { MonthCalendar } from "./MonthCalendar";
 import OrganizationManager from "./OrganizationManager";
@@ -551,7 +551,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
         </div>
       )}
 
-      <TaskModal
+      <TaskDetailModal
         task={selectedTask}
         projects={projects}
         organizations={organizations}
