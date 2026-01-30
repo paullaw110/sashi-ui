@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { TaskTable } from "./TaskTable";
-import { WeekCalendar } from "./WeekCalendar";
+import { TimeWeekCalendar } from "./TimeWeekCalendar";
 import { TaskDetailModal } from "./TaskDetailModal";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 
@@ -125,13 +125,19 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     router.refresh();
   }, [router]);
 
-  const handleTaskMove = useCallback(async (taskId: string, newDate: Date) => {
+  const handleTaskMove = useCallback(async (taskId: string, newDate: Date, newTime?: string) => {
     // Wait for API to complete before refreshing to avoid race condition
     try {
+      const body: Record<string, unknown> = { dueDate: newDate.toISOString() };
+      // If time is provided, update it; if undefined (dropped to all-day), clear it
+      if (newTime !== undefined) {
+        body.dueTime = newTime || null;
+      }
+      
       const response = await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dueDate: newDate.toISOString() }),
+        body: JSON.stringify(body),
       });
       
       if (!response.ok) {
@@ -195,13 +201,12 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
           />
         </div>
 
-        {/* Right Column - Week View (hidden on mobile) */}
-        <div className="hidden lg:block">
-          <WeekCalendar 
+        {/* Right Column - Week View with Time (hidden on mobile) */}
+        <div className="hidden lg:block h-[calc(100vh-180px)]">
+          <TimeWeekCalendar 
             tasks={weekTasks} 
             onTaskClick={handleTaskClick}
             onTaskMove={handleTaskMove}
-            onTasksMove={handleTasksMove}
           />
         </div>
       </div>
