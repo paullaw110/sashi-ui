@@ -391,19 +391,32 @@ export function MonthCalendar({
     })
   );
 
-  // Clear optimistic moves after a delay to allow server sync
-  const optimisticMovesRef = useRef(optimisticMoves);
-  optimisticMovesRef.current = optimisticMoves;
-
+  // Clear optimistic moves only when the server state reflects the change
   useEffect(() => {
-    if (optimisticMovesRef.current.size === 0) return;
+    if (optimisticMoves.size === 0) return;
 
-    const timer = setTimeout(() => {
+    // Check if all optimistic moves are now reflected in the tasks prop
+    const pendingMoves = new Map(optimisticMoves);
+    
+    pendingMoves.forEach((targetDate, taskId) => {
+      const task = tasks.find(t => t.id === taskId);
+      if (task && task.dueDate) {
+        const serverDate = format(new Date(task.dueDate), "yyyy-MM-dd");
+        if (serverDate === targetDate) {
+          // Server has the update, remove from pending
+          pendingMoves.delete(taskId);
+        }
+      }
+    });
+
+    // If all moves are confirmed, clear optimistic state
+    if (pendingMoves.size === 0) {
       setOptimisticMoves(new Map());
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [tasks]);
+    } else {
+      // Update with remaining pending moves
+      setOptimisticMoves(pendingMoves);
+    }
+  }, [tasks, optimisticMoves]);
 
   // Clear selection when tasks change (after server sync)
   useEffect(() => {

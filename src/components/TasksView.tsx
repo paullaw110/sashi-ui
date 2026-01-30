@@ -245,33 +245,54 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
 
   const handleTaskMove = useCallback(async (taskId: string, newDate: Date) => {
     try {
-      await fetch(`/api/tasks/${taskId}`, {
+      // Format as YYYY-MM-DD to avoid timezone issues
+      const dateStr = format(newDate, "yyyy-MM-dd");
+      const response = await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dueDate: newDate.toISOString() }),
+        body: JSON.stringify({ dueDate: dateStr }),
       });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        console.error("Move failed:", error);
+        toast.error("Failed to move task");
+        return;
+      }
+      
       toast.success(`Moved to ${format(newDate, "MMM d")}`);
       router.refresh();
     } catch (error) {
+      console.error("Move error:", error);
       toast.error("Failed to move task");
     }
   }, [router]);
 
   const handleTasksMove = useCallback(async (taskIds: string[], newDate: Date) => {
     try {
-      // Move all selected tasks in parallel
-      await Promise.all(
+      // Format as YYYY-MM-DD to avoid timezone issues
+      const dateStr = format(newDate, "yyyy-MM-dd");
+      
+      const results = await Promise.all(
         taskIds.map(taskId =>
           fetch(`/api/tasks/${taskId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ dueDate: newDate.toISOString() }),
+            body: JSON.stringify({ dueDate: dateStr }),
           })
         )
       );
-      toast.success(`Moved ${taskIds.length} tasks to ${format(newDate, "MMM d")}`);
+      
+      const failed = results.filter(r => !r.ok).length;
+      if (failed > 0) {
+        toast.error(`Failed to move ${failed} task(s)`);
+        return;
+      }
+      
+      toast.success(`Moved ${taskIds.length} task${taskIds.length > 1 ? 's' : ''} to ${format(newDate, "MMM d")}`);
       router.refresh();
     } catch (error) {
+      console.error("Move error:", error);
       toast.error("Failed to move tasks");
     }
   }, [router]);
