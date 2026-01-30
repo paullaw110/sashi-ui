@@ -1,59 +1,91 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { db, schema } from "@/lib/db";
+import { eq } from "drizzle-orm";
 
-const STATUS_FILE = path.join(process.cwd(), "db", "sashi-status.json");
+const SINGLETON_ID = "singleton";
 
-interface SashiStatus {
-  state: "idle" | "working" | "waiting";
-  task: string | null;
-  startedAt: string | null;
-  updatedAt: string;
-}
-
-function getStatus(): SashiStatus {
+async function getStatus() {
   try {
-    if (fs.existsSync(STATUS_FILE)) {
-      return JSON.parse(fs.readFileSync(STATUS_FILE, "utf-8"));
-    }
-  } catch (e) {
-    console.error("Error reading status:", e);
-  }
-  return {
-    state: "idle",
-    task: null,
-    startedAt: null,
-    updatedAt: new Date().toISOString(),
-  };
-}
+    const result = await db.query.sashiStatus.findFirst({
+      where: eq(schema.sashiStatus.id, SINGLETON_ID),
+    });
 
-function setStatus(status: Partial<SashiStatus>): SashiStatus {
-  const current = getStatus();
-  const updated: SashiStatus = {
-    ...current,
-    ...status,
-    updatedAt: new Date().toISOString(),
-  };
-  fs.writeFileSync(STATUS_FILE, JSON.stringify(updated, null, 2));
-  return updated;
+    if (!result) {
+      // Create default status if doesn't exist
+      const now = new Date();
+      const defaultStatus = {
+        id: SINGLETON_ID,
+        state: "idle" as const,
+        task: null,
+        startedAt: null,
+        updatedAt: now,
+      };
+      await db.insert(schema.sashiStatus).values(defaultStatus);
+      return defaultStatus;
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error getting status:", error);
+    return {
+      id: SINGLETON_ID,
+      state: "idle",
+      task: null,
+      startedAt: null,
+      updatedAt: new Date(),
+    };
+  }
 }
 
 export async function GET() {
-  const status = getStatus();
-  return NextResponse.json(status);
+  const status = await getStatus();
+  return NextResponse.json({
+    state: status.state,
+    task: status.task,
+    startedAt: status.startedAt?.toISOString() || null,
+    updatedAt: status.updatedAt?.toISOString() || new Date().toISOString(),
+  });
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const status = setStatus({
-      state: body.state || "idle",
-      task: body.task || null,
-      startedAt: body.state === "working" ? new Date().toISOString() : null,
+    const now = new Date();
+
+    const newState = body.state || "idle";
+    const newTask = body.task || null;
+
+    // Upsert the status
+    await db
+      .insert(schema.sashiStatus)
+      .values({
+        id: SINGLETON_ID,
+        state: newState,
+        task: newTask,
+        startedAt: newState === "working" ? now : null,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: schema.sashiStatus.id,
+        set: {
+          state: newState,
+          task: newTask,
+          startedAt: newState === "working" ? now : null,
+          updatedAt: now,
+        },
+      });
+
+    return NextResponse.json({
+      state: newState,
+      task: newTask,
+      startedAt: newState === "working" ? now.toISOString() : null,
+      updatedAt: now.toISOString(),
     });
-    return NextResponse.json(status);
   } catch (error) {
     console.error("Error updating status:", error);
-    return NextResponse.json({ error: "Failed to update status" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update status" },
+      { status: 500 }
+    );
   }
 }

@@ -61,6 +61,15 @@ export const sashiQueue = sqliteTable("sashi_queue", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
+// Sashi's current status (single row table)
+export const sashiStatus = sqliteTable("sashi_status", {
+  id: text("id").primaryKey().default("singleton"), // Always "singleton" - single row
+  state: text("state").notNull().default("idle"), // idle, working, waiting
+  task: text("task"), // What Sashi is currently working on
+  startedAt: integer("started_at", { mode: "timestamp_ms" }),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
 // Relations
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   projects: many(projects),
@@ -97,6 +106,8 @@ export type InboxItem = typeof inboxItems.$inferSelect;
 export type NewInboxItem = typeof inboxItems.$inferInsert;
 export type SashiQueueItem = typeof sashiQueue.$inferSelect;
 export type NewSashiQueueItem = typeof sashiQueue.$inferInsert;
+export type SashiStatus = typeof sashiStatus.$inferSelect;
+export type NewSashiStatus = typeof sashiStatus.$inferInsert;
 export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
 

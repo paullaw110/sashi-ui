@@ -70,6 +70,14 @@ CREATE TABLE IF NOT EXISTS sashi_queue (
   created_at INTEGER NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS sashi_status (
+  id TEXT PRIMARY KEY DEFAULT 'singleton',
+  state TEXT NOT NULL DEFAULT 'idle',
+  task TEXT,
+  started_at INTEGER,
+  updated_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS notes (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
