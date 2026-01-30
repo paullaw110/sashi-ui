@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useUndo } from "./use-undo";
 
 export type Task = {
   id: string;
@@ -57,6 +58,7 @@ export function useTasks(initialData?: Task[]) {
 // Hook to move a task to a new date
 export function useMoveTask() {
   const queryClient = useQueryClient();
+  const { pushUndo } = useUndo();
 
   return useMutation({
     mutationFn: async ({ taskId, newDate }: { taskId: string; newDate: Date }) => {
@@ -71,6 +73,7 @@ export function useMoveTask() {
 
       // Snapshot previous state for rollback
       const previousTasks = queryClient.getQueryData<Task[]>(["tasks"]);
+      const previousTask = previousTasks?.find((t) => t.id === taskId);
 
       // Format date the same way the API returns it (ISO string at noon)
       const dateStr = `${format(newDate, "yyyy-MM-dd")}T12:00:00.000Z`;
@@ -85,7 +88,7 @@ export function useMoveTask() {
         );
       });
 
-      return { previousTasks };
+      return { previousTasks, previousTask };
     },
 
     // Rollback on error
@@ -97,9 +100,31 @@ export function useMoveTask() {
       toast.error("Failed to move task");
     },
 
-    // Success - just show toast, don't refetch (optimistic update is already correct)
-    onSuccess: (data, variables) => {
-      toast.success(`Moved to ${format(variables.newDate, "MMM d")}`);
+    // Success - record undo action
+    onSuccess: (data, variables, context) => {
+      // Record for undo
+      if (context?.previousTask) {
+        const prevDate = context.previousTask.dueDate 
+          ? format(new Date(context.previousTask.dueDate), "MMM d")
+          : "no date";
+        pushUndo({
+          type: "move_task",
+          taskId: variables.taskId,
+          previousState: { dueDate: context.previousTask.dueDate },
+          description: `Move "${context.previousTask.name}" back to ${prevDate}`,
+        });
+      }
+      toast.success(`Moved to ${format(variables.newDate, "MMM d")}`, {
+        action: {
+          label: "Undo",
+          onClick: () => {
+            if (context?.previousTask?.dueDate) {
+              updateTask({ id: variables.taskId, dueDate: context.previousTask.dueDate })
+                .then(() => queryClient.invalidateQueries({ queryKey: ["tasks"] }));
+            }
+          },
+        },
+      });
     },
 
     // Only refetch on error to ensure consistency, not on success
@@ -160,12 +185,14 @@ export function useMoveTasks() {
 // Hook to update task (generic)
 export function useUpdateTask() {
   const queryClient = useQueryClient();
+  const { pushUndo } = useUndo();
 
   return useMutation({
     mutationFn: updateTask,
     onMutate: async (newTask) => {
       await queryClient.cancelQueries({ queryKey: ["tasks"] });
       const previousTasks = queryClient.getQueryData<Task[]>(["tasks"]);
+      const previousTask = previousTasks?.find((t) => t.id === newTask.id);
 
       queryClient.setQueryData<Task[]>(["tasks"], (old) => {
         if (!old) return old;
@@ -174,13 +201,39 @@ export function useUpdateTask() {
         );
       });
 
-      return { previousTasks };
+      return { previousTasks, previousTask };
     },
     onError: (err, variables, context) => {
       if (context?.previousTasks) {
         queryClient.setQueryData(["tasks"], context.previousTasks);
       }
       toast.error("Failed to update task");
+    },
+    onSuccess: (data, variables, context) => {
+      // Record for undo - capture only changed fields
+      if (context?.previousTask) {
+        const changedFields: Record<string, unknown> = {};
+        const fieldDescriptions: string[] = [];
+        
+        for (const key of Object.keys(variables) as (keyof Task)[]) {
+          if (key !== "id" && context.previousTask[key] !== variables[key]) {
+            changedFields[key] = context.previousTask[key];
+            if (key === "status") fieldDescriptions.push("status");
+            if (key === "priority") fieldDescriptions.push("priority");
+            if (key === "name") fieldDescriptions.push("name");
+            if (key === "dueDate") fieldDescriptions.push("date");
+          }
+        }
+        
+        if (Object.keys(changedFields).length > 0) {
+          pushUndo({
+            type: "update_task",
+            taskId: variables.id,
+            previousState: changedFields,
+            description: `Revert ${fieldDescriptions.join(", ")} on "${context.previousTask.name}"`,
+          });
+        }
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
@@ -215,6 +268,7 @@ export function useCreateTask() {
 // Hook to delete task
 export function useDeleteTask() {
   const queryClient = useQueryClient();
+  const { pushUndo } = useUndo();
 
   return useMutation({
     mutationFn: async (taskId: string) => {
@@ -227,13 +281,14 @@ export function useDeleteTask() {
     onMutate: async (taskId) => {
       await queryClient.cancelQueries({ queryKey: ["tasks"] });
       const previousTasks = queryClient.getQueryData<Task[]>(["tasks"]);
+      const deletedTask = previousTasks?.find((t) => t.id === taskId);
 
       queryClient.setQueryData<Task[]>(["tasks"], (old) => {
         if (!old) return old;
         return old.filter((task) => task.id !== taskId);
       });
 
-      return { previousTasks };
+      return { previousTasks, deletedTask };
     },
     onError: (err, variables, context) => {
       if (context?.previousTasks) {
@@ -241,8 +296,36 @@ export function useDeleteTask() {
       }
       toast.error("Failed to delete task");
     },
-    onSuccess: () => {
-      toast.success("Task deleted");
+    onSuccess: (data, variables, context) => {
+      // Record for undo
+      if (context?.deletedTask) {
+        pushUndo({
+          type: "delete_task",
+          taskId: variables,
+          previousState: context.deletedTask as unknown as Record<string, unknown>,
+          description: `Restore "${context.deletedTask.name}"`,
+        });
+        
+        toast.success("Task deleted", {
+          action: {
+            label: "Undo",
+            onClick: async () => {
+              // Quick undo via toast button
+              const response = await fetch("/api/tasks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(context.deletedTask),
+              });
+              if (response.ok) {
+                queryClient.invalidateQueries({ queryKey: ["tasks"] });
+                toast.success("Task restored");
+              }
+            },
+          },
+        });
+      } else {
+        toast.success("Task deleted");
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
