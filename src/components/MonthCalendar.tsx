@@ -214,6 +214,7 @@ const DayCell = memo(function DayCell({
   onTaskClick,
   registerRef,
   todayRef,
+  monthContext,
 }: {
   day: Date;
   tasks: Task[];
@@ -225,10 +226,13 @@ const DayCell = memo(function DayCell({
   onTaskClick?: (task: Task) => void;
   registerRef: (taskId: string, element: HTMLElement | null) => void;
   todayRef?: React.RefObject<HTMLDivElement | null>;
+  monthContext?: string;
 }) {
   const dateKey = format(day, "yyyy-MM-dd");
+  // Make drop zone ID unique by including month context for dates outside current month
+  const dropZoneId = isInCurrentMonth ? dateKey : `${monthContext}-${dateKey}`;
   const { setNodeRef, isOver } = useDroppable({
-    id: dateKey,
+    id: dropZoneId,
   });
 
   const dayNumber = format(day, "d");
@@ -307,6 +311,7 @@ const SingleMonth = memo(function SingleMonth({
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  const monthKey = format(month, 'yyyy-MM');
 
   return (
     <div className="mb-0">
@@ -338,6 +343,7 @@ const SingleMonth = memo(function SingleMonth({
               onTaskClick={onTaskClick}
               registerRef={registerRef}
               todayRef={isCurrentDay ? todayRef : undefined}
+              monthContext={monthKey}
             />
           );
         })}
@@ -626,11 +632,13 @@ export function MonthCalendar({
       if (!over) return;
 
       const draggedId = active.id as string;
-      const targetDateKey = over.id as string;
+      const targetDropZoneId = over.id as string;
 
-      // Validate it's a date key (YYYY-MM-DD format)
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDateKey)) return;
-
+      // Extract date key from drop zone ID (handles both "YYYY-MM-DD" and "YYYY-MM-YYYY-MM-DD" formats)
+      const dateKeyMatch = targetDropZoneId.match(/(\d{4}-\d{2}-\d{2})$/);
+      if (!dateKeyMatch) return;
+      
+      const targetDateKey = dateKeyMatch[1];
       const newDate = new Date(targetDateKey + "T12:00:00");
 
       // Determine which tasks to move
