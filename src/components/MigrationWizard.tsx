@@ -2,6 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { Organization, Project } from "@/lib/db/schema";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ProjectAssignment {
   projectId: string;
@@ -131,42 +139,45 @@ export default function MigrationWizard({ onComplete, onCancel }: MigrationWizar
 
   if (projects.length === 0) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg max-w-md">
-          <h3 className="text-lg font-semibold mb-4">Migration Complete</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            All projects are already assigned to organizations.
-          </p>
-          <button
-            onClick={onComplete}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Close
-          </button>
-        </div>
-      </div>
+      <Dialog open={true} onOpenChange={onComplete}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Migration Complete</DialogTitle>
+            <DialogDescription>
+              All projects are already assigned to organizations.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={onComplete}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold mb-4">Assign Projects to Organizations</h3>
-        
-        <p className="text-sm text-gray-600 mb-4">
-          Assign your existing projects to organizations. Projects without an organization will be shown as "Unassigned".
-        </p>
+    <Dialog open={true} onOpenChange={onCancel}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Assign Projects to Organizations</DialogTitle>
+          <DialogDescription>
+            Assign your existing projects to organizations. Projects without an organization will be shown as "Unassigned".
+          </DialogDescription>
+        </DialogHeader>
 
         {/* Create new organization section */}
         <div className="mb-4 p-3 bg-gray-50 rounded">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-sm font-medium">Create New Organization:</span>
-            <button
+            <Button
               onClick={() => setIsCreatingOrg(!isCreatingOrg)}
-              className="text-xs text-blue-600 hover:text-blue-800"
+              variant="ghost"
+              size="sm"
             >
               {isCreatingOrg ? "Cancel" : "+ New"}
-            </button>
+            </Button>
           </div>
           
           {isCreatingOrg && (
@@ -178,12 +189,12 @@ export default function MigrationWizard({ onComplete, onCancel }: MigrationWizar
                 onChange={(e) => setNewOrgName(e.target.value)}
                 className="flex-1 text-sm border border-gray-300 rounded px-2 py-1"
               />
-              <button
+              <Button
                 onClick={createOrganization}
-                className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                size="sm"
               >
                 Create
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -221,22 +232,21 @@ export default function MigrationWizard({ onComplete, onCancel }: MigrationWizar
 
         {/* Actions */}
         <div className="flex justify-end gap-3">
-          <button
+          <Button
             onClick={onCancel}
-            className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50"
+            variant="outline"
             disabled={isMigrating}
           >
             Skip for Now
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={runMigration}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             disabled={isMigrating}
           >
             {isMigrating ? "Migrating..." : "Assign Projects"}
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
