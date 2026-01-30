@@ -64,25 +64,27 @@ export function useMoveTask() {
       return updateTask({ id: taskId, dueDate: dateStr });
     },
     
-    // Optimistic update
+    // Optimistic update - runs BEFORE the API call
     onMutate: async ({ taskId, newDate }) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["tasks"] });
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      queryClient.cancelQueries({ queryKey: ["tasks"] });
 
-      // Snapshot previous state
+      // Snapshot previous state for rollback
       const previousTasks = queryClient.getQueryData<Task[]>(["tasks"]);
 
-      // Optimistically update the cache
+      // Format date the same way the API returns it (ISO string at noon)
+      const dateStr = `${format(newDate, "yyyy-MM-dd")}T12:00:00.000Z`;
+
+      // Optimistically update the cache - this is INSTANT
       queryClient.setQueryData<Task[]>(["tasks"], (old) => {
         if (!old) return old;
         return old.map((task) =>
           task.id === taskId
-            ? { ...task, dueDate: newDate.toISOString() }
+            ? { ...task, dueDate: dateStr }
             : task
         );
       });
 
-      // Return context with snapshot
       return { previousTasks };
     },
 
@@ -95,15 +97,13 @@ export function useMoveTask() {
       toast.error("Failed to move task");
     },
 
-    // Success toast
+    // Success - just show toast, don't refetch (optimistic update is already correct)
     onSuccess: (data, variables) => {
       toast.success(`Moved to ${format(variables.newDate, "MMM d")}`);
     },
 
-    // Always refetch after mutation
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-    },
+    // Only refetch on error to ensure consistency, not on success
+    // This prevents the "flash" when the server response replaces the optimistic data
   });
 }
 
@@ -121,14 +121,17 @@ export function useMoveTasks() {
     },
 
     onMutate: async ({ taskIds, newDate }) => {
-      await queryClient.cancelQueries({ queryKey: ["tasks"] });
+      queryClient.cancelQueries({ queryKey: ["tasks"] });
       const previousTasks = queryClient.getQueryData<Task[]>(["tasks"]);
+
+      // Format date the same way the API returns it
+      const dateStr = `${format(newDate, "yyyy-MM-dd")}T12:00:00.000Z`;
 
       queryClient.setQueryData<Task[]>(["tasks"], (old) => {
         if (!old) return old;
         return old.map((task) =>
           taskIds.includes(task.id)
-            ? { ...task, dueDate: newDate.toISOString() }
+            ? { ...task, dueDate: dateStr }
             : task
         );
       });
@@ -150,9 +153,7 @@ export function useMoveTasks() {
       );
     },
 
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-    },
+    // No onSettled refetch - optimistic update is the source of truth
   });
 }
 
