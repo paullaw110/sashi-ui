@@ -4,32 +4,35 @@ import { eq } from "drizzle-orm";
 
 const SINGLETON_ID = "singleton";
 
-async function getStatus() {
+async function getOrCreateStatus() {
   try {
+    // Try to get existing status
     const result = await db.query.sashiStatus.findFirst({
       where: eq(schema.sashiStatus.id, SINGLETON_ID),
     });
 
-    if (!result) {
-      // Create default status if doesn't exist
-      const now = new Date();
-      const defaultStatus = {
-        id: SINGLETON_ID,
-        state: "idle" as const,
-        task: null,
-        startedAt: null,
-        updatedAt: now,
-      };
-      await db.insert(schema.sashiStatus).values(defaultStatus);
-      return defaultStatus;
+    if (result) {
+      return result;
     }
 
-    return result;
+    // Create default status if doesn't exist
+    const now = new Date();
+    const defaultStatus = {
+      id: SINGLETON_ID,
+      state: "idle" as const,
+      task: null,
+      startedAt: null,
+      updatedAt: now,
+    };
+    
+    await db.insert(schema.sashiStatus).values(defaultStatus);
+    return defaultStatus;
   } catch (error) {
     console.error("Error getting status:", error);
+    // Return default without throwing
     return {
       id: SINGLETON_ID,
-      state: "idle",
+      state: "idle" as const,
       task: null,
       startedAt: null,
       updatedAt: new Date(),
@@ -38,12 +41,12 @@ async function getStatus() {
 }
 
 export async function GET() {
-  const status = await getStatus();
+  const status = await getOrCreateStatus();
   return NextResponse.json({
     state: status.state,
     task: status.task,
-    startedAt: status.startedAt?.toISOString() || null,
-    updatedAt: status.updatedAt?.toISOString() || new Date().toISOString(),
+    startedAt: status.startedAt instanceof Date ? status.startedAt.toISOString() : status.startedAt,
+    updatedAt: status.updatedAt instanceof Date ? status.updatedAt.toISOString() : status.updatedAt,
   });
 }
 
@@ -54,37 +57,32 @@ export async function POST(request: NextRequest) {
 
     const newState = body.state || "idle";
     const newTask = body.task || null;
+    const startedAt = newState === "working" ? now : null;
 
-    // Upsert the status
+    // Ensure the row exists first
+    await getOrCreateStatus();
+
+    // Now update it
     await db
-      .insert(schema.sashiStatus)
-      .values({
-        id: SINGLETON_ID,
+      .update(schema.sashiStatus)
+      .set({
         state: newState,
         task: newTask,
-        startedAt: newState === "working" ? now : null,
+        startedAt: startedAt,
         updatedAt: now,
       })
-      .onConflictDoUpdate({
-        target: schema.sashiStatus.id,
-        set: {
-          state: newState,
-          task: newTask,
-          startedAt: newState === "working" ? now : null,
-          updatedAt: now,
-        },
-      });
+      .where(eq(schema.sashiStatus.id, SINGLETON_ID));
 
     return NextResponse.json({
       state: newState,
       task: newTask,
-      startedAt: newState === "working" ? now.toISOString() : null,
+      startedAt: startedAt?.toISOString() || null,
       updatedAt: now.toISOString(),
     });
   } catch (error) {
     console.error("Error updating status:", error);
     return NextResponse.json(
-      { error: "Failed to update status" },
+      { error: "Failed to update status", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
