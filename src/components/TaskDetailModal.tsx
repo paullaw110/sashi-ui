@@ -480,7 +480,7 @@ export function TaskDetailModal({
               }
             }}
             placeholder="Task name..."
-            className="text-xl font-semibold border-none bg-transparent px-0 h-auto focus-visible:ring-0 placeholder:text-[var(--text-quaternary)]"
+            className="text-3xl font-bold border-none bg-transparent px-0 h-auto focus-visible:ring-0 placeholder:text-[var(--text-quaternary)]"
           />
         </DialogHeader>
 
