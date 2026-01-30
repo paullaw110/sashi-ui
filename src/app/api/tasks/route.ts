@@ -79,6 +79,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const now = new Date();
 
+    // Parse dueDate - handle both ISO strings and date-only strings
+    let parsedDueDate: Date | null = null;
+    if (body.dueDate) {
+      // If it's already an ISO string with time, use it directly
+      if (body.dueDate.includes("T")) {
+        parsedDueDate = new Date(body.dueDate);
+      } else {
+        // If it's just a date (YYYY-MM-DD), add noon time
+        parsedDueDate = new Date(body.dueDate + "T12:00:00");
+      }
+    }
+
     const newTask = {
       id: generateId(),
       name: body.name,
@@ -86,7 +98,7 @@ export async function POST(request: NextRequest) {
       organizationId: body.organizationId || null,
       priority: body.priority || null,
       status: body.status || "not_started",
-      dueDate: body.dueDate ? new Date(body.dueDate + "T12:00:00") : null,
+      dueDate: parsedDueDate,
       dueTime: body.dueTime || null,
       duration: body.duration || null,
       tags: body.tags ? JSON.stringify(body.tags) : null,

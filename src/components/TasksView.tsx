@@ -211,12 +211,18 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
       await updateTask.mutateAsync(taskData as { id: string } & Partial<Task>);
     } else {
       // For new tasks, still use raw fetch then refresh
-      // (createTask mutation would need the full task shape)
-      await fetch("/api/tasks", {
+      const response = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(taskData),
       });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        console.error("Failed to create task:", error);
+        throw new Error("Failed to create task");
+      }
+      
       router.refresh();
     }
   }, [updateTask, router]);
