@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { TaskTable } from "./TaskTable";
 import { WeekCalendar } from "./WeekCalendar";
-import { TaskModal } from "./TaskModal";
+import { TaskDetailModal } from "./TaskDetailModal";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 
 type Task = {
@@ -206,7 +206,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
         </div>
       </div>
 
-      <TaskModal
+      <TaskDetailModal
         task={selectedTask}
         projects={projects}
         organizations={organizations}
