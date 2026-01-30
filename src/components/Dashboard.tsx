@@ -171,6 +171,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
             organizations={organizations}
             title="Today"
             showFilters={true}
+            hideDueColumn={true}
             defaultDueDate={new Date().toISOString().split('T')[0]}
             onTaskClick={handleTaskClick}
             onNewTask={handleNewTodayTask}
@@ -185,6 +186,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
             organizations={organizations}
             title="Next"
             showFilters={false}
+            hideDueColumn={true}
             onTaskClick={handleTaskClick}
             onNewTask={handleNewNextTask}
             onStatusChange={handleStatusChange}

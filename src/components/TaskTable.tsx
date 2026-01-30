@@ -28,6 +28,7 @@ interface TaskTableProps {
   organizations?: Organization[];
   title: string;
   showFilters?: boolean;
+  hideDueColumn?: boolean; // Hide the Due column (useful when tasks are already grouped by date)
   defaultDueDate?: string; // ISO date string for new tasks (e.g., "today" section uses today's date)
   onTaskClick?: (task: Task) => void;
   onNewTask?: () => void;
@@ -148,6 +149,7 @@ export function TaskTable({
   organizations = [],
   title, 
   showFilters = true,
+  hideDueColumn = false,
   defaultDueDate,
   onTaskClick,
   onNewTask,
@@ -298,7 +300,7 @@ export function TaskTable({
         <div className="w-20 sm:w-24 hidden lg:block">Project</div>
         <div className="w-20 sm:w-24 hidden sm:block">Priority</div>
         <div className="w-20 sm:w-24 hidden sm:block">Status</div>
-        <div className="w-12 sm:w-16 text-right">Due</div>
+        {!hideDueColumn && <div className="w-12 sm:w-16 text-right">Due</div>}
       </div>
 
       {/* Rows */}
@@ -395,12 +397,14 @@ export function TaskTable({
             </div>
 
             {/* Date */}
-            <span className="w-12 sm:w-16 shrink-0 text-xs text-[var(--text-quaternary)] text-right">
-              {task.dueDate 
-                ? new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                : "—"
-              }
-            </span>
+            {!hideDueColumn && (
+              <span className="w-12 sm:w-16 shrink-0 text-xs text-[var(--text-quaternary)] text-right">
+                {task.dueDate 
+                  ? new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                  : "—"
+                }
+              </span>
+            )}
           </div>
         );
         })}
@@ -440,7 +444,7 @@ export function TaskTable({
             <div className="w-20 sm:w-24 shrink-0 hidden lg:block" />
             <div className="w-20 sm:w-24 shrink-0 hidden sm:block" />
             <div className="w-20 sm:w-24 shrink-0 hidden sm:block" />
-            <div className="w-12 sm:w-16 shrink-0" />
+            {!hideDueColumn && <div className="w-12 sm:w-16 shrink-0" />}
           </div>
         )}
       </div>
