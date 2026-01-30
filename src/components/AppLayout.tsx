@@ -77,7 +77,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   }, [isMobile, sidebarOpen, sidebarCollapsed]);
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)]">
+    <div className="h-screen flex flex-col bg-[var(--bg-base)] overflow-hidden">
       <Sidebar 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)}
@@ -107,7 +107,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
         </div>
       </header>
 
-      <main className={`transition-all duration-300 ${
+      <main className={`flex-1 flex flex-col min-h-0 overflow-hidden transition-all duration-300 ${
         isMobile 
           ? 'pt-14' 
           : sidebarCollapsed 
@@ -115,7 +115,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             : 'ml-[256px] pt-0'
       }`}>
         {(title || subtitle) && (
-          <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-4 lg:pb-6">
+          <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-4 lg:pb-6 shrink-0">
             {title && (
               <h1 className="font-display text-display text-[var(--text-primary)] tracking-tight">{title}</h1>
             )}
@@ -124,7 +124,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             )}
           </div>
         )}
-        <div className="px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8">
+        <div className="px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8 flex-1 min-h-0 flex flex-col">
           {children}
         </div>
       </main>

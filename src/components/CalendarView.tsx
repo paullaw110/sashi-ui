@@ -1246,14 +1246,14 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full">
       <DndContext
         sensors={sensors}
         collisionDetection={hourSlotCollision}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="bg-[#111] rounded-lg border border-[#1a1a1a]">
+        <div className="bg-[#111] rounded-lg border border-[#1a1a1a] flex-1 flex flex-col min-h-0">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a1a1a]">
             <h2 className="font-display text-xl text-[#f5f5f5]">
@@ -1282,13 +1282,13 @@ export function CalendarView({ tasks, projects }: CalendarViewProps) {
           </div>
 
           {/* Calendar Grid with Time Labels */}
-          <div className="flex overflow-hidden max-h-[calc(100vh-280px)]">
+          <div className="flex flex-1 overflow-hidden min-h-0">
             {/* Time labels column */}
             <div className="w-12 shrink-0 border-r border-[#1a1a1a] flex flex-col bg-[#0c0c0c]">
               {/* Empty header space */}
               <div className="h-[52px] border-b border-[#1a1a1a] shrink-0" />
               {/* Hour labels */}
-              <div className="flex-1 relative h-[600px]">
+              <div className="flex-1 relative">
                 {HOURS.map((hour, idx) => (
                   <div
                     key={hour}
