@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Calendar,
   Clock,
@@ -11,6 +12,7 @@ import {
   Trash2,
   CircleDot,
   CalendarDays,
+  Plus,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -39,7 +41,6 @@ import {
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -103,12 +104,13 @@ export function TaskDetailModal({
   task,
   isOpen,
   isCreating = false,
-  organizations,
-  projects,
+  organizations: initialOrganizations,
+  projects: initialProjects,
   onClose,
   onSave,
   onDelete,
 }: TaskDetailModalProps) {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [status, setStatus] = useState("not_started");
   const [priority, setPriority] = useState<string | null>(null);
@@ -120,10 +122,29 @@ export function TaskDetailModal({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Local lists (for inline creates)
+  const [organizations, setOrganizations] = useState(initialOrganizations);
+  const [projects, setProjects] = useState(initialProjects);
+
   // Combobox states
   const [orgOpen, setOrgOpen] = useState(false);
   const [projectOpen, setProjectOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
+  
+  // Search states for inline create
+  const [orgSearch, setOrgSearch] = useState("");
+  const [projectSearch, setProjectSearch] = useState("");
+  const [isCreatingOrg, setIsCreatingOrg] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+
+  // Sync with props when they change
+  useEffect(() => {
+    setOrganizations(initialOrganizations);
+  }, [initialOrganizations]);
+  
+  useEffect(() => {
+    setProjects(initialProjects);
+  }, [initialProjects]);
 
   // Initialize form when task changes
   useEffect(() => {
@@ -153,6 +174,81 @@ export function TaskDetailModal({
   const filteredProjects = organizationId
     ? projects.filter((p) => p.organizationId === organizationId)
     : projects;
+
+  // Check if search term matches existing items
+  const orgExists = organizations.some(
+    (o) => o.name.toLowerCase() === orgSearch.toLowerCase()
+  );
+  const projectExists = filteredProjects.some(
+    (p) => p.name.toLowerCase() === projectSearch.toLowerCase()
+  );
+
+  // Create new organization inline
+  const handleCreateOrg = async () => {
+    if (!orgSearch.trim() || isCreatingOrg) return;
+    
+    setIsCreatingOrg(true);
+    try {
+      const response = await fetch("/api/organizations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: orgSearch.trim() }),
+      });
+      
+      if (!response.ok) throw new Error("Failed to create organization");
+      
+      const { organization: newOrg } = await response.json();
+      
+      // Add to local list and select
+      setOrganizations((prev) => [...prev, newOrg]);
+      setOrganizationId(newOrg.id);
+      setOrgSearch("");
+      setOrgOpen(false);
+      toast.success(`Created "${newOrg.name}"`);
+      
+      // Refresh to update server state
+      router.refresh();
+    } catch (error) {
+      toast.error("Failed to create organization");
+    } finally {
+      setIsCreatingOrg(false);
+    }
+  };
+
+  // Create new project inline
+  const handleCreateProject = async () => {
+    if (!projectSearch.trim() || isCreatingProject) return;
+    
+    setIsCreatingProject(true);
+    try {
+      const response = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          name: projectSearch.trim(),
+          organizationId: organizationId || null,
+        }),
+      });
+      
+      if (!response.ok) throw new Error("Failed to create project");
+      
+      const { project: newProject } = await response.json();
+      
+      // Add to local list and select
+      setProjects((prev) => [...prev, newProject]);
+      setProjectId(newProject.id);
+      setProjectSearch("");
+      setProjectOpen(false);
+      toast.success(`Created "${newProject.name}"`);
+      
+      // Refresh to update server state
+      router.refresh();
+    } catch (error) {
+      toast.error("Failed to create project");
+    } finally {
+      setIsCreatingProject(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -283,7 +379,10 @@ export function TaskDetailModal({
 
           {/* Organization */}
           <PropertyRow icon={Building2} label="Organization" isEmpty={!organizationId}>
-            <Popover open={orgOpen} onOpenChange={setOrgOpen}>
+            <Popover open={orgOpen} onOpenChange={(open) => {
+              setOrgOpen(open);
+              if (!open) setOrgSearch("");
+            }}>
               <PopoverTrigger asChild>
                 <button className="text-sm hover:bg-[#1a1a1a] px-2 py-1 rounded -ml-2 transition-colors text-left">
                   {selectedOrg?.name || "Empty"}
@@ -291,9 +390,13 @@ export function TaskDetailModal({
               </PopoverTrigger>
               <PopoverContent className="w-[250px] p-0 bg-[#1a1a1a] border-[#333]" align="start">
                 <Command className="bg-transparent">
-                  <CommandInput placeholder="Search organizations..." className="border-none" />
+                  <CommandInput 
+                    placeholder="Search or create..." 
+                    className="border-none"
+                    value={orgSearch}
+                    onValueChange={setOrgSearch}
+                  />
                   <CommandList>
-                    <CommandEmpty>No organizations found</CommandEmpty>
                     <CommandGroup>
                       {organizations.map((org) => (
                         <CommandItem
@@ -308,6 +411,7 @@ export function TaskDetailModal({
                                 setProjectId(null);
                               }
                             }
+                            setOrgSearch("");
                             setOrgOpen(false);
                           }}
                           className="cursor-pointer"
@@ -316,6 +420,29 @@ export function TaskDetailModal({
                         </CommandItem>
                       ))}
                     </CommandGroup>
+                    {/* Create new option */}
+                    {orgSearch.trim() && !orgExists && (
+                      <>
+                        <CommandSeparator />
+                        <CommandGroup>
+                          <CommandItem
+                            onSelect={handleCreateOrg}
+                            className="cursor-pointer"
+                            disabled={isCreatingOrg}
+                          >
+                            {isCreatingOrg ? (
+                              <Loader2 size={14} className="mr-2 animate-spin" />
+                            ) : (
+                              <Plus size={14} className="mr-2" />
+                            )}
+                            Create
+                            <span className="ml-1 px-1.5 py-0.5 bg-[#333] rounded text-xs">
+                              {orgSearch}
+                            </span>
+                          </CommandItem>
+                        </CommandGroup>
+                      </>
+                    )}
                     {organizationId && (
                       <>
                         <CommandSeparator />
@@ -324,6 +451,7 @@ export function TaskDetailModal({
                             onSelect={() => {
                               setOrganizationId(null);
                               setProjectId(null);
+                              setOrgSearch("");
                               setOrgOpen(false);
                             }}
                             className="text-red-400 cursor-pointer"
@@ -341,7 +469,10 @@ export function TaskDetailModal({
 
           {/* Project */}
           <PropertyRow icon={FolderOpen} label="Project" isEmpty={!projectId}>
-            <Popover open={projectOpen} onOpenChange={setProjectOpen}>
+            <Popover open={projectOpen} onOpenChange={(open) => {
+              setProjectOpen(open);
+              if (!open) setProjectSearch("");
+            }}>
               <PopoverTrigger asChild>
                 <button className="text-sm hover:bg-[#1a1a1a] px-2 py-1 rounded -ml-2 transition-colors text-left">
                   {selectedProject?.name || "Empty"}
@@ -349,9 +480,13 @@ export function TaskDetailModal({
               </PopoverTrigger>
               <PopoverContent className="w-[250px] p-0 bg-[#1a1a1a] border-[#333]" align="start">
                 <Command className="bg-transparent">
-                  <CommandInput placeholder="Search projects..." className="border-none" />
+                  <CommandInput 
+                    placeholder="Search or create..." 
+                    className="border-none"
+                    value={projectSearch}
+                    onValueChange={setProjectSearch}
+                  />
                   <CommandList>
-                    <CommandEmpty>No projects found</CommandEmpty>
                     <CommandGroup>
                       {filteredProjects.map((project) => (
                         <CommandItem
@@ -363,6 +498,7 @@ export function TaskDetailModal({
                             if (project.organizationId && !organizationId) {
                               setOrganizationId(project.organizationId);
                             }
+                            setProjectSearch("");
                             setProjectOpen(false);
                           }}
                           className="cursor-pointer"
@@ -371,6 +507,29 @@ export function TaskDetailModal({
                         </CommandItem>
                       ))}
                     </CommandGroup>
+                    {/* Create new option */}
+                    {projectSearch.trim() && !projectExists && (
+                      <>
+                        <CommandSeparator />
+                        <CommandGroup>
+                          <CommandItem
+                            onSelect={handleCreateProject}
+                            className="cursor-pointer"
+                            disabled={isCreatingProject}
+                          >
+                            {isCreatingProject ? (
+                              <Loader2 size={14} className="mr-2 animate-spin" />
+                            ) : (
+                              <Plus size={14} className="mr-2" />
+                            )}
+                            Create
+                            <span className="ml-1 px-1.5 py-0.5 bg-[#333] rounded text-xs">
+                              {projectSearch}
+                            </span>
+                          </CommandItem>
+                        </CommandGroup>
+                      </>
+                    )}
                     {projectId && (
                       <>
                         <CommandSeparator />
@@ -378,6 +537,7 @@ export function TaskDetailModal({
                           <CommandItem
                             onSelect={() => {
                               setProjectId(null);
+                              setProjectSearch("");
                               setProjectOpen(false);
                             }}
                             className="text-red-400 cursor-pointer"
