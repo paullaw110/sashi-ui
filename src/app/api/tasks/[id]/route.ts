@@ -38,6 +38,7 @@ export async function PATCH(
     const updates: Record<string, unknown> = { updatedAt: now };
     
     if (body.name !== undefined) updates.name = body.name;
+    if (body.organizationId !== undefined) updates.organizationId = body.organizationId;
     if (body.projectId !== undefined) updates.projectId = body.projectId;
     if (body.priority !== undefined) updates.priority = body.priority;
     if (body.status !== undefined) updates.status = body.status;

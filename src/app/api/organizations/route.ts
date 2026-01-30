@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { db, schema } from "@/lib/db";
 import { eq, desc } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
@@ -32,6 +33,10 @@ export async function POST(request: NextRequest) {
     };
 
     await db.insert(schema.organizations).values(newOrganization);
+
+    // Revalidate pages that use organizations
+    revalidatePath("/");
+    revalidatePath("/tasks");
 
     return NextResponse.json({ organization: newOrganization }, { status: 201 });
   } catch (error) {
