@@ -174,8 +174,8 @@ const TaskItem = memo(function TaskItem({
         }
       }}
       className={cn(
-        "text-[10px] px-1.5 py-1 mb-1 rounded bg-[#1a1a1a] hover:bg-[#222] cursor-grab active:cursor-grabbing text-[#a3a3a3] transition-colors border border-transparent hover:border-[#333] touch-none",
-        task.status === "done" && "line-through text-[#525252]",
+        "text-sm px-2 py-1.5 mb-1.5 rounded bg-[#1a1a1a] hover:bg-[#222] cursor-grab active:cursor-grabbing text-[#e5e5e5] transition-colors border border-transparent hover:border-[#333] touch-none",
+        task.status === "done" && "line-through text-[#737373]",
         task.priority === "critical" && "border-l-2 border-l-red-500/50",
         task.priority === "high" && "border-l-2 border-l-amber-500/50",
         task.priority === "medium" && "border-l-2 border-l-blue-500/50",
@@ -184,18 +184,18 @@ const TaskItem = memo(function TaskItem({
         (isDragging || isDraggedAlong) && "opacity-30"
       )}
     >
-      <div className="flex items-center gap-1">
-        <span className={cn("text-[8px] font-mono", getStatusColor(task.status))}>
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className={cn("text-[10px] font-mono", getStatusColor(task.status))}>
           {getStatusIndicator(task.status)}
         </span>
-        <span className="truncate flex-1">{task.name}</span>
+        <span className="truncate flex-1 font-medium">{task.name}</span>
         {task.dueTime && (
-          <span className="text-[8px] text-[#525252]">
+          <span className="text-xs text-[#737373]">
             {task.dueTime.substring(0, 5)}
           </span>
         )}
       </div>
-      <div className={cn("text-[8px] pl-3", getStatusColor(task.status))}>
+      <div className={cn("text-xs", getStatusColor(task.status))}>
         {getStatusLabel(task.status)}
       </div>
     </div>
@@ -237,7 +237,7 @@ const DayCell = memo(function DayCell({
     <div
       ref={setNodeRef}
       className={cn(
-        "border-r border-b border-[#161616] last:border-r-0 min-h-[80px] flex flex-col relative",
+        "border-r border-b border-[#161616] last:border-r-0 min-h-[120px] flex flex-col relative",
         isOver && "bg-blue-500/10",
         !isInCurrentMonth && "bg-[#0a0a0a]"
       )}
@@ -260,7 +260,7 @@ const DayCell = memo(function DayCell({
       </div>
 
       {/* Tasks Area - no overflow hidden, shows ALL tasks */}
-      <div className="flex-1 p-1 space-y-0.5">
+      <div className="flex-1 p-1.5 space-y-1">
         {tasks.map((task) => (
           <TaskItem
             key={task.id}
@@ -812,20 +812,20 @@ export function MonthCalendar({
             {tasksBeingDragged.length > 1 ? (
               // Show stacked preview for multiple tasks
               <div className="relative">
-                <div className="px-2 py-1.5 rounded bg-[#222] shadow-xl border border-[#444] text-[11px] text-[#f5f5f5] cursor-grabbing">
+                <div className="px-3 py-2 rounded bg-[#222] shadow-xl border border-[#444] text-sm text-[#f5f5f5] cursor-grabbing font-medium">
                   {activeTask.name}
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium">
+                <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
                   {tasksBeingDragged.length}
                 </div>
               </div>
             ) : (
-              <div className="px-2 py-1.5 rounded bg-[#222] shadow-xl border border-[#444] text-[11px] text-[#f5f5f5] cursor-grabbing">
-                <div className="flex items-center gap-1.5">
-                  <span className={cn("text-[10px] font-mono", getStatusColor(activeTask.status))}>
+              <div className="px-3 py-2 rounded bg-[#222] shadow-xl border border-[#444] text-sm text-[#f5f5f5] cursor-grabbing">
+                <div className="flex items-center gap-2">
+                  <span className={cn("text-[11px] font-mono", getStatusColor(activeTask.status))}>
                     {getStatusIndicator(activeTask.status)}
                   </span>
-                  <span>{activeTask.name}</span>
+                  <span className="font-medium">{activeTask.name}</span>
                 </div>
               </div>
             )}
