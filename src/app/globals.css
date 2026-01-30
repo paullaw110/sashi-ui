@@ -1,25 +1,74 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
+@import "tw-animate-css";
 
-/* Midday-inspired monochrome palette */
+@custom-variant dark (&:is(.dark *));
+
+/* Midday-inspired monochrome palette (preserved) */
 :root {
   --bg-base: #0c0c0c;
   --bg-elevated: #111111;
   --bg-surface: #161616;
   --bg-hover: #1c1c1c;
   --bg-active: #222222;
-  
+
   --border-subtle: #1a1a1a;
   --border-default: #222222;
   --border-strong: #333333;
-  
+
   --text-primary: #f5f5f5;
   --text-secondary: #a3a3a3;
   --text-tertiary: #737373;
   --text-quaternary: #525252;
-  
-  --accent: #e5e5e5;
+
+  --accent-custom: #e5e5e5;
   --accent-muted: #a3a3a3;
+
+  /* shadcn CSS variables mapped to our dark monochrome theme */
+  --radius: 0.375rem;
+  --background: 0 0% 5%;          /* #0c0c0c */
+  --foreground: 0 0% 96%;         /* #f5f5f5 */
+  
+  --card: 0 0% 7%;                /* #111111 */
+  --card-foreground: 0 0% 96%;
+  
+  --popover: 0 0% 9%;             /* #161616 */
+  --popover-foreground: 0 0% 96%;
+  
+  --primary: 0 0% 90%;            /* #e5e5e5 */
+  --primary-foreground: 0 0% 5%;
+  
+  --secondary: 0 0% 13%;          /* #222222 */
+  --secondary-foreground: 0 0% 96%;
+  
+  --muted: 0 0% 11%;              /* #1c1c1c */
+  --muted-foreground: 0 0% 45%;   /* #737373 */
+  
+  --accent: 0 0% 13%;
+  --accent-foreground: 0 0% 96%;
+  
+  --destructive: 0 62% 30%;       /* red, muted for dark theme */
+  --destructive-foreground: 0 0% 96%;
+  
+  --border: 0 0% 13%;             /* #222222 */
+  --input: 0 0% 13%;
+  --ring: 0 0% 45%;
+  
+  --chart-1: 0 0% 60%;
+  --chart-2: 0 0% 50%;
+  --chart-3: 0 0% 40%;
+  --chart-4: 0 0% 70%;
+  --chart-5: 0 0% 35%;
+  
+  /* Sidebar variables for consistent theming */
+  --sidebar: 0 0% 7%;
+  --sidebar-foreground: 0 0% 96%;
+  --sidebar-primary: 0 0% 90%;
+  --sidebar-primary-foreground: 0 0% 5%;
+  --sidebar-accent: 0 0% 13%;
+  --sidebar-accent-foreground: 0 0% 96%;
+  --sidebar-border: 0 0% 13%;
+  --sidebar-ring: 0 0% 45%;
 }
 
 body {
@@ -74,4 +123,17 @@ input, textarea, select {
 input::placeholder,
 textarea::placeholder {
   color: var(--text-quaternary);
+}
+
+/* Simplified approach - let shadcn handle the color mapping */
+
+/* Note: We're using a dark-only theme, so no separate .dark class needed */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
