@@ -6,6 +6,7 @@ import { Plus, Circle, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 import { InlineOrgProjectCell } from "./InlineOrgProjectCell";
+import { InlineSelectCell, STATUS_OPTIONS, PRIORITY_OPTIONS } from "./InlineSelectCell";
 
 type Task = {
   id: string;
@@ -301,13 +302,32 @@ export function TaskTable({
             </div>
 
             {/* Priority - hidden on mobile */}
-            <div className="w-20 sm:w-24 shrink-0 hidden sm:block">
-              {getPriorityBadge(task.priority)}
+            <div 
+              className="w-20 sm:w-24 shrink-0 hidden sm:block"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <InlineSelectCell
+                type="priority"
+                taskId={task.id}
+                currentValue={task.priority}
+                options={PRIORITY_OPTIONS}
+                onUpdate={handleInlineUpdate}
+              />
             </div>
 
             {/* Status - hidden on mobile */}
-            <div className="w-16 sm:w-20 shrink-0 hidden sm:block">
-              {getStatusBadge(task.status)}
+            <div 
+              className="w-16 sm:w-20 shrink-0 hidden sm:block"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <InlineSelectCell
+                type="status"
+                taskId={task.id}
+                currentValue={task.status}
+                options={STATUS_OPTIONS}
+                onUpdate={handleInlineUpdate}
+                allowClear={false}
+              />
             </div>
 
             {/* Date */}
