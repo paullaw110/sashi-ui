@@ -4,6 +4,19 @@ import { useState } from "react";
 import { Plus, Circle, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+type Organization = {
+  id: string;
+  name: string;
+  description?: string | null;
+};
+
+type Project = {
+  id: string;
+  name: string;
+  color: string | null;
+  organizationId?: string | null;
+};
+
 type Task = {
   id: string;
   name: string;
@@ -14,17 +27,14 @@ type Task = {
   dueDate: string | null;  // ISO string from server
   dueTime: string | null;
   tags: string | null;
-};
-
-type Project = {
-  id: string;
-  name: string;
-  color: string | null;
+  project?: Project | null;
+  organization?: Organization | null;
 };
 
 interface TaskTableProps {
   tasks: Task[];
   projects: Project[];
+  organizations?: Organization[];
   title: string;
   showFilters?: boolean;
   onTaskClick?: (task: Task) => void;
@@ -141,6 +151,7 @@ function getPriorityBadge(priority: string | null) {
 export function TaskTable({ 
   tasks, 
   projects, 
+  organizations = [],
   title, 
   showFilters = true,
   onTaskClick,
@@ -211,12 +222,14 @@ export function TaskTable({
       </div>
 
       {/* Column Headers */}
-      <div className="flex items-center gap-4 sm:gap-6 px-3 sm:px-4 py-2 border-b border-[#1a1a1a] text-[10px] text-[#525252] uppercase tracking-widest">
+      <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2 border-b border-[#1a1a1a] text-[10px] text-[#525252] uppercase tracking-widest">
         <div className="w-5"></div>
-        <div className="flex-1">Task</div>
-        <div className="w-24 sm:w-28 hidden sm:block">Priority</div>
-        <div className="w-20 sm:w-24 hidden sm:block">Status</div>
-        <div className="w-16 sm:w-20 text-right">Due</div>
+        <div className="flex-1 min-w-0">Task</div>
+        <div className="w-20 sm:w-24 hidden md:block">Organization</div>
+        <div className="w-20 sm:w-24 hidden lg:block">Project</div>
+        <div className="w-20 sm:w-24 hidden sm:block">Priority</div>
+        <div className="w-16 sm:w-20 hidden sm:block">Status</div>
+        <div className="w-12 sm:w-16 text-right">Due</div>
       </div>
 
       {/* Rows */}
@@ -226,7 +239,7 @@ export function TaskTable({
             key={task.id}
             onClick={() => onTaskClick?.(task)}
             className={cn(
-              "flex items-center gap-4 sm:gap-6 px-3 sm:px-4 py-2.5 hover:bg-[#161616] cursor-pointer transition-colors",
+              "flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2.5 hover:bg-[#161616] cursor-pointer transition-colors",
               task.status === "done" && "opacity-40"
             )}
           >
@@ -240,24 +253,38 @@ export function TaskTable({
 
             {/* Name */}
             <span className={cn(
-              "flex-1 text-sm truncate font-medium",
+              "flex-1 min-w-0 text-sm truncate font-medium",
               task.status === "done" ? "text-[#525252] line-through" : "text-[#e5e5e5]"
             )}>
               {task.name}
             </span>
 
+            {/* Organization - hidden on mobile/tablet */}
+            <div className="w-20 sm:w-24 shrink-0 hidden md:block">
+              <span className="text-xs text-[#737373] truncate">
+                {task.organization?.name || "—"}
+              </span>
+            </div>
+
+            {/* Project - hidden on mobile/tablet/small desktop */}
+            <div className="w-20 sm:w-24 shrink-0 hidden lg:block">
+              <span className="text-xs text-[#737373] truncate">
+                {task.project?.name || "—"}
+              </span>
+            </div>
+
             {/* Priority - hidden on mobile */}
-            <div className="w-24 sm:w-28 shrink-0 hidden sm:block">
+            <div className="w-20 sm:w-24 shrink-0 hidden sm:block">
               {getPriorityBadge(task.priority)}
             </div>
 
             {/* Status - hidden on mobile */}
-            <div className="w-20 sm:w-24 shrink-0 hidden sm:block">
+            <div className="w-16 sm:w-20 shrink-0 hidden sm:block">
               {getStatusBadge(task.status)}
             </div>
 
             {/* Date */}
-            <span className="w-16 sm:w-20 shrink-0 text-[10px] text-[#404040] text-right">
+            <span className="w-12 sm:w-16 shrink-0 text-xs text-[#525252] text-right">
               {task.dueDate 
                 ? new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
                 : "—"

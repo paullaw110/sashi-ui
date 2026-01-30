@@ -49,6 +49,10 @@ async function getTasks() {
       gte(schema.tasks.dueDate, startOfDay),
       lte(schema.tasks.dueDate, endOfDay)
     ),
+    with: {
+      project: true,
+      organization: true,
+    },
     orderBy: (tasks, { asc }) => [asc(tasks.dueTime)],
   });
 
@@ -61,6 +65,10 @@ async function getTasks() {
       gte(schema.tasks.dueDate, startOfTomorrow),
       lte(schema.tasks.dueDate, endOfTomorrow)
     ),
+    with: {
+      project: true,
+      organization: true,
+    },
     orderBy: (tasks, { asc }) => [asc(tasks.dueTime)],
   });
 
@@ -76,6 +84,10 @@ async function getTasks() {
       gte(schema.tasks.dueDate, weekStart),
       lte(schema.tasks.dueDate, weekEnd)
     ),
+    with: {
+      project: true,
+      organization: true,
+    },
     orderBy: (tasks, { asc }) => [asc(tasks.dueDate), asc(tasks.dueTime)],
   });
 
@@ -84,8 +96,22 @@ async function getTasks() {
 
 async function getProjects() {
   return await db.query.projects.findMany({
+    with: {
+      organization: true,
+    },
     orderBy: (projects, { asc }) => [asc(projects.name)],
   });
+}
+
+async function getOrganizations() {
+  try {
+    return await db.query.organizations.findMany({
+      orderBy: (organizations, { asc }) => [asc(organizations.name)],
+    });
+  } catch (error) {
+    console.log("Organizations table not found, returning empty array:", (error as Error).message);
+    return [];
+  }
 }
 
 // Serialize dates to ISO strings for client components
@@ -99,6 +125,7 @@ function serializeTasks<T extends { dueDate: Date | null }>(tasks: T[]) {
 export default async function Home() {
   const { todayTasks, weekTasks, nextTasks } = await getTasks();
   const projects = await getProjects();
+  const organizations = await getOrganizations();
 
   return (
     <AppLayout>
@@ -107,6 +134,7 @@ export default async function Home() {
         weekTasks={serializeTasks(weekTasks)}
         nextTasks={serializeTasks(nextTasks)}
         projects={projects}
+        organizations={organizations}
       />
     </AppLayout>
   );

@@ -17,12 +17,21 @@ type Task = {
   dueTime: string | null;
   tags: string | null;
   description?: string | null;
+  project?: Project | null;
+  organization?: Organization | null;
+};
+
+type Organization = {
+  id: string;
+  name: string;
+  description?: string | null;
 };
 
 type Project = {
   id: string;
   name: string;
   color: string | null;
+  organizationId?: string | null;
 };
 
 interface DashboardProps {
@@ -30,13 +39,15 @@ interface DashboardProps {
   weekTasks: Task[];
   nextTasks: Task[];
   projects: Project[];
+  organizations?: Organization[];
 }
 
-export function Dashboard({ todayTasks, weekTasks, nextTasks, projects }: DashboardProps) {
+export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organizations = [] }: DashboardProps) {
   const router = useRouter();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [defaultDate, setDefaultDate] = useState<Date | null>(null);
 
   const handleTaskClick = useCallback((task: Task) => {
     setSelectedTask(task);
@@ -44,16 +55,28 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects }: Dashbo
     setIsPanelOpen(true);
   }, []);
 
-  const handleNewTask = useCallback(() => {
+  const handleNewTask = useCallback((defaultDate?: Date) => {
     setSelectedTask(null);
     setIsCreating(true);
+    setDefaultDate(defaultDate || null);
     setIsPanelOpen(true);
   }, []);
+
+  const handleNewTodayTask = useCallback(() => {
+    handleNewTask(new Date());
+  }, [handleNewTask]);
+
+  const handleNewNextTask = useCallback(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    handleNewTask(tomorrow);
+  }, [handleNewTask]);
 
   const handleClosePanel = useCallback(() => {
     setIsPanelOpen(false);
     setSelectedTask(null);
     setIsCreating(false);
+    setDefaultDate(null);
   }, []);
 
   const handleSave = useCallback(async (taskData: Partial<Task>) => {
@@ -132,20 +155,22 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects }: Dashbo
           <TaskTable
             tasks={todayTasks}
             projects={projects}
+            organizations={organizations}
             title="Today"
             showFilters={true}
             onTaskClick={handleTaskClick}
-            onNewTask={handleNewTask}
+            onNewTask={handleNewTodayTask}
             onStatusChange={handleStatusChange}
           />
 
           <TaskTable
             tasks={nextTasks}
             projects={projects}
+            organizations={organizations}
             title="Next"
             showFilters={false}
             onTaskClick={handleTaskClick}
-            onNewTask={handleNewTask}
+            onNewTask={handleNewNextTask}
             onStatusChange={handleStatusChange}
           />
         </div>
@@ -166,7 +191,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects }: Dashbo
         projects={projects}
         isOpen={isPanelOpen}
         isCreating={isCreating}
-        defaultDate={new Date()}
+        defaultDate={defaultDate}
         onClose={handleClosePanel}
         onSave={handleSave}
         onDelete={handleDelete}
