@@ -33,13 +33,13 @@ interface TaskTableProps {
 function getStatusIcon(status: string) {
   switch (status) {
     case "done":
-      return <CheckCircle2 size={14} className="text-[#737373]" />;
+      return <CheckCircle2 size={14} className="text-[var(--text-tertiary)]" />;
     case "in_progress":
-      return <Clock size={14} className="text-[#a3a3a3]" />;
+      return <Clock size={14} className="text-[var(--text-secondary)]" />;
     case "waiting":
-      return <AlertCircle size={14} className="text-[#737373]" />;
+      return <AlertCircle size={14} className="text-[var(--text-tertiary)]" />;
     default:
-      return <Circle size={14} className="text-[#404040]" />;
+      return <Circle size={14} className="text-[var(--text-quaternary)]" />;
   }
 }
 
@@ -65,9 +65,9 @@ function getStatusBadge(status: string) {
     },
     not_started: { 
       label: "Not Started", 
-      bg: "bg-[#1a1a1a]", 
-      text: "text-[#525252]", 
-      border: "border-[#222]" 
+      bg: "bg-[var(--bg-surface)]", 
+      text: "text-[var(--text-quaternary)]", 
+      border: "border-[var(--border-default)]" 
     },
   };
   
@@ -84,7 +84,7 @@ function getStatusBadge(status: string) {
 }
 
 function getPriorityBadge(priority: string | null) {
-  if (!priority) return <span className="text-xs text-[#525252]">—</span>;
+  if (!priority) return <span className="text-xs text-[var(--text-quaternary)]">—</span>;
   
   const config: Record<string, { label: string; bg: string; text: string; border: string }> = {
     "non-negotiable": { 
@@ -121,9 +121,9 @@ function getPriorityBadge(priority: string | null) {
   
   const { label, bg, text, border } = config[priority] || { 
     label: priority, 
-    bg: "bg-[#1a1a1a]", 
-    text: "text-[#525252]", 
-    border: "border-[#222]" 
+    bg: "bg-[var(--bg-surface)]", 
+    text: "text-[var(--text-quaternary)]", 
+    border: "border-[var(--border-default)]" 
   };
   
   return (
@@ -164,12 +164,12 @@ export function TaskTable({
   };
 
   return (
-    <div className="bg-[#111] rounded-lg border border-[#1a1a1a]">
+    <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-[#1a1a1a]">
+      <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-[var(--border-subtle)]">
         <div className="flex items-center gap-2 sm:gap-3">
-          <h2 className="font-display text-lg text-[#f5f5f5]">{title}</h2>
-          <span className="text-xs text-[#525252]">{filteredTasks.length}</span>
+          <h2 className="font-display text-lg text-[var(--text-primary)]">{title}</h2>
+          <span className="text-xs text-[var(--text-quaternary)]">{filteredTasks.length}</span>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
           {showFilters && (
@@ -177,7 +177,7 @@ export function TaskTable({
               <select
                 value={filterStatus || ""}
                 onChange={(e) => setFilterStatus(e.target.value || null)}
-                className="text-xs text-[#525252] bg-transparent border border-[#222] px-2 py-1 rounded hover:border-[#333] focus:outline-none transition-colors"
+                className="text-xs text-[var(--text-quaternary)] bg-transparent border border-[var(--border-default)] px-2 py-1 rounded hover:border-[var(--border-strong)] focus:outline-none transition-colors"
               >
                 <option value="">Status</option>
                 <option value="not_started">Todo</option>
@@ -188,7 +188,7 @@ export function TaskTable({
               <select
                 value={filterPriority || ""}
                 onChange={(e) => setFilterPriority(e.target.value || null)}
-                className="hidden sm:block text-xs text-[#525252] bg-transparent border border-[#222] px-2 py-1 rounded hover:border-[#333] focus:outline-none transition-colors"
+                className="hidden sm:block text-xs text-[var(--text-quaternary)] bg-transparent border border-[var(--border-default)] px-2 py-1 rounded hover:border-[var(--border-strong)] focus:outline-none transition-colors"
               >
                 <option value="">Priority</option>
                 <option value="non-negotiable">Non-Negotiable</option>
@@ -201,7 +201,7 @@ export function TaskTable({
           )}
           <button 
             onClick={onNewTask}
-            className="flex items-center gap-1 text-xs text-[#525252] hover:text-[#a3a3a3] px-2 py-1 rounded hover:bg-[#1a1a1a] transition-colors"
+            className="flex items-center gap-1 text-xs text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] px-2 py-1 rounded hover:bg-[var(--bg-surface)] transition-colors"
           >
             <Plus size={12} />
             <span className="hidden sm:inline">Add</span>
@@ -210,7 +210,7 @@ export function TaskTable({
       </div>
 
       {/* Column Headers */}
-      <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2 border-b border-[#1a1a1a] text-[10px] text-[#525252] uppercase tracking-widest">
+      <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2 border-b border-[var(--border-subtle)] text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest">
         <div className="w-5"></div>
         <div className="flex-1 min-w-0">Task</div>
         <div className="w-20 sm:w-24 hidden md:block">Organization</div>
@@ -227,7 +227,7 @@ export function TaskTable({
             key={task.id}
             onClick={() => onTaskClick?.(task)}
             className={cn(
-              "flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2.5 hover:bg-[#161616] cursor-pointer transition-colors",
+              "flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2.5 hover:bg-[var(--bg-surface)] cursor-pointer transition-colors",
               task.status === "done" && "opacity-40"
             )}
           >
@@ -242,21 +242,21 @@ export function TaskTable({
             {/* Name */}
             <span className={cn(
               "flex-1 min-w-0 text-sm truncate font-medium",
-              task.status === "done" ? "text-[#525252] line-through" : "text-[#e5e5e5]"
+              task.status === "done" ? "text-[var(--text-quaternary)] line-through" : "text-[var(--text-primary)]"
             )}>
               {task.name}
             </span>
 
             {/* Organization - hidden on mobile/tablet */}
             <div className="w-20 sm:w-24 shrink-0 hidden md:block">
-              <span className="text-xs text-[#737373] truncate">
+              <span className="text-xs text-[var(--text-tertiary)] truncate">
                 {task.organization?.name || "—"}
               </span>
             </div>
 
             {/* Project - hidden on mobile/tablet/small desktop */}
             <div className="w-20 sm:w-24 shrink-0 hidden lg:block">
-              <span className="text-xs text-[#737373] truncate">
+              <span className="text-xs text-[var(--text-tertiary)] truncate">
                 {task.project?.name || "—"}
               </span>
             </div>
@@ -272,7 +272,7 @@ export function TaskTable({
             </div>
 
             {/* Date */}
-            <span className="w-12 sm:w-16 shrink-0 text-xs text-[#525252] text-right">
+            <span className="w-12 sm:w-16 shrink-0 text-xs text-[var(--text-quaternary)] text-right">
               {task.dueDate 
                 ? new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
                 : "—"
@@ -282,7 +282,7 @@ export function TaskTable({
         ))}
 
         {filteredTasks.length === 0 && (
-          <div className="px-4 py-10 text-center text-[#404040] text-xs">
+          <div className="px-4 py-10 text-center text-[var(--text-quaternary)] text-xs">
             No tasks
           </div>
         )}

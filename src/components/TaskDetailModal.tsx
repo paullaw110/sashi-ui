@@ -86,7 +86,7 @@ interface TaskDetailModalProps {
 }
 
 const STATUSES = [
-  { value: "not_started", label: "Not Started", color: "text-[#525252]" },
+  { value: "not_started", label: "Not Started", color: "text-[var(--text-quaternary)]" },
   { value: "in_progress", label: "In Progress", color: "text-blue-400" },
   { value: "waiting", label: "Waiting", color: "text-amber-400" },
   { value: "done", label: "Done", color: "text-green-400" },
@@ -308,7 +308,7 @@ export function TaskDetailModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Task name..."
-            className="text-xl font-semibold border-none bg-transparent px-0 h-auto focus-visible:ring-0 placeholder:text-[#404040]"
+            className="text-xl font-semibold border-none bg-transparent px-0 h-auto focus-visible:ring-0 placeholder:text-[var(--text-quaternary)]"
           />
         </DialogHeader>
 
@@ -316,7 +316,7 @@ export function TaskDetailModal({
           {/* Status */}
           <PropertyRow icon={CircleDot} label="Status">
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="h-8 w-auto border-none bg-transparent hover:bg-[#1a1a1a] px-2">
+              <SelectTrigger className="h-8 w-auto border-none bg-transparent hover:bg-[var(--bg-surface)] px-2">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -344,11 +344,11 @@ export function TaskDetailModal({
           <PropertyRow icon={Calendar} label="Due" isEmpty={!dueDate}>
             <Popover open={dateOpen} onOpenChange={setDateOpen}>
               <PopoverTrigger asChild>
-                <button className="text-sm hover:bg-[#1a1a1a] px-2 py-1 rounded -ml-2 transition-colors text-left">
+                <button className="text-sm hover:bg-[var(--bg-surface)] px-2 py-1 rounded -ml-2 transition-colors text-left">
                   {dueDate ? format(dueDate, "MMMM d, yyyy") : "Empty"}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border-[#333]" align="start">
+              <PopoverContent className="w-auto p-0 bg-[var(--bg-surface)] border-[var(--border-strong)]" align="start">
                 <CalendarPicker
                   mode="single"
                   selected={dueDate}
@@ -359,7 +359,7 @@ export function TaskDetailModal({
                   initialFocus
                 />
                 {dueDate && (
-                  <div className="p-2 border-t border-[#333]">
+                  <div className="p-2 border-t border-[var(--border-strong)]">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -384,11 +384,11 @@ export function TaskDetailModal({
               if (!open) setOrgSearch("");
             }}>
               <PopoverTrigger asChild>
-                <button className="text-sm hover:bg-[#1a1a1a] px-2 py-1 rounded -ml-2 transition-colors text-left">
+                <button className="text-sm hover:bg-[var(--bg-surface)] px-2 py-1 rounded -ml-2 transition-colors text-left">
                   {selectedOrg?.name || "Empty"}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-[250px] p-0 bg-[#1a1a1a] border-[#333]" align="start">
+              <PopoverContent className="w-[250px] p-0 bg-[var(--bg-surface)] border-[var(--border-strong)]" align="start">
                 <Command className="bg-transparent">
                   <CommandInput 
                     placeholder="Search or create..." 
@@ -474,11 +474,11 @@ export function TaskDetailModal({
               if (!open) setProjectSearch("");
             }}>
               <PopoverTrigger asChild>
-                <button className="text-sm hover:bg-[#1a1a1a] px-2 py-1 rounded -ml-2 transition-colors text-left">
+                <button className="text-sm hover:bg-[var(--bg-surface)] px-2 py-1 rounded -ml-2 transition-colors text-left">
                   {selectedProject?.name || "Empty"}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-[250px] p-0 bg-[#1a1a1a] border-[#333]" align="start">
+              <PopoverContent className="w-[250px] p-0 bg-[var(--bg-surface)] border-[var(--border-strong)]" align="start">
                 <Command className="bg-transparent">
                   <CommandInput 
                     placeholder="Search or create..." 
@@ -559,12 +559,12 @@ export function TaskDetailModal({
               value={priority || "none"}
               onValueChange={(v) => setPriority(v === "none" ? null : v)}
             >
-              <SelectTrigger className="h-8 w-auto border-none bg-transparent hover:bg-[#1a1a1a] px-2">
+              <SelectTrigger className="h-8 w-auto border-none bg-transparent hover:bg-[var(--bg-surface)] px-2">
                 <SelectValue placeholder="Empty" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">
-                  <span className="text-[#525252]">None</span>
+                  <span className="text-[var(--text-quaternary)]">None</span>
                 </SelectItem>
                 {PRIORITIES.map((p) => (
                   <SelectItem key={p.value} value={p.value}>
@@ -581,7 +581,7 @@ export function TaskDetailModal({
               type="time"
               value={dueTime}
               onChange={(e) => setDueTime(e.target.value)}
-              className="h-8 w-auto border-none bg-transparent hover:bg-[#1a1a1a] px-2"
+              className="h-8 w-auto border-none bg-transparent hover:bg-[var(--bg-surface)] px-2"
               placeholder="--:-- --"
             />
           </PropertyRow>
@@ -589,7 +589,7 @@ export function TaskDetailModal({
           {/* Created (read-only) */}
           {task?.createdAt && (
             <PropertyRow icon={CalendarDays} label="Created">
-              <span className="text-sm text-[#737373]">
+              <span className="text-sm text-[var(--text-tertiary)]">
                 {format(new Date(task.createdAt), "MMMM d, yyyy h:mm a")}
               </span>
             </PropertyRow>
@@ -597,12 +597,12 @@ export function TaskDetailModal({
         </div>
 
         {/* Divider */}
-        <div className="border-t border-[#222] my-4" />
+        <div className="border-t border-[var(--border-default)] my-4" />
 
         {/* Description */}
         <div>
-          <h3 className="text-sm font-medium text-[#a3a3a3] mb-2">Description</h3>
-          <div className="bg-[#161616] rounded-lg border border-[#222] min-h-[120px]">
+          <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-2">Description</h3>
+          <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] min-h-[120px]">
             <RichEditor
               content={description}
               onChange={setDescription}
@@ -613,7 +613,7 @@ export function TaskDetailModal({
         </div>
 
         {/* Footer */}
-        <DialogFooter className="mt-6 pt-4 border-t border-[#222]">
+        <DialogFooter className="mt-6 pt-4 border-t border-[var(--border-default)]">
           <div className="flex items-center justify-between w-full">
             {task && onDelete ? (
               <Button

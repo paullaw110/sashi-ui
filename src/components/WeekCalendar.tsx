@@ -155,8 +155,8 @@ function TaskItem({
         }
       }}
       className={cn(
-        "text-sm px-2 py-2 rounded bg-[#1a1a1a] hover:bg-[#222] cursor-grab active:cursor-grabbing text-[#e5e5e5] transition-colors border border-[#222] touch-none",
-        task.status === "done" && "line-through text-[#737373]",
+        "text-sm px-2 py-2 rounded bg-[var(--bg-surface)] hover:bg-[var(--bg-active)] cursor-grab active:cursor-grabbing text-[var(--text-primary)] transition-colors border border-[var(--border-default)] touch-none",
+        task.status === "done" && "line-through text-[var(--text-tertiary)]",
         task.priority === "critical" && "border-l-2 border-l-red-500/30",
         task.priority === "high" && "border-l-2 border-l-amber-500/30",
         task.priority === "medium" && "border-l-2 border-l-blue-500/30",
@@ -169,7 +169,7 @@ function TaskItem({
         <div className="flex items-center gap-1.5">
           <span className="truncate font-medium">{task.name}</span>
           {task.dueTime && (
-            <span className="text-xs text-[#737373] ml-auto">
+            <span className="text-xs text-[var(--text-tertiary)] ml-auto">
               {task.dueTime.substring(0, 5)}
             </span>
           )}
@@ -211,24 +211,24 @@ function DayColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "border-r border-[#161616] last:border-r-0 min-h-[180px] flex flex-col",
+        "border-r border-[var(--border-subtle)] last:border-r-0 min-h-[180px] flex flex-col",
         isOver && "bg-blue-500/10"
       )}
     >
       {/* Day Header */}
       <div
         className={cn(
-          "px-2 py-3 text-center border-b border-[#161616]",
-          isCurrentDay && "bg-[#1a1a1a]"
+          "px-2 py-3 text-center border-b border-[var(--border-subtle)]",
+          isCurrentDay && "bg-[var(--bg-surface)]"
         )}
       >
-        <div className="text-[10px] text-[#525252] uppercase tracking-widest">
+        <div className="text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest">
           {format(day, "EEE")}
         </div>
         <div
           className={cn(
             "text-lg mt-0.5 font-display",
-            isCurrentDay ? "text-[#f5f5f5] font-medium" : "text-[#737373]"
+            isCurrentDay ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-tertiary)]"
           )}
         >
           {format(day, "d")}
@@ -537,7 +537,7 @@ export function WeekCalendar({
   // Don't render until client-side date is set
   if (!currentDate) {
     return (
-      <div className="bg-[#111] rounded-lg border border-[#1a1a1a] h-[300px] animate-pulse" />
+      <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)] h-[300px] animate-pulse" />
     );
   }
 
@@ -557,30 +557,30 @@ export function WeekCalendar({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="bg-[#111] rounded-lg border border-[#1a1a1a]">
+      <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)]">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a1a]">
-          <h2 className="font-display text-lg text-[#f5f5f5]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
+          <h2 className="font-display text-lg text-[var(--text-primary)]">
             {format(currentDate, "MMMM yyyy")}
           </h2>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate("prev")}
-              className="p-1 hover:bg-[#1a1a1a] rounded transition-colors"
+              className="p-1 hover:bg-[var(--bg-surface)] rounded transition-colors"
             >
-              <ChevronLeft size={14} className="text-[#525252]" />
+              <ChevronLeft size={14} className="text-[var(--text-quaternary)]" />
             </button>
             <button
               onClick={() => setCurrentDate(new Date())}
-              className="text-xs text-[#e5e5e5] bg-[#1a1a1a] hover:bg-[#222] px-3 py-1.5 rounded transition-colors"
+              className="text-xs text-[var(--text-primary)] bg-[var(--bg-surface)] hover:bg-[var(--bg-active)] px-3 py-1.5 rounded transition-colors"
             >
               Today
             </button>
             <button
               onClick={() => navigate("next")}
-              className="p-1 hover:bg-[#1a1a1a] rounded transition-colors"
+              className="p-1 hover:bg-[var(--bg-surface)] rounded transition-colors"
             >
-              <ChevronRight size={14} className="text-[#525252]" />
+              <ChevronRight size={14} className="text-[var(--text-quaternary)]" />
             </button>
           </div>
         </div>
@@ -631,7 +631,7 @@ export function WeekCalendar({
             {tasksBeingDragged.length > 1 ? (
               // Show stacked preview for multiple tasks
               <div className="relative">
-                <div className="px-3 py-2 rounded bg-[#222] shadow-xl border border-[#444] text-sm text-[#f5f5f5] cursor-grabbing font-medium">
+                <div className="px-3 py-2 rounded bg-[var(--bg-active)] shadow-xl border border-[#444] text-sm text-[var(--text-primary)] cursor-grabbing font-medium">
                   {activeTask.name}
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
@@ -639,7 +639,7 @@ export function WeekCalendar({
                 </div>
               </div>
             ) : (
-              <div className="px-3 py-2 rounded bg-[#222] shadow-xl border border-[#444] text-sm text-[#f5f5f5] cursor-grabbing font-medium">
+              <div className="px-3 py-2 rounded bg-[var(--bg-active)] shadow-xl border border-[#444] text-sm text-[var(--text-primary)] cursor-grabbing font-medium">
                 {activeTask.name}
               </div>
             )}

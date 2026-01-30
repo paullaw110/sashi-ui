@@ -77,7 +77,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   }, [isMobile, sidebarOpen, sidebarCollapsed]);
 
   return (
-    <div className="min-h-screen bg-[#0c0c0c]">
+    <div className="min-h-screen bg-[var(--bg-base)]">
       <Sidebar 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)}
@@ -87,12 +87,12 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
       />
       
       {/* Header - shown when sidebar is collapsed or on mobile */}
-      <header className={`fixed top-0 left-0 right-0 h-14 bg-[#0c0c0c] border-b border-[#1a1a1a] flex items-center px-4 z-30 transition-all duration-300 ${
+      <header className={`fixed top-0 left-0 right-0 h-14 bg-[var(--bg-base)] border-b border-[var(--border-default)] flex items-center px-4 z-30 transition-all duration-300 ${
         isMobile || sidebarCollapsed ? 'block' : 'hidden'
       }`}>
         <button 
           onClick={toggleSidebar}
-          className="p-2 -ml-2 text-[#737373] hover:text-[#f5f5f5] hover:bg-[#1c1c1c] rounded transition-colors"
+          className="p-2 -ml-2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-lg transition-colors"
           title={sidebarCollapsed ? 'Expand sidebar (⌘B)' : 'Open sidebar'}
         >
           {isMobile ? <Menu size={20} /> : (sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />)}
@@ -101,9 +101,9 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
           <img 
             src="/sashi-avatar.png" 
             alt="Sashi" 
-            className="w-6 h-6 rounded object-cover grayscale"
+            className="w-6 h-6 rounded-lg object-cover grayscale"
           />
-          <span className="font-display text-base text-[#f5f5f5]">Sashi</span>
+          <span className="font-display text-base text-[var(--text-primary)]">Sashi</span>
         </div>
       </header>
 
@@ -117,10 +117,10 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
         {(title || subtitle) && (
           <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-4 lg:pb-6">
             {title && (
-              <h1 className="font-display text-xl sm:text-2xl font-medium text-[#f5f5f5] tracking-tight">{title}</h1>
+              <h1 className="font-display text-display text-[var(--text-primary)] tracking-tight">{title}</h1>
             )}
             {subtitle && (
-              <p className="text-xs text-[#525252] mt-1">{subtitle}</p>
+              <p className="text-xs text-[var(--text-quaternary)] mt-1">{subtitle}</p>
             )}
           </div>
         )}

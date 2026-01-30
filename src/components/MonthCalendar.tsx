@@ -73,7 +73,7 @@ function getStatusColor(status: string) {
     case "waiting":
       return "text-amber-400";
     default:
-      return "text-[#404040]";
+      return "text-[var(--text-quaternary)]";
   }
 }
 
@@ -175,10 +175,10 @@ const TaskItem = memo(function TaskItem({
         }
       }}
       className={cn(
-        "text-sm px-2 py-1.5 mb-1.5 rounded bg-[#1a1a1a] hover:bg-[#222] cursor-grab active:cursor-grabbing text-[#e5e5e5] transition-colors border border-transparent hover:border-[#333] touch-none",
-        task.status === "done" && "line-through text-[#737373]",
+        "text-sm px-2 py-1.5 mb-1.5 rounded bg-[var(--bg-surface)] hover:bg-[var(--bg-active)] cursor-grab active:cursor-grabbing text-[var(--text-primary)] transition-colors border border-transparent hover:border-[var(--border-strong)] touch-none",
+        task.status === "done" && "line-through text-[var(--text-tertiary)]",
         task.priority === "non-negotiable" && "border-l-2 border-l-red-500/50",
-        !isSelected && task.priority !== "non-negotiable" && "hover:border-[#333]",
+        !isSelected && task.priority !== "non-negotiable" && "hover:border-[var(--border-strong)]",
         isSelected && "border-blue-500/30 bg-blue-500/10",
         (isDragging || isDraggedAlong) && "opacity-30"
       )}
@@ -189,7 +189,7 @@ const TaskItem = memo(function TaskItem({
         </span>
         <span className="truncate flex-1 font-medium">{task.name}</span>
         {task.dueTime && (
-          <span className="text-xs text-[#737373]">
+          <span className="text-xs text-[var(--text-tertiary)]">
             {task.dueTime.substring(0, 5)}
           </span>
         )}
@@ -240,9 +240,9 @@ const DayCell = memo(function DayCell({
     <div
       ref={setNodeRef}
       className={cn(
-        "border-r border-b border-[#161616] last:border-r-0 min-h-[120px] flex flex-col relative",
+        "border-r border-b border-[var(--border-subtle)] last:border-r-0 min-h-[120px] flex flex-col relative",
         isOver && "bg-blue-500/10",
-        !isInCurrentMonth && "bg-[#0a0a0a]"
+        !isInCurrentMonth && "bg-[var(--bg-base)]"
       )}
     >
       {/* Anchor for scrolling to today */}
@@ -252,12 +252,12 @@ const DayCell = memo(function DayCell({
 
       {/* Day Number */}
       <div className={cn(
-        "px-2 py-1.5 text-xs font-medium border-b border-[#161616]",
+        "px-2 py-1.5 text-xs font-medium border-b border-[var(--border-subtle)]",
         isCurrentDay
           ? "bg-blue-500/20 text-blue-400"
           : isInCurrentMonth
-          ? "text-[#f5f5f5]"
-          : "text-[#404040]"
+          ? "text-[var(--text-primary)]"
+          : "text-[var(--text-quaternary)]"
       )}>
         {dayNumber}
       </div>
@@ -315,8 +315,8 @@ const SingleMonth = memo(function SingleMonth({
   return (
     <div className="mb-0">
       {/* Month Label */}
-      <div className="px-4 py-2 bg-[#0d0d0d] border-b border-[#1a1a1a]">
-        <h3 className="font-display text-sm text-[#f5f5f5]">
+      <div className="px-4 py-2 bg-[var(--bg-base)] border-b border-[var(--border-subtle)]">
+        <h3 className="font-display text-sm text-[var(--text-primary)]">
           {format(month, "MMMM yyyy")}
         </h3>
       </div>
@@ -717,7 +717,7 @@ export function MonthCalendar({
   // Don't render until client-side
   if (!mounted || !monthsRange) {
     return (
-      <div className="bg-[#111] rounded-lg border border-[#1a1a1a] h-[600px] animate-pulse" />
+      <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)] h-[600px] animate-pulse" />
     );
   }
 
@@ -731,26 +731,26 @@ export function MonthCalendar({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="bg-[#111] rounded-lg border border-[#1a1a1a] flex flex-col h-[calc(100vh-200px)]">
+      <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)] flex flex-col h-[calc(100vh-200px)]">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a1a] shrink-0">
-          <h2 className="font-display text-base text-[#f5f5f5]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] shrink-0">
+          <h2 className="font-display text-base text-[var(--text-primary)]">
             Calendar
           </h2>
           <button
             onClick={scrollToToday}
-            className="text-[10px] text-[#e5e5e5] bg-[#1a1a1a] hover:bg-[#222] px-3 py-1.5 rounded transition-colors"
+            className="text-[10px] text-[var(--text-primary)] bg-[var(--bg-surface)] hover:bg-[var(--bg-active)] px-3 py-1.5 rounded transition-colors"
           >
             Today
           </button>
         </div>
 
         {/* Sticky Week Day Headers */}
-        <div className="grid grid-cols-7 border-b border-[#1a1a1a] shrink-0 bg-[#111]">
+        <div className="grid grid-cols-7 border-b border-[var(--border-subtle)] shrink-0 bg-[var(--bg-elevated)]">
           {weekDays.map((day) => (
             <div
               key={day}
-              className="px-2 py-2 text-center text-[10px] text-[#525252] font-medium uppercase tracking-wider border-r border-[#161616] last:border-r-0"
+              className="px-2 py-2 text-center text-[10px] text-[var(--text-quaternary)] font-medium uppercase tracking-wider border-r border-[var(--border-subtle)] last:border-r-0"
             >
               {day}
             </div>
@@ -804,7 +804,7 @@ export function MonthCalendar({
             {tasksBeingDragged.length > 1 ? (
               // Show stacked preview for multiple tasks
               <div className="relative">
-                <div className="px-3 py-2 rounded bg-[#222] shadow-xl border border-[#444] text-sm text-[#f5f5f5] cursor-grabbing font-medium">
+                <div className="px-3 py-2 rounded bg-[var(--bg-active)] shadow-xl border border-[var(--border-strong)] text-sm text-[var(--text-primary)] cursor-grabbing font-medium">
                   {activeTask.name}
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
@@ -812,7 +812,7 @@ export function MonthCalendar({
                 </div>
               </div>
             ) : (
-              <div className="px-3 py-2 rounded bg-[#222] shadow-xl border border-[#444] text-sm text-[#f5f5f5] cursor-grabbing">
+              <div className="px-3 py-2 rounded bg-[var(--bg-active)] shadow-xl border border-[var(--border-strong)] text-sm text-[var(--text-primary)] cursor-grabbing">
                 <div className="flex items-center gap-2">
                   <span className={cn("text-[11px] font-mono", getStatusColor(activeTask.status))}>
                     {getStatusIndicator(activeTask.status)}

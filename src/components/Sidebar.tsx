@@ -63,29 +63,29 @@ export function Sidebar({
       )}
       
       <aside className={cn(
-        "w-[256px] h-screen bg-[#0c0c0c] border-r border-[#1a1a1a] flex flex-col fixed left-0 top-0 z-50",
+        "w-[256px] h-screen bg-[var(--bg-base)] border-r border-[var(--border-subtle)] flex flex-col fixed left-0 top-0 z-50",
         "transition-all duration-300 ease-in-out",
         isMobile 
           ? cn("lg:hidden", isOpen ? "translate-x-0" : "-translate-x-full")
           : cn("hidden lg:flex", isCollapsed ? "-translate-x-full" : "translate-x-0")
       )}>
         {/* Logo + Status */}
-        <div className="p-4 border-b border-[#1a1a1a]">
+        <div className="p-4 border-b border-[var(--border-subtle)]">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2.5" onClick={onClose}>
               <img 
                 src="/sashi-avatar.png" 
                 alt="Sashi" 
-                className="w-7 h-7 rounded object-cover grayscale"
+                className="w-7 h-7 rounded-lg object-cover grayscale"
               />
-              <span className="font-display text-lg text-[#f5f5f5]">Sashi</span>
+              <span className="font-display text-lg text-[var(--text-primary)]">Sashi</span>
             </Link>
             <div className="flex items-center gap-1">
               {/* Desktop collapse button */}
               {!isMobile && onToggleCollapse && (
                 <button 
                   onClick={onToggleCollapse}
-                  className="p-1 text-[#525252] hover:text-[#737373] hover:bg-[#1c1c1c] rounded transition-colors"
+                  className="p-1.5 text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)] rounded-lg transition-colors"
                   title="Collapse sidebar (⌘B)"
                 >
                   <PanelLeftClose size={18} />
@@ -95,7 +95,7 @@ export function Sidebar({
               {isMobile && (
                 <button 
                   onClick={onClose}
-                  className="p-1 text-[#525252] hover:text-[#737373]"
+                  className="p-1.5 text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)]"
                 >
                   <X size={18} />
                 </button>
@@ -109,10 +109,10 @@ export function Sidebar({
 
         {/* Search */}
         <div className="p-3">
-          <button className="w-full flex items-center gap-2 px-3 py-2 text-[#525252] text-xs rounded border border-[#1a1a1a] hover:border-[#333] hover:text-[#737373] transition-colors">
+          <button className="w-full flex items-center gap-2 px-3 py-2 text-[var(--text-quaternary)] text-xs rounded-lg border border-[var(--border-subtle)] hover:border-[var(--border-strong)] hover:text-[var(--text-tertiary)] transition-colors">
             <Search size={13} />
             <span>Search</span>
-            <kbd className="ml-auto text-[9px] text-[#404040] bg-[#161616] px-1.5 py-0.5 rounded hidden sm:inline">⌘K</kbd>
+            <kbd className="ml-auto text-[9px] text-[var(--text-quaternary)] bg-[var(--bg-surface)] px-1.5 py-0.5 rounded hidden sm:inline">⌘K</kbd>
           </button>
         </div>
 
@@ -128,10 +128,10 @@ export function Sidebar({
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-2.5 px-3 py-2 rounded text-xs transition-colors",
+                  "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors",
                   isActive 
-                    ? "bg-[#1c1c1c] text-[#f5f5f5]" 
-                    : "text-[#737373] hover:bg-[#161616] hover:text-[#a3a3a3]"
+                    ? "bg-[var(--bg-hover)] text-[var(--text-primary)]" 
+                    : "text-[var(--text-tertiary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-secondary)]"
                 )}
               >
                 <Icon size={15} strokeWidth={1.5} />
@@ -142,8 +142,8 @@ export function Sidebar({
         </nav>
 
         {/* Footer */}
-        <div className="p-3 border-t border-[#1a1a1a]">
-          <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs text-[#525252] hover:bg-[#161616] hover:text-[#737373] transition-colors">
+        <div className="p-3 border-t border-[var(--border-subtle)]">
+          <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-[var(--text-quaternary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-tertiary)] transition-colors">
             <Settings size={15} strokeWidth={1.5} />
             Settings
           </button>

@@ -44,7 +44,7 @@ function getStatusIcon(status: string) {
     case "waiting":
       return <AlertCircle size={14} className="text-amber-400" />;
     default:
-      return <Circle size={14} className="text-[#404040]" />;
+      return <Circle size={14} className="text-[var(--text-quaternary)]" />;
   }
 }
 
@@ -70,7 +70,7 @@ function getStatusBadge(status: string) {
       );
     default:
       return (
-        <span className="text-[10px] px-2 py-0.5 rounded bg-[#1a1a1a] text-[#525252] border border-[#222]">
+        <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--bg-surface)] text-[var(--text-quaternary)] border border-[var(--border-default)]">
           Todo
         </span>
       );
@@ -78,7 +78,7 @@ function getStatusBadge(status: string) {
 }
 
 function getPriorityBadge(priority: string | null) {
-  if (!priority) return <span className="text-[10px] text-[#333]">—</span>;
+  if (!priority) return <span className="text-[10px] text-[var(--text-quaternary)]">—</span>;
   
   const config: Record<string, { label: string; bg: string; text: string; border: string }> = {
     "non-negotiable": { 
@@ -115,9 +115,9 @@ function getPriorityBadge(priority: string | null) {
   
   const { label, bg, text, border } = config[priority] || { 
     label: priority, 
-    bg: "bg-[#1a1a1a]", 
-    text: "text-[#525252]", 
-    border: "border-[#222]" 
+    bg: "bg-[var(--bg-surface)]", 
+    text: "text-[var(--text-quaternary)]", 
+    border: "border-[var(--border-default)]" 
   };
   
   return (
@@ -333,7 +333,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
     <div className={cn("flex flex-col", view === "calendar" && "h-[calc(100vh-180px)]")}>
       {/* Organization Panel */}
       {showOrganizations && (
-        <div className="mb-4 p-4 bg-[#111] border border-[#1a1a1a] rounded-lg">
+        <div className="mb-4 p-4 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg">
           <OrganizationManager
             onOrganizationSelect={setSelectedOrganization}
             selectedOrganizationId={selectedOrganization?.id || null}
@@ -348,14 +348,14 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
       <div className="flex items-center justify-between mb-6 shrink-0">
         <div className="flex items-center gap-4">
           {/* View Toggle */}
-          <div className="flex items-center bg-[#111] rounded-lg p-0.5 border border-[#1a1a1a]">
+          <div className="flex items-center bg-[var(--bg-elevated)] rounded-lg p-0.5 border border-[var(--border-subtle)]">
             <button
               onClick={() => setView("calendar")}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors",
                 view === "calendar"
-                  ? "bg-[#1c1c1c] text-[#f5f5f5]"
-                  : "text-[#525252] hover:text-[#737373]"
+                  ? "bg-[var(--bg-hover)] text-[var(--text-primary)]"
+                  : "text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)]"
               )}
             >
               <Calendar size={14} />
@@ -366,8 +366,8 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors",
                 view === "list"
-                  ? "bg-[#1c1c1c] text-[#f5f5f5]"
-                  : "text-[#525252] hover:text-[#737373]"
+                  ? "bg-[var(--bg-hover)] text-[var(--text-primary)]"
+                  : "text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)]"
               )}
             >
               <List size={14} />
@@ -382,8 +382,8 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors border",
                 showOrganizations
-                  ? "bg-[#1c1c1c] text-[#f5f5f5] border-[#333]"
-                  : "text-[#525252] hover:text-[#737373] border-[#222] hover:border-[#333]"
+                  ? "bg-[var(--bg-hover)] text-[var(--text-primary)] border-[var(--border-strong)]"
+                  : "text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] border-[var(--border-default)] hover:border-[var(--border-strong)]"
               )}
             >
               <Building2 size={14} />
@@ -391,14 +391,14 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
             </button>
 
             {selectedOrganization && (
-              <div className="px-2 py-1 text-xs bg-[#1a1a1a] text-[#e5e5e5] rounded border border-[#222]">
+              <div className="px-2 py-1 text-xs bg-[var(--bg-surface)] text-[var(--text-primary)] rounded border border-[var(--border-default)]">
                 {selectedOrganization.name}
               </div>
             )}
 
             <button
               onClick={() => setShowMigrationWizard(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors border border-[#222] hover:border-[#333] text-[#525252] hover:text-[#737373]"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors border border-[var(--border-default)] hover:border-[var(--border-strong)] text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)]"
             >
               <ArrowUpDown size={14} />
               Migrate Projects
@@ -407,13 +407,13 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
 
           {/* Search Input */}
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#404040]" />
+            <Search size={14} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-quaternary)]" />
             <input
               type="text"
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="text-xs text-[#e5e5e5] bg-[#111] border border-[#222] pl-9 pr-3 py-1.5 rounded hover:border-[#333] focus:border-[#404040] focus:outline-none transition-colors w-48"
+              className="text-xs text-[var(--text-primary)] bg-[var(--bg-elevated)] border border-[var(--border-default)] pl-9 pr-3 py-1.5 rounded hover:border-[var(--border-strong)] focus:border-[#404040] focus:outline-none transition-colors w-48"
             />
           </div>
 
@@ -421,7 +421,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
           <select
             value={filterStatus || ""}
             onChange={(e) => setFilterStatus(e.target.value || null)}
-            className="text-xs text-[#525252] bg-[#111] border border-[#222] px-2 py-1.5 rounded hover:border-[#333] focus:outline-none transition-colors"
+            className="text-xs text-[var(--text-quaternary)] bg-[var(--bg-elevated)] border border-[var(--border-default)] px-2 py-1.5 rounded hover:border-[var(--border-strong)] focus:outline-none transition-colors"
           >
             <option value="">All Status</option>
             <option value="not_started">Todo</option>
@@ -432,7 +432,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
           <select
             value={filterPriority || ""}
             onChange={(e) => setFilterPriority(e.target.value || null)}
-            className="text-xs text-[#525252] bg-[#111] border border-[#222] px-2 py-1.5 rounded hover:border-[#333] focus:outline-none transition-colors"
+            className="text-xs text-[var(--text-quaternary)] bg-[var(--bg-elevated)] border border-[var(--border-default)] px-2 py-1.5 rounded hover:border-[var(--border-strong)] focus:outline-none transition-colors"
           >
             <option value="">All Priority</option>
             <option value="non-negotiable">Non-Negotiable</option>
@@ -446,7 +446,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="flex items-center gap-1.5 text-xs text-[#525252] hover:text-[#737373] border border-[#222] hover:border-[#333] px-2 py-1.5 rounded transition-colors"
+              className="flex items-center gap-1.5 text-xs text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] border border-[var(--border-default)] hover:border-[var(--border-strong)] px-2 py-1.5 rounded transition-colors"
             >
               <X size={12} />
               Clear
@@ -465,9 +465,9 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
 
       {/* Content */}
       {view === "list" ? (
-        <div className="bg-[#111] rounded-lg border border-[#1a1a1a]">
+        <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)]">
           {/* Table Header */}
-          <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[#1a1a1a] text-[10px] text-[#525252] uppercase tracking-widest">
+          <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[var(--border-subtle)] text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest">
             <div className="col-span-5">Task</div>
             <div className="col-span-2">Context</div>
             <div className="col-span-2">Priority</div>
@@ -482,7 +482,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
                 key={task.id}
                 onClick={() => handleTaskClick(task)}
                 className={cn(
-                  "grid grid-cols-12 gap-4 px-4 py-3 hover:bg-[#161616] cursor-pointer transition-colors items-center",
+                  "grid grid-cols-12 gap-4 px-4 py-3 hover:bg-[var(--bg-surface)] cursor-pointer transition-colors items-center",
                   task.status === "done" && "opacity-40"
                 )}
               >
@@ -495,7 +495,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
                   </button>
                   <span className={cn(
                     "text-sm truncate font-medium",
-                    task.status === "done" ? "text-[#525252] line-through" : "text-[#e5e5e5]"
+                    task.status === "done" ? "text-[var(--text-quaternary)] line-through" : "text-[var(--text-primary)]"
                   )}>
                     {task.name}
                   </span>
@@ -514,7 +514,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
                   {getStatusBadge(task.status)}
                 </div>
                 <div className="col-span-1">
-                  <span className="text-xs text-[#525252]">
+                  <span className="text-xs text-[var(--text-quaternary)]">
                     {task.dueDate ? format(new Date(task.dueDate), "MMM d") : "—"}
                   </span>
                 </div>
@@ -522,15 +522,15 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
             ))}
 
             {filteredTasks.length === 0 && (
-              <div className="px-4 py-12 text-center text-[#404040] text-xs">
+              <div className="px-4 py-12 text-center text-[var(--text-quaternary)] text-xs">
                 No tasks found
               </div>
             )}
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-3 border-t border-[#1a1a1a]">
-            <span className="text-xs text-[#525252]">
+          <div className="px-4 py-3 border-t border-[var(--border-subtle)]">
+            <span className="text-xs text-[var(--text-quaternary)]">
               {filteredTasks.length} task{filteredTasks.length !== 1 && "s"}
             </span>
           </div>
