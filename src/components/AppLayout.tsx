@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { QuickAddTask } from "./QuickAddTask";
+import { CommandPalette } from "./CommandPalette";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -58,8 +59,8 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
-      // Cmd+K / Ctrl+K for quick add
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      // Cmd+N / Ctrl+N for quick add task
+      if ((e.metaKey || e.ctrlKey) && e.key === "n") {
         e.preventDefault();
         setQuickAddOpen(true);
       }
@@ -133,6 +134,9 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
         isOpen={quickAddOpen}
         onClose={() => setQuickAddOpen(false)}
       />
+
+      {/* Command Palette (Cmd+K) */}
+      <CommandPalette onCreateTask={() => setQuickAddOpen(true)} />
     </div>
   );
 }

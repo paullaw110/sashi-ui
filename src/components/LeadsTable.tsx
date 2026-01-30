@@ -1,8 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, ExternalLink, Star, Gauge, Check, X, RefreshCw } from "lucide-react";
+import { ExternalLink, Star, Gauge, Check, X, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Lead = {
   id: string;
@@ -48,21 +64,21 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
   outreach_sent: { label: "Outreach", color: "text-cyan-400", bg: "bg-cyan-400/10" },
   converted: { label: "Converted", color: "text-green-400", bg: "bg-green-400/10" },
   lost: { label: "Lost", color: "text-red-400", bg: "bg-red-400/10" },
-  skipped: { label: "Skipped", color: "text-[#525252]", bg: "bg-[#1a1a1a]" },
+  skipped: { label: "Skipped", color: "text-muted-foreground", bg: "bg-secondary" },
   disqualified: { label: "Disqualified", color: "text-red-400", bg: "bg-red-400/10" },
 };
 
 function getScoreColor(score: number | null) {
-  if (score === null) return "text-[#404040]";
+  if (score === null) return "text-muted-foreground";
   if (score >= 80) return "text-emerald-400";
   if (score >= 60) return "text-amber-400";
   if (score >= 40) return "text-orange-400";
-  return "text-[#525252]";
+  return "text-muted-foreground";
 }
 
 function getPageSpeedColor(score: number | null) {
-  if (score === null) return "text-[#404040]";
-  if (score < 30) return "text-red-400"; // Bad site = good prospect
+  if (score === null) return "text-muted-foreground";
+  if (score < 30) return "text-red-400";
   if (score < 50) return "text-orange-400";
   if (score < 70) return "text-amber-400";
   return "text-emerald-400";
@@ -79,17 +95,14 @@ export function LeadsTable({
   const [filterIndustry, setFilterIndustry] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"score" | "date" | "rating">("score");
 
-  // Get unique industries from leads
   const industries = [...new Set(leads.map(l => l.industry))].sort();
 
-  // Filter leads
   const filteredLeads = leads.filter((lead) => {
     if (filterStatus && lead.status !== filterStatus) return false;
     if (filterIndustry && lead.industry !== filterIndustry) return false;
     return true;
   });
 
-  // Sort leads
   const sortedLeads = [...filteredLeads].sort((a, b) => {
     switch (sortBy) {
       case "score":
@@ -104,213 +117,231 @@ export function LeadsTable({
   });
 
   return (
-    <div className="bg-[#111] rounded-lg border border-[#1a1a1a]">
+    <div className="rounded-lg border">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a1a]">
+      <div className="flex items-center justify-between px-4 py-3 border-b">
         <div className="flex items-center gap-3">
-          <h2 className="font-display text-base text-[#f5f5f5]">Leads</h2>
-          <span className="text-[10px] text-[#404040]">{filteredLeads.length}</span>
+          <h2 className="text-base font-semibold">Leads</h2>
+          <span className="text-xs text-muted-foreground">{filteredLeads.length}</span>
         </div>
         <div className="flex items-center gap-2">
-          <select
-            value={filterStatus || ""}
-            onChange={(e) => setFilterStatus(e.target.value || null)}
-            className="text-[11px] text-[#525252] bg-transparent border border-[#222] px-2 py-1 rounded hover:border-[#333] focus:outline-none transition-colors"
+          <Select
+            value={filterStatus || "all"}
+            onValueChange={(v) => setFilterStatus(v === "all" ? null : v)}
           >
-            <option value="">All Status</option>
-            {Object.entries(STATUS_CONFIG).map(([value, config]) => (
-              <option key={value} value={value}>{config.label}</option>
-            ))}
-          </select>
-          <select
-            value={filterIndustry || ""}
-            onChange={(e) => setFilterIndustry(e.target.value || null)}
-            className="text-[11px] text-[#525252] bg-transparent border border-[#222] px-2 py-1 rounded hover:border-[#333] focus:outline-none transition-colors"
+            <SelectTrigger className="w-[120px] h-8 text-xs">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              {Object.entries(STATUS_CONFIG).map(([value, config]) => (
+                <SelectItem key={value} value={value}>{config.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filterIndustry || "all"}
+            onValueChange={(v) => setFilterIndustry(v === "all" ? null : v)}
           >
-            <option value="">All Industries</option>
-            {industries.map((industry) => (
-              <option key={industry} value={industry}>{industry}</option>
-            ))}
-          </select>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="text-[11px] text-[#525252] bg-transparent border border-[#222] px-2 py-1 rounded hover:border-[#333] focus:outline-none transition-colors"
-          >
-            <option value="score">Score</option>
-            <option value="rating">Rating</option>
-            <option value="date">Newest</option>
-          </select>
-          <button 
+            <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectValue placeholder="All Industries" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Industries</SelectItem>
+              {industries.map((industry) => (
+                <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="w-[100px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="score">Score</SelectItem>
+              <SelectItem value="rating">Rating</SelectItem>
+              <SelectItem value="date">Newest</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onRunScrape}
             disabled={isLoading}
-            className={cn(
-              "flex items-center gap-1 text-[11px] px-2 py-1 rounded transition-colors",
-              isLoading 
-                ? "text-[#404040] cursor-not-allowed" 
-                : "text-[#525252] hover:text-[#a3a3a3] hover:bg-[#1a1a1a]"
-            )}
+            className="h-8 text-xs"
           >
-            <RefreshCw size={12} className={cn(isLoading && "animate-spin")} />
+            <RefreshCw size={12} className={cn("mr-1", isLoading && "animate-spin")} />
             {isLoading ? "Scraping..." : "Run Scrape"}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Column Headers */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-[#1a1a1a] text-[9px] text-[#404040] uppercase tracking-widest">
-        <div className="w-14">Score</div>
-        <div className="flex-1">Business</div>
-        <div className="w-20">Rating</div>
-        <div className="w-16">PageSpeed</div>
-        <div className="w-20">Status</div>
-        <div className="w-20">Actions</div>
-        <div className="w-8"></div>
-      </div>
+      {/* Table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-14">Score</TableHead>
+            <TableHead>Business</TableHead>
+            <TableHead className="w-20">Rating</TableHead>
+            <TableHead className="w-16">PageSpeed</TableHead>
+            <TableHead className="w-20">Status</TableHead>
+            <TableHead className="w-20">Actions</TableHead>
+            <TableHead className="w-8"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedLeads.slice(0, 50).map((lead) => {
+            const statusConfig = STATUS_CONFIG[lead.status] || STATUS_CONFIG.new;
+            
+            return (
+              <TableRow
+                key={lead.id}
+                onClick={() => onLeadClick?.(lead)}
+                className={cn(
+                  "cursor-pointer",
+                  (lead.status === "skipped" || lead.status === "disqualified") && "opacity-40"
+                )}
+              >
+                <TableCell className={cn("font-mono font-medium", getScoreColor(lead.qualificationScore))}>
+                  {lead.qualificationScore ?? "—"}
+                </TableCell>
 
-      {/* Rows */}
-      <div className="divide-y divide-[#161616]">
-        {sortedLeads.slice(0, 50).map((lead) => {
-          const statusConfig = STATUS_CONFIG[lead.status] || STATUS_CONFIG.new;
-          
-          return (
-            <div
-              key={lead.id}
-              onClick={() => onLeadClick?.(lead)}
-              className={cn(
-                "flex items-center gap-3 px-4 py-2.5 hover:bg-[#161616] cursor-pointer transition-colors",
-                (lead.status === "skipped" || lead.status === "disqualified") && "opacity-40"
-              )}
-            >
-              {/* Qualification Score */}
-              <div className={cn("w-14 text-sm font-mono font-medium", getScoreColor(lead.qualificationScore))}>
-                {lead.qualificationScore ?? "—"}
-              </div>
+                <TableCell>
+                  <div className="text-sm truncate">{lead.businessName}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {lead.industry} • {lead.location}
+                  </div>
+                </TableCell>
 
-              {/* Business Info */}
-              <div className="flex-1 min-w-0">
-                <div className="text-xs text-[#e5e5e5] truncate">{lead.businessName}</div>
-                <div className="text-[10px] text-[#525252] truncate">
-                  {lead.industry} • {lead.location}
-                </div>
-              </div>
+                <TableCell>
+                  {lead.googleRating ? (
+                    <div className="flex items-center gap-1">
+                      <Star size={11} className="text-amber-400 fill-amber-400" />
+                      <span className="text-xs">
+                        {(lead.googleRating / 10).toFixed(1)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ({lead.reviewCount})
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </TableCell>
 
-              {/* Google Rating */}
-              <div className="w-20 flex items-center gap-1">
-                {lead.googleRating ? (
-                  <>
-                    <Star size={11} className="text-amber-400 fill-amber-400" />
-                    <span className="text-[11px] text-[#a3a3a3]">
-                      {(lead.googleRating / 10).toFixed(1)}
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <Gauge size={11} className={getPageSpeedColor(lead.pagespeedScore)} />
+                    <span className={cn("text-xs font-mono", getPageSpeedColor(lead.pagespeedScore))}>
+                      {lead.pagespeedScore ?? "—"}
                     </span>
-                    <span className="text-[10px] text-[#404040]">
-                      ({lead.reviewCount})
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[10px] text-[#404040]">—</span>
-                )}
-              </div>
+                  </div>
+                </TableCell>
 
-              {/* PageSpeed Score */}
-              <div className="w-16 flex items-center gap-1">
-                <Gauge size={11} className={getPageSpeedColor(lead.pagespeedScore)} />
-                <span className={cn("text-[11px] font-mono", getPageSpeedColor(lead.pagespeedScore))}>
-                  {lead.pagespeedScore ?? "—"}
-                </span>
-              </div>
+                <TableCell>
+                  <span className={cn(
+                    "inline-flex text-[10px] px-1.5 py-0.5 rounded",
+                    statusConfig.bg,
+                    statusConfig.color
+                  )}>
+                    {statusConfig.label}
+                  </span>
+                </TableCell>
 
-              {/* Status */}
-              <div className="w-20">
-                <span className={cn(
-                  "inline-flex text-[10px] px-1.5 py-0.5 rounded",
-                  statusConfig.bg,
-                  statusConfig.color
-                )}>
-                  {statusConfig.label}
-                </span>
-              </div>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    {lead.status === "new" && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 hover:text-emerald-400 hover:bg-emerald-400/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onStatusChange?.(lead.id, "approved");
+                          }}
+                          title="Approve"
+                        >
+                          <Check size={12} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 hover:text-amber-400 hover:bg-amber-400/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onStatusChange?.(lead.id, "skipped");
+                          }}
+                          title="Skip"
+                        >
+                          <RefreshCw size={12} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 hover:text-red-400 hover:bg-red-400/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onStatusChange?.(lead.id, "disqualified");
+                          }}
+                          title="Disqualify"
+                        >
+                          <X size={12} />
+                        </Button>
+                      </>
+                    )}
+                    {lead.status === "skipped" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 hover:text-blue-400 hover:bg-blue-400/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onStatusChange?.(lead.id, "new");
+                        }}
+                        title="Move back"
+                      >
+                        <RefreshCw size={12} />
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
 
-              {/* Quick Actions */}
-              <div className="w-20 flex items-center gap-1">
-                {lead.status === "new" && (
-                  <>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onStatusChange?.(lead.id, "approved");
-                      }}
-                      title="Approve"
-                      className="p-1 text-[#404040] hover:text-emerald-400 hover:bg-emerald-400/10 rounded transition-colors"
+                <TableCell>
+                  {lead.websiteUrl && (
+                    <a
+                      href={lead.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-muted-foreground hover:text-foreground"
                     >
-                      <Check size={12} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onStatusChange?.(lead.id, "skipped");
-                      }}
-                      title="Skip for later"
-                      className="p-1 text-[#404040] hover:text-amber-400 hover:bg-amber-400/10 rounded transition-colors"
-                    >
-                      <RefreshCw size={12} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onStatusChange?.(lead.id, "disqualified");
-                      }}
-                      title="Disqualify"
-                      className="p-1 text-[#404040] hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
-                    >
-                      <X size={12} />
-                    </button>
-                  </>
-                )}
-                {lead.status === "skipped" && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStatusChange?.(lead.id, "new");
-                    }}
-                    title="Move back to New"
-                    className="p-1 text-[#404040] hover:text-blue-400 hover:bg-blue-400/10 rounded transition-colors"
-                  >
-                    <RefreshCw size={12} />
-                  </button>
-                )}
-              </div>
+                      <ExternalLink size={12} />
+                    </a>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
 
-              {/* External Link */}
-              <div className="w-8 flex justify-end">
-                {lead.websiteUrl && (
-                  <a
-                    href={lead.websiteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-[#404040] hover:text-[#737373] transition-colors"
-                  >
-                    <ExternalLink size={12} />
-                  </a>
-                )}
-              </div>
-            </div>
-          );
-        })}
+          {sortedLeads.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                No leads yet. Click "Run Scrape" to find prospects.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
 
-        {sortedLeads.length === 0 && (
-          <div className="px-4 py-10 text-center text-[#404040] text-xs">
-            No leads yet. Click "Run Scrape" to find prospects.
-          </div>
-        )}
-
-        {sortedLeads.length > 50 && (
-          <div className="px-4 py-2 text-center text-[#333] text-[10px]">
-            +{sortedLeads.length - 50} more
-          </div>
-        )}
-      </div>
+      {sortedLeads.length > 50 && (
+        <div className="px-4 py-2 text-center text-xs text-muted-foreground border-t">
+          +{sortedLeads.length - 50} more
+        </div>
+      )}
     </div>
   );
 }
