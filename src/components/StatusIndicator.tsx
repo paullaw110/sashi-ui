@@ -43,8 +43,8 @@ export function StatusIndicator() {
     },
     working: {
       icon: Loader2,
-      color: "text-[#a3a3a3]",
-      bg: "bg-[#a3a3a3]",
+      color: "text-[var(--accent-primary)]",
+      bg: "bg-[var(--accent-primary)]",
       label: "Working",
     },
     waiting: {
