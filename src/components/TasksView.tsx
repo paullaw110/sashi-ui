@@ -11,6 +11,7 @@ import OrganizationManager from "./OrganizationManager";
 import MigrationWizard from "./MigrationWizard";
 import Breadcrumb from "./Breadcrumb";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 
 type Task = {
@@ -243,26 +244,36 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
   };
 
   const handleTaskMove = useCallback(async (taskId: string, newDate: Date) => {
-    await fetch(`/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dueDate: newDate.toISOString() }),
-    });
-    router.refresh();
+    try {
+      await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dueDate: newDate.toISOString() }),
+      });
+      toast.success(`Moved to ${format(newDate, "MMM d")}`);
+      router.refresh();
+    } catch (error) {
+      toast.error("Failed to move task");
+    }
   }, [router]);
 
   const handleTasksMove = useCallback(async (taskIds: string[], newDate: Date) => {
-    // Move all selected tasks in parallel
-    await Promise.all(
-      taskIds.map(taskId =>
-        fetch(`/api/tasks/${taskId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ dueDate: newDate.toISOString() }),
-        })
-      )
-    );
-    router.refresh();
+    try {
+      // Move all selected tasks in parallel
+      await Promise.all(
+        taskIds.map(taskId =>
+          fetch(`/api/tasks/${taskId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ dueDate: newDate.toISOString() }),
+          })
+        )
+      );
+      toast.success(`Moved ${taskIds.length} tasks to ${format(newDate, "MMM d")}`);
+      router.refresh();
+    } catch (error) {
+      toast.error("Failed to move tasks");
+    }
   }, [router]);
 
   // Organization handlers
