@@ -275,39 +275,26 @@ function AllDayTask({
   );
 }
 
-// Droppable hour slot with visual preview
+// Droppable hour slot
 function HourSlot({
   dateKey,
   hour,
-  isDropTarget,
-  previewTime,
 }: {
   dateKey: string;
   hour: number;
-  isDropTarget?: boolean;
-  previewTime?: string | null;
 }) {
   const slotId = `${dateKey}-${hour}`;
   const { setNodeRef, isOver } = useDroppable({ id: slotId });
-
-  const showPreview = isOver || (isDropTarget && previewTime);
 
   return (
     <div
       ref={setNodeRef}
       className={cn(
         "border-t border-[var(--border-subtle)] relative transition-colors",
-        showPreview && "bg-blue-500/15"
+        isOver && "bg-blue-500/15"
       )}
       style={{ height: HOUR_HEIGHT }}
-    >
-      {/* Time preview indicator when hovering */}
-      {showPreview && previewTime && (
-        <div className="absolute top-0 left-1 px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-medium rounded-sm shadow-lg z-30">
-          {previewTime}
-        </div>
-      )}
-    </div>
+    />
   );
 }
 
@@ -709,8 +696,6 @@ export function TimeWeekCalendar({
                       key={hour} 
                       dateKey={dateKey} 
                       hour={hour}
-                      isDropTarget={isTargetDay}
-                      previewTime={isTargetDay ? dragTarget?.displayTime : null}
                     />
                   ))}
 
