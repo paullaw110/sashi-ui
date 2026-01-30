@@ -11,8 +11,8 @@ import OrganizationManager from "./OrganizationManager";
 import MigrationWizard from "./MigrationWizard";
 import Breadcrumb from "./Breadcrumb";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
+import { useMoveTask, useMoveTasks, useUpdateTask, useDeleteTask } from "@/lib/hooks/use-tasks";
 
 type Task = {
   id: string;
@@ -132,6 +132,13 @@ function getPriorityBadge(priority: string | null) {
 
 export function TasksView({ tasks, projects, organizations = [] }: TasksViewProps) {
   const router = useRouter();
+  
+  // React Query mutations for proper optimistic updates
+  const moveTask = useMoveTask();
+  const moveTasks = useMoveTasks();
+  const updateTask = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask();
+  
   const [view, setView] = useState<"list" | "calendar">("calendar");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -209,22 +216,10 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
     router.refresh();
   }, [router]);
 
+  // Use React Query for delete - handles optimistic updates + rollback
   const handleDelete = useCallback(async (id: string) => {
-    try {
-      const response = await fetch(`/api/tasks/${id}`, {
-        method: "DELETE",
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Delete failed: ${response.status}`);
-      }
-      
-      router.refresh();
-    } catch (error) {
-      console.error("Failed to delete task:", error);
-      throw error; // Re-throw so the modal can handle it
-    }
-  }, [router]);
+    await deleteTaskMutation.mutateAsync(id);
+  }, [deleteTaskMutation]);
 
   const handleStatusChange = useCallback(async (taskId: string, newStatus: string) => {
     await fetch(`/api/tasks/${taskId}`, {
@@ -243,59 +238,14 @@ export function TasksView({ tasks, projects, organizations = [] }: TasksViewProp
     handleStatusChange(task.id, nextStatus);
   };
 
-  const handleTaskMove = useCallback(async (taskId: string, newDate: Date) => {
-    try {
-      // Format as YYYY-MM-DD to avoid timezone issues
-      const dateStr = format(newDate, "yyyy-MM-dd");
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dueDate: dateStr }),
-      });
-      
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Move failed:", error);
-        toast.error("Failed to move task");
-        return;
-      }
-      
-      toast.success(`Moved to ${format(newDate, "MMM d")}`);
-      router.refresh();
-    } catch (error) {
-      console.error("Move error:", error);
-      toast.error("Failed to move task");
-    }
-  }, [router]);
+  // Use React Query for task moves - handles optimistic updates + rollback automatically
+  const handleTaskMove = useCallback((taskId: string, newDate: Date) => {
+    moveTask.mutate({ taskId, newDate });
+  }, [moveTask]);
 
-  const handleTasksMove = useCallback(async (taskIds: string[], newDate: Date) => {
-    try {
-      // Format as YYYY-MM-DD to avoid timezone issues
-      const dateStr = format(newDate, "yyyy-MM-dd");
-      
-      const results = await Promise.all(
-        taskIds.map(taskId =>
-          fetch(`/api/tasks/${taskId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ dueDate: dateStr }),
-          })
-        )
-      );
-      
-      const failed = results.filter(r => !r.ok).length;
-      if (failed > 0) {
-        toast.error(`Failed to move ${failed} task(s)`);
-        return;
-      }
-      
-      toast.success(`Moved ${taskIds.length} task${taskIds.length > 1 ? 's' : ''} to ${format(newDate, "MMM d")}`);
-      router.refresh();
-    } catch (error) {
-      console.error("Move error:", error);
-      toast.error("Failed to move tasks");
-    }
-  }, [router]);
+  const handleTasksMove = useCallback((taskIds: string[], newDate: Date) => {
+    moveTasks.mutate({ taskIds, newDate });
+  }, [moveTasks]);
 
   // Organization handlers
   const handleCreateOrganization = useCallback(() => {

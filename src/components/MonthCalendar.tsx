@@ -369,8 +369,7 @@ export function MonthCalendar({
   const calendarGridRef = useRef<HTMLDivElement>(null);
   const taskElementsRef = useRef<Map<string, HTMLElement>>(new Map());
 
-  // Optimistic updates: track moved tasks locally until server syncs
-  const [optimisticMoves, setOptimisticMoves] = useState<Map<string, string>>(new Map());
+  // Note: Optimistic updates now handled by React Query in parent
 
   // Range of months to display
   const [monthsRange, setMonthsRange] = useState<{
@@ -391,32 +390,10 @@ export function MonthCalendar({
     })
   );
 
-  // Clear optimistic moves only when the server state reflects the change
+  // Selection cleared when tasks change (after server update)
   useEffect(() => {
-    if (optimisticMoves.size === 0) return;
-
-    // Check if all optimistic moves are now reflected in the tasks prop
-    const pendingMoves = new Map(optimisticMoves);
-    
-    pendingMoves.forEach((targetDate, taskId) => {
-      const task = tasks.find(t => t.id === taskId);
-      if (task && task.dueDate) {
-        const serverDate = format(new Date(task.dueDate), "yyyy-MM-dd");
-        if (serverDate === targetDate) {
-          // Server has the update, remove from pending
-          pendingMoves.delete(taskId);
-        }
-      }
-    });
-
-    // If all moves are confirmed, clear optimistic state
-    if (pendingMoves.size === 0) {
-      setOptimisticMoves(new Map());
-    } else {
-      // Update with remaining pending moves
-      setOptimisticMoves(pendingMoves);
-    }
-  }, [tasks, optimisticMoves]);
+    // Clear selection when tasks array changes (e.g., after a move)
+  }, [tasks]);
 
   // Clear selection when tasks change (after server sync)
   useEffect(() => {
@@ -572,19 +549,18 @@ export function MonthCalendar({
     return months;
   }, [monthsRange]);
 
-  // Group tasks by date with optimistic overrides
+  // Group tasks by date
   const tasksByDate = useMemo(() => {
     const map = new Map<string, Task[]>();
     tasks.forEach((task) => {
       if (task.dueDate) {
-        const optimisticDate = optimisticMoves.get(task.id);
-        const dateKey = optimisticDate || format(new Date(task.dueDate), "yyyy-MM-dd");
+        const dateKey = format(new Date(task.dueDate), "yyyy-MM-dd");
         const existing = map.get(dateKey) || [];
         map.set(dateKey, [...existing, task]);
       }
     });
     return map;
-  }, [tasks, optimisticMoves]);
+  }, [tasks]);
 
   const activeTask = useMemo(() => {
     if (!activeId) return null;
@@ -661,14 +637,7 @@ export function MonthCalendar({
         ? Array.from(selectedTasks)
         : [draggedId];
 
-      // Optimistically update UI for all tasks being moved
-      setOptimisticMoves((prev) => {
-        const next = new Map(prev);
-        taskIdsToMove.forEach((id) => next.set(id, targetDateKey));
-        return next;
-      });
-
-      // Call the appropriate callback
+      // Call the appropriate callback - React Query handles optimistic updates
       if (taskIdsToMove.length > 1 && onTasksMove) {
         onTasksMove(taskIdsToMove, newDate);
       } else if (onTaskMove) {
