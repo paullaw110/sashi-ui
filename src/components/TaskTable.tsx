@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Circle, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
+import { InlineOrgProjectCell } from "./InlineOrgProjectCell";
 
 type Task = {
   id: string;
@@ -28,6 +30,7 @@ interface TaskTableProps {
   onTaskClick?: (task: Task) => void;
   onNewTask?: () => void;
   onStatusChange?: (taskId: string, status: string) => void;
+  onTaskUpdate?: (taskId: string, field: string, value: string | null) => Promise<void>;
 }
 
 function getStatusIcon(status: string) {
@@ -145,9 +148,26 @@ export function TaskTable({
   onTaskClick,
   onNewTask,
   onStatusChange,
+  onTaskUpdate,
 }: TaskTableProps) {
+  const router = useRouter();
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
+
+  // Handler for inline updates (org/project)
+  const handleInlineUpdate = useCallback(async (taskId: string, field: string, value: string | null) => {
+    if (onTaskUpdate) {
+      await onTaskUpdate(taskId, field, value);
+    } else {
+      // Fallback: direct API call
+      await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      router.refresh();
+    }
+  }, [onTaskUpdate, router]);
 
   const filteredTasks = tasks.filter((task) => {
     if (filterStatus && task.status !== filterStatus) return false;
@@ -248,17 +268,36 @@ export function TaskTable({
             </span>
 
             {/* Organization - hidden on mobile/tablet */}
-            <div className="w-20 sm:w-24 shrink-0 hidden md:block">
-              <span className="text-xs text-[var(--text-tertiary)] truncate">
-                {task.organization?.name || "—"}
-              </span>
+            <div 
+              className="w-20 sm:w-24 shrink-0 hidden md:block"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <InlineOrgProjectCell
+                type="organization"
+                taskId={task.id}
+                currentId={task.organizationId}
+                currentName={task.organization?.name || null}
+                organizations={organizations}
+                projects={projects}
+                onUpdate={handleInlineUpdate}
+              />
             </div>
 
             {/* Project - hidden on mobile/tablet/small desktop */}
-            <div className="w-20 sm:w-24 shrink-0 hidden lg:block">
-              <span className="text-xs text-[var(--text-tertiary)] truncate">
-                {task.project?.name || "—"}
-              </span>
+            <div 
+              className="w-20 sm:w-24 shrink-0 hidden lg:block"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <InlineOrgProjectCell
+                type="project"
+                taskId={task.id}
+                currentId={task.projectId}
+                currentName={task.project?.name || null}
+                organizationId={task.organizationId}
+                organizations={organizations}
+                projects={projects}
+                onUpdate={handleInlineUpdate}
+              />
             </div>
 
             {/* Priority - hidden on mobile */}
