@@ -35,6 +35,11 @@ export async function GET(request: NextRequest) {
         with: {
           project: true,
           organization: true,
+          taskTags: {
+            with: {
+              tag: true,
+            },
+          },
         },
         orderBy: (tasks, { asc }) => [asc(tasks.dueDate)],
       });
@@ -49,6 +54,11 @@ export async function GET(request: NextRequest) {
         with: {
           project: true,
           organization: true,
+          taskTags: {
+            with: {
+              tag: true,
+            },
+          },
         },
         orderBy: (tasks, { asc }) => [asc(tasks.dueDate)],
       });
@@ -62,10 +72,21 @@ export async function GET(request: NextRequest) {
         with: {
           project: true,
           organization: true,
+          taskTags: {
+            with: {
+              tag: true,
+            },
+          },
         },
         orderBy: (tasks, { asc }) => [asc(tasks.dueDate)],
       });
     }
+
+    // Transform taskTags to a flat tags array for easier consumption
+    tasks = tasks.map((task: any) => ({
+      ...task,
+      relationalTags: task.taskTags?.map((tt: any) => tt.tag) || [],
+    }));
 
     return NextResponse.json({ tasks });
   } catch (error) {

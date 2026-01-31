@@ -7,6 +7,13 @@ import { cn } from "@/lib/utils";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 import { InlineOrgProjectCell } from "./InlineOrgProjectCell";
 import { InlineSelectCell, STATUS_OPTIONS, PRIORITY_OPTIONS } from "./InlineSelectCell";
+import { TagList } from "./TagBadge";
+
+type Tag = {
+  id: string;
+  name: string;
+  color?: string | null;
+};
 
 type Task = {
   id: string;
@@ -18,6 +25,7 @@ type Task = {
   dueDate: string | null;  // ISO string from server
   dueTime: string | null;
   tags: string | null;
+  relationalTags?: Tag[];
   project?: SchemaProject | null;
   organization?: Organization | null;
 };
@@ -314,6 +322,7 @@ export function TaskTable({
         <div className="flex-1 min-w-0">Task</div>
         <div className="w-20 sm:w-24 hidden md:block">Organization</div>
         <div className="w-20 sm:w-24 hidden lg:block">Project</div>
+        <div className="w-24 hidden xl:block">Tags</div>
         <div className="w-20 sm:w-24 hidden sm:block">Priority</div>
         <div className="w-20 sm:w-24 hidden sm:block">Status</div>
         {!hideDueColumn && <div className="w-12 sm:w-16 text-right">Due</div>}
@@ -381,6 +390,15 @@ export function TaskTable({
                 projects={projects}
                 onUpdate={handleInlineUpdate}
               />
+            </div>
+
+            {/* Tags - hidden on smaller screens */}
+            <div className="w-24 shrink-0 hidden xl:block">
+              {task.relationalTags && task.relationalTags.length > 0 ? (
+                <TagList tags={task.relationalTags} max={2} size="sm" />
+              ) : (
+                <span className="text-xs text-[var(--text-quaternary)]">—</span>
+              )}
             </div>
 
             {/* Priority - hidden on mobile */}
@@ -458,6 +476,7 @@ export function TaskTable({
             {/* Spacer columns to match layout */}
             <div className="w-20 sm:w-24 shrink-0 hidden md:block" />
             <div className="w-20 sm:w-24 shrink-0 hidden lg:block" />
+            <div className="w-24 shrink-0 hidden xl:block" />
             <div className="w-20 sm:w-24 shrink-0 hidden sm:block" />
             <div className="w-20 sm:w-24 shrink-0 hidden sm:block" />
             {!hideDueColumn && <div className="w-12 sm:w-16 shrink-0" />}

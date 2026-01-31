@@ -16,6 +16,7 @@ import {
   MoreHorizontal,
   Maximize2,
   X,
+  Tags,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,14 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { RichEditor } from "./RichEditor";
+import { TagInput } from "./TagInput";
 import { toast } from "sonner";
+
+type Tag = {
+  id: string;
+  name: string;
+  color?: string | null;
+};
 
 type Task = {
   id: string;
@@ -142,6 +150,10 @@ export function TaskDetailModal({
   const [organizations, setOrganizations] = useState(initialOrganizations);
   const [projects, setProjects] = useState(initialProjects);
 
+  // Tags
+  const [taskTags, setTaskTags] = useState<Tag[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+
   // Combobox states
   const [orgOpen, setOrgOpen] = useState(false);
   const [projectOpen, setProjectOpen] = useState(false);
@@ -161,6 +173,44 @@ export function TaskDetailModal({
   useEffect(() => {
     setProjects(initialProjects);
   }, [initialProjects]);
+
+  // Fetch all tags for the picker
+  const fetchAllTags = useCallback(async () => {
+    try {
+      const res = await fetch("/api/tags");
+      if (res.ok) {
+        const data = await res.json();
+        setAllTags(data.tags || []);
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  // Fetch task tags when task changes
+  const fetchTaskTags = useCallback(async (taskId: string) => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/tags`);
+      if (res.ok) {
+        const data = await res.json();
+        setTaskTags(data.tags || []);
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  // Fetch tags when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchAllTags();
+      if (task?.id) {
+        fetchTaskTags(task.id);
+      } else {
+        setTaskTags([]);
+      }
+    }
+  }, [isOpen, task?.id, fetchAllTags, fetchTaskTags]);
 
   // Initialize form when task changes
   useEffect(() => {
@@ -312,6 +362,45 @@ export function TaskDetailModal({
       autoSave({ projectId: newProjectId });
     }
   }, [organizationId, autoSave]);
+
+  // Tag handlers
+  const handleAddTag = useCallback(async (tagId: string, name?: string) => {
+    const taskId = localTaskId || task?.id;
+    if (!taskId) return;
+
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/tags`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tagId ? { tagId } : { name }),
+      });
+
+      if (res.ok) {
+        const { tag } = await res.json();
+        if (tag) {
+          setTaskTags((prev) => [...prev, tag]);
+          // Refresh all tags in case a new one was created
+          fetchAllTags();
+        }
+      }
+    } catch {
+      toast.error("Failed to add tag");
+    }
+  }, [localTaskId, task?.id, fetchAllTags]);
+
+  const handleRemoveTag = useCallback(async (tagId: string) => {
+    const taskId = localTaskId || task?.id;
+    if (!taskId) return;
+
+    try {
+      await fetch(`/api/tasks/${taskId}/tags?tagId=${tagId}`, {
+        method: "DELETE",
+      });
+      setTaskTags((prev) => prev.filter((t) => t.id !== tagId));
+    } catch {
+      toast.error("Failed to remove tag");
+    }
+  }, [localTaskId, task?.id]);
 
   // Debounced description save
   const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -761,6 +850,22 @@ export function TaskDetailModal({
               placeholder="--:-- --"
             />
           </PropertyRow>
+
+          {/* Tags */}
+          {(task?.id || localTaskId) && (
+            <PropertyRow icon={Tags} label="Tags" isEmpty={taskTags.length === 0}>
+              <div className="-ml-2">
+                <TagInput
+                  taskId={localTaskId || task?.id || ""}
+                  tags={taskTags}
+                  allTags={allTags}
+                  onAdd={handleAddTag}
+                  onRemove={handleRemoveTag}
+                  onRefreshTags={fetchAllTags}
+                />
+              </div>
+            </PropertyRow>
+          )}
 
           {/* Created (read-only) */}
           {task?.createdAt && (
