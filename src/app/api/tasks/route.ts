@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, schema } from "@/lib/db";
-import { eq, and, gte, lte, isNull, or } from "drizzle-orm";
+import { eq, and, gte, lte, isNull, or, inArray } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
@@ -104,15 +104,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform taskTags to a flat tags array and add subtask counts
-    tasks = tasks.map((task: any) => {
-      const subtaskInfo = subtaskCounts.get(task.id);
-      return {
-        ...task,
-        relationalTags: task.taskTags?.map((tt: any) => tt.tag) || [],
-        subtaskCount: subtaskInfo?.total || 0,
-        subtaskDoneCount: subtaskInfo?.done || 0,
-      };
-    });
+    // Also filter out subtasks (they're shown under their parent task)
+    const includeSubtasks = searchParams.get("includeSubtasks") === "true";
+    
+    tasks = tasks
+      .filter((task: any) => includeSubtasks || !task.parentId)
+      .map((task: any) => {
+        const subtaskInfo = subtaskCounts.get(task.id);
+        return {
+          ...task,
+          relationalTags: task.taskTags?.map((tt: any) => tt.tag) || [],
+          subtaskCount: subtaskInfo?.total || 0,
+          subtaskDoneCount: subtaskInfo?.done || 0,
+        };
+      });
 
     return NextResponse.json({ tasks });
   } catch (error) {
