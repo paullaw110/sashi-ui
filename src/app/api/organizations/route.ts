@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       id: generateId(),
       name: body.name,
       description: body.description || null,
+      icon: body.icon || null,
       createdAt: now,
     };
 

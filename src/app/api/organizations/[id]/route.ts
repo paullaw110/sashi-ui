@@ -35,12 +35,44 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
+    const updates: Record<string, unknown> = {};
+    if (body.name !== undefined) updates.name = body.name;
+    if (body.description !== undefined) updates.description = body.description;
+    if (body.icon !== undefined) updates.icon = body.icon;
+
     const updatedOrganization = await db
       .update(schema.organizations)
-      .set({
-        name: body.name,
-        description: body.description,
-      })
+      .set(updates)
+      .where(eq(schema.organizations.id, id))
+      .returning();
+
+    if (updatedOrganization.length === 0) {
+      return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ organization: updatedOrganization[0] });
+  } catch (error) {
+    console.error("Error updating organization:", error);
+    return NextResponse.json({ error: "Failed to update organization" }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+
+    const updates: Record<string, unknown> = {};
+    if (body.name !== undefined) updates.name = body.name;
+    if (body.description !== undefined) updates.description = body.description;
+    if (body.icon !== undefined) updates.icon = body.icon;
+
+    const updatedOrganization = await db
+      .update(schema.organizations)
+      .set(updates)
       .where(eq(schema.organizations.id, id))
       .returning();
 

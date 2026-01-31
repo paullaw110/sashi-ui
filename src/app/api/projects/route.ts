@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       organizationId: organizationId || null,
       color: color || null,
+      icon: body.icon || null,
       type: type || null,
       createdAt: now,
     });

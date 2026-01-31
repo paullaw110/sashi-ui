@@ -14,7 +14,9 @@ import {
   CheckCircle,
   Circle,
   Plus,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  X
 } from "lucide-react";
 
 // CAST Skills Library - Command-based workflow skills for enhanced productivity
@@ -135,6 +137,8 @@ export function SkillsManager() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [skills, setSkills] = useState(CAST_SKILLS);
   const [copiedSkill, setCopiedSkill] = useState<string | null>(null);
+  const [selectedSkill, setSelectedSkill] = useState<typeof CAST_SKILLS[0] | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Calculate categories dynamically 
   const CATEGORIES = [

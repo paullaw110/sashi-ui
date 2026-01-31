@@ -5,6 +5,7 @@ export const organizations = sqliteTable("organizations", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  icon: text("icon"), // emoji like "🏢" or "🏠"
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
@@ -12,8 +13,24 @@ export const projects = sqliteTable("projects", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   color: text("color"),
+  icon: text("icon"), // emoji like "🚀" or "📊"
   type: text("type"), // client, personal, work
   organizationId: text("organization_id").references(() => organizations.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+// Tags for tasks
+export const tags = sqliteTable("tags", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  color: text("color"), // hex color like "#FF5733"
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+// Junction table for task-tag relationships
+export const taskTags = sqliteTable("task_tags", {
+  taskId: text("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  tagId: text("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
@@ -84,7 +101,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   tasks: many(tasks),
 }));
 
-export const tasksRelations = relations(tasks, ({ one }) => ({
+export const tasksRelations = relations(tasks, ({ one, many }) => ({
   project: one(projects, {
     fields: [tasks.projectId],
     references: [projects.id],
@@ -92,6 +109,22 @@ export const tasksRelations = relations(tasks, ({ one }) => ({
   organization: one(organizations, {
     fields: [tasks.organizationId],
     references: [organizations.id],
+  }),
+  taskTags: many(taskTags),
+}));
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+  taskTags: many(taskTags),
+}));
+
+export const taskTagsRelations = relations(taskTags, ({ one }) => ({
+  task: one(tasks, {
+    fields: [taskTags.taskId],
+    references: [tasks.id],
+  }),
+  tag: one(tags, {
+    fields: [taskTags.tagId],
+    references: [tags.id],
   }),
 }));
 
@@ -110,6 +143,10 @@ export type SashiStatus = typeof sashiStatus.$inferSelect;
 export type NewSashiStatus = typeof sashiStatus.$inferInsert;
 export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
+export type Tag = typeof tags.$inferSelect;
+export type NewTag = typeof tags.$inferInsert;
+export type TaskTag = typeof taskTags.$inferSelect;
+export type NewTaskTag = typeof taskTags.$inferInsert;
 
 // SuperLandings Leads
 export const leads = sqliteTable("leads", {

@@ -273,14 +273,14 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
     setIsCreatingOrg(false);
   }, []);
 
-  const handleSaveOrganization = useCallback(async (orgData: { id?: string; name: string; description?: string }) => {
+  const handleSaveOrganization = useCallback(async (orgData: { id?: string; name: string; description?: string; icon?: string | null }) => {
     try {
       if (orgData.id) {
         // Update existing organization
         const response = await fetch(`/api/organizations/${orgData.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: orgData.name, description: orgData.description }),
+          body: JSON.stringify({ name: orgData.name, description: orgData.description, icon: orgData.icon }),
         });
         if (!response.ok) throw new Error(`Update failed: ${response.status}`);
       } else {
@@ -288,7 +288,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
         const response = await fetch("/api/organizations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: orgData.name, description: orgData.description }),
+          body: JSON.stringify({ name: orgData.name, description: orgData.description, icon: orgData.icon }),
         });
         if (!response.ok) throw new Error(`Create failed: ${response.status}`);
       }

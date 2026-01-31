@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, Trash2 } from "lucide-react";
 import { Organization } from "@/lib/db/schema";
+import { EmojiPicker } from "./EmojiPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,7 +30,7 @@ interface OrganizationModalProps {
   isOpen: boolean;
   isCreating?: boolean;
   onClose: () => void;
-  onSave: (orgData: { id?: string; name: string; description?: string }) => Promise<void>;
+  onSave: (orgData: { id?: string; name: string; description?: string; icon?: string | null }) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
 }
 
@@ -41,6 +42,8 @@ export function OrganizationModal({
   onSave,
   onDelete,
 }: OrganizationModalProps) {
+  const [icon, setIcon] = useState<string | null>(null);
+  
   const form = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationFormSchema),
     defaultValues: {
@@ -56,11 +59,13 @@ export function OrganizationModal({
         name: organization.name,
         description: organization.description || null,
       });
+      setIcon(organization.icon || null);
     } else if (isCreating) {
       form.reset({
         name: "",
         description: null,
       });
+      setIcon(null);
     }
   }, [organization, isCreating, form]);
 
@@ -70,6 +75,7 @@ export function OrganizationModal({
         id: organization?.id,
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
+        icon,
       });
       onClose();
     } catch (error) {
@@ -95,9 +101,14 @@ export function OrganizationModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <Building2 size={16} className="text-muted-foreground" />
-            <DialogTitle>
+          <div className="flex items-center gap-3">
+            <EmojiPicker
+              value={icon}
+              onChange={setIcon}
+              placeholder={<Building2 size={20} className="text-[var(--text-quaternary)]" />}
+              size="lg"
+            />
+            <DialogTitle className="text-xl">
               {isCreating ? "New Organization" : "Edit Organization"}
             </DialogTitle>
           </div>
