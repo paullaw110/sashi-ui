@@ -966,19 +966,48 @@ export function TaskDetailModal({
                     <FileText size={14} />
                     PRD
                   </h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowPrdCreator(true)}
-                  >
-                    Edit
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPrdCreator(true)}
+                    >
+                      <Sparkles size={12} className="mr-1" />
+                      Regenerate
+                    </Button>
+                  </div>
                 </div>
-                <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] p-3 max-h-[200px] overflow-y-auto">
-                  <p className="text-sm text-[var(--text-tertiary)] line-clamp-4">
-                    {prd.substring(0, 300)}...
-                  </p>
-                </div>
+                <details className="group">
+                  <summary className="cursor-pointer list-none">
+                    <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] p-3">
+                      <p className="text-sm text-[var(--text-tertiary)] line-clamp-3">
+                        {prd.split("\n").slice(0, 3).join(" ").substring(0, 200)}...
+                      </p>
+                      <span className="text-xs text-[var(--accent-primary)] mt-2 inline-block group-open:hidden">
+                        Click to expand
+                      </span>
+                    </div>
+                  </summary>
+                  <div className="mt-2 bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] p-4 max-h-[400px] overflow-y-auto">
+                    <article className="prose prose-invert prose-sm max-w-none">
+                      {prd.split("\n").map((line, i) => {
+                        if (line.startsWith("## ")) {
+                          return <h2 key={i} className="text-base font-semibold mt-4 mb-2 text-[var(--text-primary)]">{line.replace("## ", "")}</h2>;
+                        }
+                        if (line.startsWith("**") && line.endsWith("**")) {
+                          return <p key={i} className="font-medium text-[var(--text-secondary)]">{line.replace(/\*\*/g, "")}</p>;
+                        }
+                        if (line.startsWith("- ")) {
+                          return <li key={i} className="text-sm text-[var(--text-tertiary)] ml-4">{line.replace("- ", "")}</li>;
+                        }
+                        if (line.trim()) {
+                          return <p key={i} className="text-sm text-[var(--text-tertiary)] my-1">{line}</p>;
+                        }
+                        return null;
+                      })}
+                    </article>
+                  </div>
+                </details>
               </div>
             ) : (
               <Button
