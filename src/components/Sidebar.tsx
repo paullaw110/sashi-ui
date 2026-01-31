@@ -14,7 +14,7 @@ import {
   Target,
   X,
   Code2,
-  Zap,
+  BookOpen,
   PanelLeftClose,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ const NAV_ITEMS = [
   { href: "/playground", icon: Code2, label: "Code Playground" },
   { href: "/calendar", icon: Calendar, label: "Calendar" },
   { href: "/queue", icon: ListTodo, label: "Queue" },
-  { href: "/skills", icon: Zap, label: "Skills" },
+  { href: "/library", icon: BookOpen, label: "Library" },
   { href: "/leads", icon: Target, label: "Leads" },
 ];
 
