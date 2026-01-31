@@ -1,5 +1,7 @@
 # PRD: Sashi UI Mac App
 
+**Status:** 🟡 Phase 1 Complete (2026-01-31)
+
 ## Overview
 
 Transform Sashi UI from a web application into a native macOS application, providing a faster, more integrated desktop experience with native OS features.
@@ -159,12 +161,12 @@ Tauri provides the best balance of:
 
 ## Implementation Plan
 
-### Phase 1: Setup (Week 1)
-- [ ] Initialize Tauri project
-- [ ] Configure build for macOS
-- [ ] Integrate existing React app
-- [ ] Basic window management
-- [ ] Code signing setup
+### Phase 1: Setup (Week 1) ✅
+- [x] Initialize Tauri project
+- [x] Configure build for macOS
+- [x] Integrate existing React app
+- [x] Basic window management
+- [ ] Code signing setup (later)
 
 ### Phase 2: Native Features (Week 2)
 - [ ] Menu bar icon + dropdown
