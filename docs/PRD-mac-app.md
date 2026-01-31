@@ -1,6 +1,6 @@
 # PRD: Sashi UI Mac App
 
-**Status:** 🟡 Phase 2 Complete (2026-01-31)
+**Status:** 🟡 Phase 3 Foundation Complete (2026-01-31)
 
 ## Overview
 
@@ -175,11 +175,11 @@ Tauri provides the best balance of:
 - [x] System notifications (plugin added)
 - [ ] Dock badge (requires task count integration)
 
-### Phase 3: Offline & Sync (Week 3)
-- [ ] Local SQLite database
-- [ ] Sync engine (conflict resolution)
+### Phase 3: Offline & Sync (Week 3) 🟡
+- [x] Local SQLite database (schema + migrations)
+- [x] Online/offline indicator
+- [ ] Sync engine (bidirectional sync logic)
 - [ ] Background sync service
-- [ ] Online/offline indicator
 
 ### Phase 4: Polish & Ship (Week 4)
 - [ ] App icon design
