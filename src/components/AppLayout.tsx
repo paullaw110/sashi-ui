@@ -7,6 +7,7 @@ import { QuickAddTask } from "./QuickAddTask";
 import { CommandPalette } from "./CommandPalette";
 import { TauriEventListener } from "./TauriEventListener";
 import { SyncIndicator } from "./SyncIndicator";
+import { UpdateChecker } from "./UpdateChecker";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -153,6 +154,9 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
           window.location.href = "/settings";
         }}
       />
+
+      {/* Update notification for Tauri app */}
+      <UpdateChecker />
     </div>
   );
 }

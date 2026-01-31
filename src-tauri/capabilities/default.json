@@ -17,6 +17,8 @@
     "sql:allow-select",
     "sql:allow-close",
     "http:default",
-    "updater:default"
+    "updater:default",
+    "process:allow-restart",
+    "process:allow-exit"
   ]
 }
