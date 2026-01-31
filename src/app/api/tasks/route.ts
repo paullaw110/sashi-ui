@@ -82,11 +82,37 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Transform taskTags to a flat tags array for easier consumption
-    tasks = tasks.map((task: any) => ({
-      ...task,
-      relationalTags: task.taskTags?.map((tt: any) => tt.tag) || [],
-    }));
+    // Get subtask counts for all tasks
+    const taskIds = tasks.map((t: any) => t.id);
+    const subtaskCounts = new Map<string, { total: number; done: number }>();
+    
+    if (taskIds.length > 0) {
+      // Fetch all subtasks for these parent tasks
+      const allSubtasks = await db.query.tasks.findMany({
+        where: (tasks, { inArray }) => inArray(tasks.parentId, taskIds),
+        columns: { parentId: true, status: true },
+      });
+      
+      // Count subtasks per parent
+      for (const subtask of allSubtasks) {
+        if (!subtask.parentId) continue;
+        const current = subtaskCounts.get(subtask.parentId) || { total: 0, done: 0 };
+        current.total++;
+        if (subtask.status === "done") current.done++;
+        subtaskCounts.set(subtask.parentId, current);
+      }
+    }
+
+    // Transform taskTags to a flat tags array and add subtask counts
+    tasks = tasks.map((task: any) => {
+      const subtaskInfo = subtaskCounts.get(task.id);
+      return {
+        ...task,
+        relationalTags: task.taskTags?.map((tt: any) => tt.tag) || [],
+        subtaskCount: subtaskInfo?.total || 0,
+        subtaskDoneCount: subtaskInfo?.done || 0,
+      };
+    });
 
     return NextResponse.json({ tasks });
   } catch (error) {

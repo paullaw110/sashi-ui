@@ -26,6 +26,8 @@ type Task = {
   dueTime: string | null;
   tags: string | null;
   relationalTags?: Tag[];
+  subtaskCount?: number;
+  subtaskDoneCount?: number;
   project?: SchemaProject | null;
   organization?: Organization | null;
 };
@@ -352,12 +354,19 @@ export function TaskTable({
             </button>
 
             {/* Name */}
-            <span className={cn(
-              "flex-1 min-w-0 text-sm truncate font-medium",
-              task.status === "done" ? "text-[var(--text-quaternary)] line-through" : "text-[var(--text-primary)]"
-            )}>
-              {task.name}
-            </span>
+            <div className="flex-1 min-w-0 flex items-center gap-2">
+              <span className={cn(
+                "text-sm truncate font-medium",
+                task.status === "done" ? "text-[var(--text-quaternary)] line-through" : "text-[var(--text-primary)]"
+              )}>
+                {task.name}
+              </span>
+              {task.subtaskCount && task.subtaskCount > 0 && (
+                <span className="shrink-0 text-[10px] text-[var(--text-quaternary)] bg-[var(--bg-surface)] px-1.5 py-0.5 rounded">
+                  {task.subtaskDoneCount}/{task.subtaskCount}
+                </span>
+              )}
+            </div>
 
             {/* Organization - hidden on mobile/tablet */}
             <div 
