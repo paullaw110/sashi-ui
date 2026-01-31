@@ -16,6 +16,7 @@
     "sql:allow-execute",
     "sql:allow-select",
     "sql:allow-close",
-    "http:default"
+    "http:default",
+    "updater:default"
   ]
 }
