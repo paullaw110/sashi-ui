@@ -148,13 +148,24 @@ export function SkillsManager() {
     { id: "media", name: "Media", count: skills.filter(s => s.category === "media").length },
   ];
 
-  const copyToClipboard = (text: string, skillId: string) => {
+  const copyToClipboard = (text: string, skillId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent modal from opening
     navigator.clipboard.writeText(text).then(() => {
       setCopiedSkill(skillId);
       setTimeout(() => setCopiedSkill(null), 2000); // Clear after 2 seconds
     }).catch(err => {
       console.error('Failed to copy to clipboard:', err);
     });
+  };
+
+  const openSkillModal = (skill: typeof CAST_SKILLS[0]) => {
+    setSelectedSkill(skill);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedSkill(null);
   };
 
   const filteredSkills = skills.filter(skill => {
@@ -227,15 +238,23 @@ export function SkillsManager() {
           return (
             <div
               key={skill.id}
-              onClick={() => copyToClipboard(skill.trigger, skill.id)}
-              className={`bg-[#0a0a0a] border rounded-lg p-4 hover:bg-[#111] transition-colors cursor-pointer ${
-                copiedSkill === skill.id 
-                  ? 'border-green-500 bg-green-500/5' 
-                  : 'border-[#1a1a1a] hover:border-[#333]'
-              }`}
-              title={copiedSkill === skill.id ? 'Copied!' : `Click to copy: ${skill.trigger}`}
+              onClick={() => openSkillModal(skill)}
+              className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4 hover:bg-[#111] hover:border-[#333] transition-colors cursor-pointer relative group"
             >
-              <div className="flex items-start justify-between mb-3">
+              {/* Copy Button - Shows on Hover */}
+              <button
+                onClick={(e) => copyToClipboard(skill.trigger, skill.id, e)}
+                className={`absolute top-3 right-3 p-2 rounded-lg transition-all duration-200 ${
+                  copiedSkill === skill.id 
+                    ? 'bg-green-600/20 text-green-400 opacity-100' 
+                    : 'bg-[#1a1a1a] text-[#525252] hover:text-[#737373] opacity-0 group-hover:opacity-100'
+                }`}
+                title={copiedSkill === skill.id ? 'Copied!' : 'Copy trigger command'}
+              >
+                <Copy size={16} />
+              </button>
+
+              <div className="flex items-start justify-between mb-3 pr-12">
                 <div className="flex items-center gap-3">
                   <div className={'p-2 rounded-lg ' + (
                     skill.status === "active" ? 'bg-green-600/20 text-green-400' :
@@ -258,11 +277,6 @@ export function SkillsManager() {
                     <p className="text-xs text-[#737373] capitalize">{skill.category}</p>
                   </div>
                 </div>
-                <div className={'w-3 h-3 rounded-full ' + (
-                  skill.status === "active" ? 'bg-green-500' :
-                  skill.status === "building" ? 'bg-orange-500' :
-                  'bg-[#525252]'
-                )}></div>
               </div>
               
               <p className="text-xs text-[#737373] mb-2 leading-relaxed">
@@ -270,17 +284,8 @@ export function SkillsManager() {
               </p>
               
               <div className="mb-4">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-[10px] text-[#525252]">Trigger:</p>
-                  {copiedSkill === skill.id && (
-                    <span className="text-[9px] text-green-400 font-medium">Copied!</span>
-                  )}
-                </div>
-                <code className={`text-[10px] px-2 py-1 rounded font-mono ${
-                  copiedSkill === skill.id 
-                    ? 'text-green-400 bg-green-500/20' 
-                    : 'text-[#e5e5e5] bg-[#1a1a1a]'
-                }`}>
+                <p className="text-[10px] text-[#525252] mb-1">Trigger:</p>
+                <code className="text-[10px] text-[#e5e5e5] bg-[#1a1a1a] px-2 py-1 rounded font-mono">
                   {skill.trigger}
                 </code>
               </div>
@@ -308,6 +313,111 @@ export function SkillsManager() {
           <p className="text-sm text-[#737373]">
             Try adjusting your search or category filter
           </p>
+        </div>
+      )}
+
+      {/* Skill Detail Modal */}
+      {isModalOpen && selectedSkill && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-[#1a1a1a]">
+              <div className="flex items-center gap-3">
+                <div className={'p-2 rounded-lg ' + (
+                  selectedSkill.status === "active" ? 'bg-green-600/20 text-green-400' :
+                  selectedSkill.status === "building" ? 'bg-orange-600/20 text-orange-400' :
+                  'bg-[#1a1a1a] text-[#525252]'
+                )}>
+                  <selectedSkill.icon size={24} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-medium text-[#f5f5f5]">{selectedSkill.name}</h2>
+                    <span className={'text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider font-medium ' + (
+                      selectedSkill.status === "active" ? 'bg-green-600/20 text-green-400' :
+                      selectedSkill.status === "building" ? 'bg-orange-600/20 text-orange-400' :
+                      'bg-[#1a1a1a] text-[#525252]'
+                    )}>
+                      {selectedSkill.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-[#737373] capitalize">{selectedSkill.category}</p>
+                </div>
+              </div>
+              <button
+                onClick={closeModal}
+                className="p-2 text-[#525252] hover:text-[#737373] hover:bg-[#1a1a1a] rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Description */}
+              <div>
+                <h3 className="text-sm font-medium text-[#f5f5f5] mb-2">Description</h3>
+                <p className="text-sm text-[#737373] leading-relaxed">{selectedSkill.description}</p>
+              </div>
+
+              {/* Trigger Command */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-[#f5f5f5]">Trigger Command</h3>
+                  <button
+                    onClick={(e) => copyToClipboard(selectedSkill.trigger, selectedSkill.id, e)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+                      copiedSkill === selectedSkill.id 
+                        ? 'bg-green-600/20 text-green-400' 
+                        : 'bg-[#1a1a1a] text-[#525252] hover:text-[#737373]'
+                    }`}
+                  >
+                    <Copy size={12} />
+                    {copiedSkill === selectedSkill.id ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <code className="block text-sm text-[#e5e5e5] bg-[#1a1a1a] px-3 py-2 rounded font-mono">
+                  {selectedSkill.trigger}
+                </code>
+              </div>
+
+              {/* Usage Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-[#f5f5f5] mb-2">Last Used</h3>
+                  <p className="text-sm text-[#737373]">{formatLastUsed(selectedSkill.lastUsed)}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-[#f5f5f5] mb-2">Usage Count</h3>
+                  <p className="text-sm text-[#737373]">{selectedSkill.usageCount} times</p>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <h3 className="text-sm font-medium text-[#f5f5f5] mb-2">Location</h3>
+                <p className="text-sm text-[#737373]">{selectedSkill.location}</p>
+              </div>
+
+              {/* Documentation - Placeholder for now */}
+              <div>
+                <h3 className="text-sm font-medium text-[#f5f5f5] mb-2">Documentation</h3>
+                <div className="bg-[#1a1a1a] rounded-lg p-4">
+                  {selectedSkill.status === "active" ? (
+                    <div className="space-y-2 text-sm text-[#737373]">
+                      <p>This skill is currently active and ready to use.</p>
+                      <p>Use the trigger command above to invoke this skill in any channel.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 text-sm text-[#737373]">
+                      <p>This skill is currently in development as part of the CAST Skills Library.</p>
+                      <p>Once implementation is complete, you'll be able to use this workflow command across all channels.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
