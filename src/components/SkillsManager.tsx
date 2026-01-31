@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { 
   Search, 
-  Filter, 
   Settings, 
   Zap, 
   Globe, 
@@ -308,46 +307,6 @@ export function SkillsManager() {
         </div>
       )}
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Zap className="text-blue-500" size={16} />
-            <span className="text-xs text-[#737373]">Total Skills</span>
-          </div>
-          <span className="text-2xl font-bold text-[#f5f5f5]">{skills.length}</span>
-        </div>
-        
-        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle className="text-green-500" size={16} />
-            <span className="text-xs text-[#737373]">Active</span>
-          </div>
-          <span className="text-2xl font-bold text-[#f5f5f5]">
-            {skills.filter(s => s.status === "active").length}
-          </span>
-        </div>
-        
-        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Settings className="text-orange-500" size={16} />
-            <span className="text-xs text-[#737373]">Building</span>
-          </div>
-          <span className="text-2xl font-bold text-[#f5f5f5]">
-            {skills.filter(s => s.status === "building").length}
-          </span>
-        </div>
-        
-        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Filter className="text-purple-500" size={16} />
-            <span className="text-xs text-[#737373]">Categories</span>
-          </div>
-          <span className="text-2xl font-bold text-[#f5f5f5]">
-            {CATEGORIES.length - 1}
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
