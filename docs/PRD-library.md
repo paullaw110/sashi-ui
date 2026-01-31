@@ -1,5 +1,7 @@
 # PRD: Library Page
 
+**Status:** ✅ Complete - Phase 1+2 (2026-01-31)
+
 ## Overview
 Replace the current "Skills" nav item with "Library" — a unified hub for everything Sashi-generated: PRDs, session transcripts, reports, skills, and configuration files. View-only interface for browsing Sashi's work and context.
 

@@ -1,5 +1,7 @@
 # PRD: Task Tagging System
 
+**Status:** ✅ Complete (2026-01-31)
+
 ## Overview
 
 Add a flexible tagging system to organize and filter tasks across organizations and projects. Tags provide a cross-cutting way to categorize tasks that doesn't fit into the hierarchical org → project structure.
