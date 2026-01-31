@@ -1,0 +1,1032 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - link:
+            - /url: /
+            - img
+            - generic: Sashi
+          - generic:
+            - button:
+              - img
+        - generic:
+          - generic:
+            - button:
+              - generic: Idle
+      - generic:
+        - button:
+          - img
+          - generic: Search
+          - generic: ⌘K
+      - navigation:
+        - link:
+          - /url: /
+          - img
+          - text: Dashboard
+        - link:
+          - /url: /tasks
+          - img
+          - text: Tasks
+        - link:
+          - /url: /inbox
+          - img
+          - text: Inbox
+        - link:
+          - /url: /notes
+          - img
+          - text: Notes
+        - link:
+          - /url: /playground
+          - img
+          - text: Code Playground
+        - link:
+          - /url: /calendar
+          - img
+          - text: Calendar
+        - link:
+          - /url: /queue
+          - img
+          - text: Queue
+        - link:
+          - /url: /skills
+          - img
+          - text: Skills
+        - link:
+          - /url: /leads
+          - img
+          - text: Leads
+      - generic:
+        - button:
+          - img
+          - text: Settings
+    - main:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=2]: Today
+                  - generic: "23"
+                - generic:
+                  - combobox
+                  - combobox
+                  - button:
+                    - img
+                    - generic: Add
+              - generic:
+                - generic: Organization
+                - generic: Project
+                - generic: Priority
+                - generic: Status
+                - generic: Due
+              - generic:
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Non-Negotiable
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Non-Negotiable
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Critical
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Critical
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Critical
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Critical
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Critical
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: High
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: High
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: High
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: High
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: High
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Low
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Low
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Low
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Low
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Non-Negotiable
+                  - generic: Waiting
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Non-Negotiable
+                  - generic: Waiting
+                  - generic: Jan 30
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Low
+                  - generic: Waiting
+                  - generic: Jan 30
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=2]: Next
+                  - generic: "24"
+                - generic:
+                  - button:
+                    - img
+                    - generic: Add
+              - generic:
+                - generic: Organization
+                - generic: Project
+                - generic: Priority
+                - generic: Status
+                - generic: Due
+              - generic:
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Non-Negotiable
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Non-Negotiable
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Non-Negotiable
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Non-Negotiable
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: High
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: High
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: High
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Medium
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Low
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Low
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: Low
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+                - generic:
+                  - button:
+                    - img
+                  - generic: —
+                  - generic: —
+                  - generic: —
+                  - generic: Not Started
+                  - generic: Jan 31
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: January 2026
+                - generic:
+                  - button:
+                    - img
+                  - button: Today
+                  - button:
+                    - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: Sun
+                    - generic: "25"
+                  - generic:
+                    - generic:
+                      - img
+                - generic:
+                  - generic:
+                    - generic: Mon
+                    - generic: "26"
+                  - generic:
+                    - generic:
+                      - img
+                - generic:
+                  - generic:
+                    - generic: Tue
+                    - generic: "27"
+                  - generic:
+                    - generic:
+                      - img
+                - generic:
+                  - generic:
+                    - generic: Wed
+                    - generic: "28"
+                  - generic:
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: help
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 16:45
+                        - generic: Waiting On Client
+                - generic:
+                  - generic:
+                    - generic: Thu
+                    - generic: "29"
+                  - generic:
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: progress meter for run status,
+                        - generic: Waiting On Client
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: COMPOSE QA
+                          - generic: 11:00
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: QA Plan
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Chat Revamp
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: access forbidden
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Auto-Ticketing QA
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: imPAC Tags
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Add Blog Section on Home
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Create one BG Video
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: PCC - web ask
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: plan framer
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: testing in compose
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Compensating Framework?
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: organize new tables in compose
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: "imPAC: Hub"
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: message brian
+                        - generic: Done
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: remove compensation tab and then make exception column in the policy catalogue
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 10:00
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 12:00
+                        - generic: Waiting On Client
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 16:30
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 18:30
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 19:30
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 13:45
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: QA Framework Side Panel
+                          - generic: 15:15
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 15:30
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: tooltip for configure providers
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: time machine report
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: message brian
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: "imPAC: Product Analytics"
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Scores Tab
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: QA Plan
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: AI Dashboard Insights - Most Risk
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Compensating Framework?
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 16:00
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 20:00
+                        - generic: Waiting On Client
+                - generic:
+                  - generic:
+                    - generic: Fri
+                    - generic: "30"
+                  - generic:
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: progress meter for run status,
+                        - generic: Waiting On Client
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: AI Integration - Table + Widgets
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Hero Section w/ partnership logos
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Add reviews on webstite
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: pay Malcolm!
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Chat Revamp
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: AI Integration - Search
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: new compensation column
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: update findings exemptions tab
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 12:00
+                        - generic: Waiting On Client
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 16:00
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Start Paying Loans
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Home Loan Look into
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Research Storybook
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: weed parkway strip
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Email Updates for Web clients
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: tooltip for configure providers
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: time machine report
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Create one BG Video
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: plan framer
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: "imPAC: Product Analytics"
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Scores Tab
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 16:45
+                        - generic: Waiting On Client
+                - generic:
+                  - generic:
+                    - generic: Sat
+                    - generic: "31"
+                  - generic:
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: spectrum mobile
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Car insureance
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: overview dashboard - key findings
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Garden Wall
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Plant Plan
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Build Bench frame
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: AI Dashboard Insights - Most Risk
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Email Signature Deven
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Asset History + add created on other stats
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: home insurance
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Clothes donation
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Learn Framer
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: plan traitor
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Toastmasters
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Prabahar and Barry notes
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: PCC - web ask
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: AI Chat
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Text Kevin
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: set up daily task tackle help from sashi
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: set up task tackle
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: set up sashi task helper
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 16:00
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: 16:00
+                        - generic: Not Started
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Research Storybook
+                        - generic: Not Started
+            - status
+    - generic:
+      - heading [level=2]: Command Palette
+      - paragraph: Search for a command to run...
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e6] [cursor=pointer]:
+    - img [ref=e7]
+  - alert
+  - dialog "Edit Task" [ref=e11]:
+    - heading "Edit Task" [level=2] [ref=e15]
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - generic [ref=e18]: Task Name
+        - textbox "Task Name" [active] [ref=e19]:
+          - /placeholder: Enter task name...
+          - text: AI Integration - Table + Widgets
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e22]: Organization
+          - combobox "Organization" [ref=e23]:
+            - generic: None
+            - img
+          - combobox [ref=e24]
+        - generic [ref=e25]:
+          - generic [ref=e26]: Project
+          - combobox "Project" [ref=e27]:
+            - generic: None
+            - img
+          - combobox [ref=e28]
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - generic [ref=e31]: Status
+          - combobox "Status" [ref=e32]:
+            - generic: Todo
+            - img
+          - combobox [ref=e33]
+        - generic [ref=e34]:
+          - generic [ref=e35]: Priority
+          - combobox "Priority" [ref=e36]:
+            - generic: Non-Negotiable
+            - img
+          - combobox [ref=e37]
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: Due Date
+          - textbox "Due Date" [ref=e41]: 2026-01-30
+        - generic [ref=e42]:
+          - generic [ref=e43]: Due Time
+          - textbox "Due Time" [ref=e44]
+      - generic [ref=e45]:
+        - generic [ref=e46]: Description
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - button "Bold" [ref=e49]:
+              - img [ref=e50]
+            - button "Italic" [ref=e52]:
+              - img [ref=e53]
+            - button "Strikethrough" [ref=e55]:
+              - img [ref=e56]
+            - button "Bullet list" [ref=e60]:
+              - img [ref=e61]
+            - button "Numbered list" [ref=e62]:
+              - img [ref=e63]
+            - button "Code" [ref=e67]:
+              - img [ref=e68]
+            - button "Add link" [ref=e71]:
+              - img [ref=e72]
+          - paragraph [ref=e78]: Add task description...
+      - generic [ref=e79]:
+        - button "Delete" [ref=e81]:
+          - img
+          - text: Delete
+        - generic [ref=e82]:
+          - button "Cancel" [ref=e83]
+          - button "Save" [ref=e84]
+    - button "Close" [ref=e85]:
+      - img
+      - generic [ref=e86]: Close
+```

@@ -1,0 +1,210 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Organization } from "@/lib/db/schema";
+import { Building2, Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+interface OrganizationManagerProps {
+  onOrganizationSelect?: (organization: Organization | null) => void;
+  selectedOrganizationId?: string | null;
+  onCreateClick?: () => void;
+  onEditClick?: (organization: Organization) => void;
+  onRefresh?: number;
+}
+
+export default function OrganizationManager({ 
+  onOrganizationSelect,
+  selectedOrganizationId,
+  onCreateClick,
+  onEditClick,
+  onRefresh
+}: OrganizationManagerProps) {
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
+
+  // Refresh when trigger changes
+  useEffect(() => {
+    if (onRefresh !== undefined && onRefresh > 0) {
+      fetchOrganizations();
+    }
+  }, [onRefresh]);
+
+  const fetchOrganizations = async () => {
+    try {
+      const response = await fetch("/api/organizations");
+      const data = await response.json();
+      setOrganizations(data.organizations || []);
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteOrganization = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this organization? This will also remove all associated projects.")) return;
+
+    try {
+      const response = await fetch(`/api/organizations/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setOrganizations(organizations.filter(org => org.id !== id));
+        if (selectedOrganizationId === id && onOrganizationSelect) {
+          onOrganizationSelect(null);
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting organization:", error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-xs text-muted-foreground">Loading organizations...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Building2 size={16} className="text-muted-foreground" />
+          <h3 className="text-sm font-medium">Organizations</h3>
+          <span className="text-xs text-muted-foreground">({organizations.length})</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCreateClick}
+          className="text-blue-400 hover:text-blue-300"
+        >
+          <Plus size={14} className="mr-1.5" />
+          Add Organization
+        </Button>
+      </div>
+
+      {/* Organization Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        {/* All Organizations Card */}
+        <Card
+          onClick={() => onOrganizationSelect?.(null)}
+          className={cn(
+            "flex items-center gap-3 p-3 cursor-pointer transition-all",
+            !selectedOrganizationId 
+              ? "bg-secondary ring-1 ring-blue-500/30" 
+              : "hover:bg-secondary/50"
+          )}
+        >
+          <div className={cn(
+            "w-8 h-8 rounded-md flex items-center justify-center",
+            !selectedOrganizationId ? "bg-blue-500/20" : "bg-secondary"
+          )}>
+            <Building2 size={16} className={!selectedOrganizationId ? "text-blue-400" : "text-muted-foreground"} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className={cn(
+              "text-sm font-medium truncate",
+              !selectedOrganizationId ? "text-foreground" : "text-muted-foreground"
+            )}>
+              All Organizations
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              View all tasks
+            </div>
+          </div>
+          <ChevronRight size={14} className="text-muted-foreground/50 shrink-0" />
+        </Card>
+
+        {/* Organization Cards */}
+        {organizations.map((org) => (
+          <Card
+            key={org.id}
+            onClick={() => onOrganizationSelect?.(org)}
+            className={cn(
+              "group flex items-center gap-3 p-3 cursor-pointer transition-all",
+              selectedOrganizationId === org.id 
+                ? "bg-secondary ring-1 ring-blue-500/30" 
+                : "hover:bg-secondary/50"
+            )}
+          >
+            <div className={cn(
+              "w-8 h-8 rounded-md flex items-center justify-center",
+              selectedOrganizationId === org.id ? "bg-blue-500/20" : "bg-secondary"
+            )}>
+              <Building2 size={16} className={selectedOrganizationId === org.id ? "text-blue-400" : "text-muted-foreground"} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={cn(
+                "text-sm font-medium truncate",
+                selectedOrganizationId === org.id ? "text-foreground" : "text-muted-foreground"
+              )}>
+                {org.name}
+              </div>
+              {org.description && (
+                <div className="text-[10px] text-muted-foreground truncate">
+                  {org.description}
+                </div>
+              )}
+            </div>
+            
+            {/* Action buttons - show on hover */}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditClick?.(org);
+                }}
+                title="Edit organization"
+              >
+                <Pencil size={12} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
+                onClick={(e) => deleteOrganization(e, org.id)}
+                title="Delete organization"
+              >
+                <Trash2 size={12} />
+              </Button>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {organizations.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Building2 size={32} className="text-muted-foreground/30 mb-3" />
+          <p className="text-sm text-muted-foreground mb-1">No organizations yet</p>
+          <p className="text-xs text-muted-foreground/70 mb-4">Create an organization to group your projects</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onCreateClick}
+            className="text-blue-400 hover:text-blue-300"
+          >
+            <Plus size={14} className="mr-1.5" />
+            Create your first organization
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
