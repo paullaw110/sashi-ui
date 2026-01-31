@@ -15,6 +15,7 @@ import {
   Plus,
   MoreHorizontal,
   Maximize2,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -423,52 +424,68 @@ export function TaskDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="sr-only">
-              {isCreating ? "New Task" : "Edit Task"}
-            </DialogTitle>
-            {/* Saving indicator */}
-            {isSaving && (
-              <div className="flex items-center gap-1.5 text-xs text-[var(--text-quaternary)]">
-                <Loader2 size={12} className="animate-spin" />
-                Saving...
-              </div>
-            )}
-            {/* Three-dot menu for expand/delete */}
-            {(task || localTaskId) && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
-                    <MoreHorizontal size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {onExpand && (
-                    <DropdownMenuItem onClick={onExpand}>
-                      <Maximize2 size={14} className="mr-2" />
-                      Expand
-                    </DropdownMenuItem>
-                  )}
-                  {onDelete && (
-                    <DropdownMenuItem
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                      className="text-red-400 focus:text-red-400"
-                    >
-                      {isDeleting ? (
-                        <Loader2 size={14} className="mr-2 animate-spin" />
-                      ) : (
-                        <Trash2 size={14} className="mr-2" />
-                      )}
-                      Delete task
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" showCloseButton={false}>
+        {/* Custom header with More and Close buttons */}
+        <div className="absolute top-4 right-4 flex items-center gap-1">
+          {/* Saving indicator */}
+          {isSaving && (
+            <div className="flex items-center gap-1.5 text-xs text-[var(--text-quaternary)] mr-2">
+              <Loader2 size={12} className="animate-spin" />
+              Saving...
+            </div>
+          )}
+          {/* Three-dot menu for expand/delete */}
+          {(task || localTaskId) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-9 w-9"
+                  tabIndex={-1}
+                >
+                  <MoreHorizontal size={18} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-[var(--border-strong)]">
+                {onExpand && (
+                  <DropdownMenuItem onClick={onExpand}>
+                    <Maximize2 size={14} className="mr-2" />
+                    Expand
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <DropdownMenuItem
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="text-red-400 focus:text-red-400 focus:bg-red-400/10"
+                  >
+                    {isDeleting ? (
+                      <Loader2 size={14} className="mr-2 animate-spin" />
+                    ) : (
+                      <Trash2 size={14} className="mr-2" />
+                    )}
+                    Delete task
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {/* Close button */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-9 w-9"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </Button>
+        </div>
+
+        <DialogHeader className="pb-4 pr-24">
+          <DialogTitle className="sr-only">
+            {isCreating ? "New Task" : "Edit Task"}
+          </DialogTitle>
           {/* Editable Title */}
           <Input
             value={name}
@@ -480,7 +497,8 @@ export function TaskDetailModal({
               }
             }}
             placeholder="Task name..."
-            className="text-3xl font-bold border-none bg-transparent px-0 h-auto focus-visible:ring-0 placeholder:text-[var(--text-quaternary)]"
+            autoFocus
+            className="text-4xl font-bold border-none bg-transparent px-0 h-auto focus-visible:ring-0 placeholder:text-[var(--text-quaternary)]"
           />
         </DialogHeader>
 
