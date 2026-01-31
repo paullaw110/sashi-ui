@@ -18,140 +18,114 @@ import {
   ExternalLink
 } from "lucide-react";
 
-// Mock skills data - in a real app, this would come from an API
-const MOCK_SKILLS = [
+// CAST Skills Library - Command-based workflow skills for enhanced productivity
+const CAST_SKILLS = [
+  // Active Skills (Auto-triggering)
   {
-    id: "web-search",
-    name: "Web Search",
-    description: "Search the web using Brave Search API with region-specific results",
-    category: "research",
-    icon: Globe,
+    id: "frontend-design",
+    name: "Frontend Design",
+    description: "Create distinctive, production-grade frontend interfaces with high design quality",
+    category: "design",
+    icon: Code,
     enabled: true,
-    lastUsed: "2024-01-15T10:30:00Z",
-    usageCount: 45,
-    status: "active"
+    lastUsed: "2026-01-30T15:20:00Z",
+    usageCount: 18,
+    status: "active",
+    trigger: "Auto-triggers when building web components/pages",
+    location: "Built-in skill"
   },
   {
-    id: "message-control",
-    name: "Message Control",
-    description: "Send, delete, and manage messages via various channel plugins",
-    category: "communication",
-    icon: MessageSquare,
-    enabled: true,
-    lastUsed: "2024-01-15T09:15:00Z",
-    usageCount: 23,
-    status: "active"
-  },
-  {
-    id: "camera-capture",
-    name: "Camera Capture",
-    description: "Take photos and record videos from paired devices",
+    id: "remotion",
+    name: "Remotion Video Creation",
+    description: "Create animated video clips from designs using React-based video framework",
     category: "media",
     icon: Camera,
+    enabled: true,
+    lastUsed: "2026-01-29T11:15:00Z",
+    usageCount: 7,
+    status: "active",
+    trigger: "Auto-triggers for social media posts, design showcases",
+    location: "Built-in skill"
+  },
+  
+  // CAST Workflow Commands (Implementation in Progress)
+  {
+    id: "create-prd",
+    name: "CAST: CREATE_PRD",
+    description: "Generate comprehensive Product Requirements Documents with stakeholder analysis and success metrics",
+    category: "workflow",
+    icon: Zap,
     enabled: false,
     lastUsed: null,
     usageCount: 0,
-    status: "disabled"
-  },
-  {
-    id: "text-to-speech",
-    name: "Text to Speech",
-    description: "Convert text to natural speech with voice customization",
-    category: "audio",
-    icon: Music,
-    enabled: true,
-    lastUsed: "2024-01-14T16:20:00Z",
-    usageCount: 8,
-    status: "active"
-  },
-  {
-    id: "code-execution",
-    name: "Code Execution",
-    description: "Execute shell commands and manage background processes",
-    category: "development",
-    icon: Code,
-    enabled: true,
-    lastUsed: "2024-01-15T11:45:00Z",
-    usageCount: 67,
-    status: "active"
-  },
-  {
-    id: "image-analysis",
-    name: "Image Analysis",
-    description: "Analyze images with vision models for content understanding",
-    category: "ai",
-    icon: Brain,
-    enabled: true,
-    lastUsed: "2024-01-15T08:30:00Z",
-    usageCount: 12,
-    status: "active"
-  },
-  // Feature Development Workflow Skills - CAST Commands
-  {
-    id: "create-prd",
-    name: "*CAST: CREATE_PRD*",
-    description: "Generate comprehensive PRD with test scenarios and acceptance criteria",
-    category: "workflow",
-    icon: Zap,
-    enabled: true,
-    lastUsed: "2024-01-15T14:20:00Z",
-    usageCount: 5,
-    status: "active"
+    status: "building",
+    trigger: "CAST: CREATE_PRD [feature name]",
+    location: "In development"
   },
   {
     id: "generate-tasks",
-    name: "*CAST: GENERATE_TASKS*",
-    description: "Break down PRD into actionable tasks with test plans",
+    name: "CAST: GENERATE_TASKS",
+    description: "Break down PRDs into actionable development tasks with effort estimates",
     category: "workflow", 
     icon: Settings,
-    enabled: true,
-    lastUsed: "2024-01-15T14:25:00Z",
-    usageCount: 4,
-    status: "active"
+    enabled: false,
+    lastUsed: null,
+    usageCount: 0,
+    status: "building",
+    trigger: "CAST: GENERATE_TASKS",
+    location: "In development"
   },
   {
     id: "setup-branch",
-    name: "*CAST: SETUP_BRANCH*",
-    description: "Git workflow automation + draft PR creation",
+    name: "CAST: SETUP_BRANCH",
+    description: "Initialize feature branch with proper Git structure and CI setup",
     category: "workflow",
     icon: Code,
-    enabled: true,
-    lastUsed: "2024-01-15T14:30:00Z",
-    usageCount: 3,
-    status: "active"
+    enabled: false,
+    lastUsed: null,
+    usageCount: 0,
+    status: "building",
+    trigger: "CAST: SETUP_BRANCH [feature-name]",
+    location: "In development"
   },
   {
     id: "generate-tests",
-    name: "*CAST: GENERATE_TESTS*",
-    description: "Playwright tests from acceptance criteria - test-first development",
+    name: "CAST: GENERATE_TESTS",
+    description: "Generate Playwright tests from PRD acceptance criteria for test-first development",
     category: "workflow",
     icon: CheckCircle,
-    enabled: true,
-    lastUsed: "2024-01-15T14:35:00Z",
-    usageCount: 3,
-    status: "active"
+    enabled: false,
+    lastUsed: null,
+    usageCount: 0,
+    status: "building",
+    trigger: "CAST: GENERATE_TESTS",
+    location: "In development"
   },
   {
     id: "implement-feature",
-    name: "*CAST: IMPLEMENT_FEATURE*",
-    description: "Parallel coding agent orchestration for backend + frontend",
+    name: "CAST: IMPLEMENT_FEATURE",
+    description: "Parallel backend + frontend development with coding agent orchestration",
     category: "workflow",
-    icon: Code,
-    enabled: true,
-    lastUsed: "2024-01-15T14:40:00Z",
-    usageCount: 2,
-    status: "active"
+    icon: Brain,
+    enabled: false,
+    lastUsed: null,
+    usageCount: 0,
+    status: "building",
+    trigger: "CAST: IMPLEMENT_FEATURE",
+    location: "In development"
   },
   {
     id: "validate-deploy",
-    name: "*CAST: VALIDATE_DEPLOY*",
-    description: "Quality gates + production deployment pipeline",
+    name: "CAST: VALIDATE_DEPLOY",
+    description: "QA validation and production deployment with quality gates",
     category: "workflow",
-    icon: CheckCircle,
-    enabled: true,
-    lastUsed: "2024-01-15T14:45:00Z",
-    usageCount: 2,
-    status: "active"
+    icon: Globe,
+    enabled: false,
+    lastUsed: null,
+    usageCount: 0,
+    status: "building",
+    trigger: "CAST: VALIDATE_DEPLOY",
+    location: "In development"
   }
 ];
 
@@ -160,27 +134,15 @@ const MOCK_SKILLS = [
 export function SkillsManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [skills, setSkills] = useState(MOCK_SKILLS);
+  const [skills, setSkills] = useState(CAST_SKILLS);
 
   // Calculate categories dynamically 
   const CATEGORIES = [
     { id: "all", name: "All Skills", count: skills.length },
     { id: "workflow", name: "Workflow", count: skills.filter(s => s.category === "workflow").length },
-    { id: "research", name: "Research", count: skills.filter(s => s.category === "research").length },
-    { id: "communication", name: "Communication", count: skills.filter(s => s.category === "communication").length },
+    { id: "design", name: "Design", count: skills.filter(s => s.category === "design").length },
     { id: "media", name: "Media", count: skills.filter(s => s.category === "media").length },
-    { id: "audio", name: "Audio", count: skills.filter(s => s.category === "audio").length },
-    { id: "development", name: "Development", count: skills.filter(s => s.category === "development").length },
-    { id: "ai", name: "AI", count: skills.filter(s => s.category === "ai").length },
   ];
-
-  const toggleSkill = (skillId: string) => {
-    setSkills(prev => prev.map(skill => 
-      skill.id === skillId 
-        ? { ...skill, enabled: !skill.enabled, status: !skill.enabled ? "active" : "disabled" }
-        : skill
-    ));
-  };
 
   const filteredSkills = skills.filter(skill => {
     const matchesSearch = skill.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -217,10 +179,15 @@ export function SkillsManager() {
             className="w-full pl-10 pr-4 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg text-sm text-[#f5f5f5] placeholder-[#525252] focus:outline-none focus:border-[#333] transition-colors"
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#1c1c1c] text-[#f5f5f5] text-sm rounded-lg hover:bg-[#252525] transition-colors">
-          <Plus size={16} />
-          Add Skill
-        </button>
+        <a 
+          href="https://github.com/paullaw110/sashi-ui"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-4 py-2 bg-[#1c1c1c] text-[#f5f5f5] text-sm rounded-lg hover:bg-[#252525] transition-colors"
+        >
+          <ExternalLink size={16} />
+          View Source
+        </a>
       </div>
 
       {/* Categories */}
@@ -251,46 +218,54 @@ export function SkillsManager() {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className={'p-2 rounded-lg ' + (skill.enabled ? 'bg-blue-600/20 text-blue-400' : 'bg-[#1a1a1a] text-[#525252]')}>
+                  <div className={'p-2 rounded-lg ' + (
+                    skill.status === "active" ? 'bg-green-600/20 text-green-400' :
+                    skill.status === "building" ? 'bg-orange-600/20 text-orange-400' :
+                    'bg-[#1a1a1a] text-[#525252]'
+                  )}>
                     <Icon size={20} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-[#f5f5f5]">{skill.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-[#f5f5f5]">{skill.name}</h3>
+                      <span className={'text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider font-medium ' + (
+                        skill.status === "active" ? 'bg-green-600/20 text-green-400' :
+                        skill.status === "building" ? 'bg-orange-600/20 text-orange-400' :
+                        'bg-[#1a1a1a] text-[#525252]'
+                      )}>
+                        {skill.status}
+                      </span>
+                    </div>
                     <p className="text-xs text-[#737373] capitalize">{skill.category}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => toggleSkill(skill.id)}
-                  className={'p-1 rounded transition-colors ' + (
-                    skill.enabled 
-                      ? 'text-green-500 hover:text-green-400' 
-                      : 'text-[#525252] hover:text-[#737373]'
-                  )}
-                >
-                  {skill.enabled ? <CheckCircle size={18} /> : <Circle size={18} />}
-                </button>
+                <div className={'w-3 h-3 rounded-full ' + (
+                  skill.status === "active" ? 'bg-green-500' :
+                  skill.status === "building" ? 'bg-orange-500' :
+                  'bg-[#525252]'
+                )}></div>
               </div>
               
-              <p className="text-xs text-[#737373] mb-4 leading-relaxed">
+              <p className="text-xs text-[#737373] mb-2 leading-relaxed">
                 {skill.description}
               </p>
               
-              <div className="flex items-center justify-between text-xs">
-                <div className="space-y-1">
-                  <div className="text-[#525252]">
-                    Last used: <span className="text-[#737373]">{formatLastUsed(skill.lastUsed)}</span>
-                  </div>
-                  <div className="text-[#525252]">
-                    Usage: <span className="text-[#737373]">{skill.usageCount} times</span>
-                  </div>
+              <div className="mb-4">
+                <p className="text-[10px] text-[#525252] mb-1">Trigger:</p>
+                <code className="text-[10px] text-[#e5e5e5] bg-[#1a1a1a] px-2 py-1 rounded font-mono">
+                  {skill.trigger}
+                </code>
+              </div>
+              
+              <div className="space-y-1 text-xs">
+                <div className="text-[#525252]">
+                  Last used: <span className="text-[#737373]">{formatLastUsed(skill.lastUsed)}</span>
                 </div>
-                <div className="flex gap-1">
-                  <button className="p-1.5 text-[#525252] hover:text-[#737373] hover:bg-[#1a1a1a] rounded transition-colors">
-                    <Settings size={14} />
-                  </button>
-                  <button className="p-1.5 text-[#525252] hover:text-[#737373] hover:bg-[#1a1a1a] rounded transition-colors">
-                    <ExternalLink size={14} />
-                  </button>
+                <div className="text-[#525252]">
+                  Usage: <span className="text-[#737373]">{skill.usageCount} times</span>
+                </div>
+                <div className="text-[#525252]">
+                  Location: <span className="text-[#737373]">{skill.location}</span>
                 </div>
               </div>
             </div>
@@ -324,17 +299,17 @@ export function SkillsManager() {
             <span className="text-xs text-[#737373]">Active</span>
           </div>
           <span className="text-2xl font-bold text-[#f5f5f5]">
-            {skills.filter(s => s.enabled).length}
+            {skills.filter(s => s.status === "active").length}
           </span>
         </div>
         
         <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Circle className="text-[#737373]" size={16} />
-            <span className="text-xs text-[#737373]">Disabled</span>
+            <Settings className="text-orange-500" size={16} />
+            <span className="text-xs text-[#737373]">Building</span>
           </div>
           <span className="text-2xl font-bold text-[#f5f5f5]">
-            {skills.filter(s => !s.enabled).length}
+            {skills.filter(s => s.status === "building").length}
           </span>
         </div>
         
