@@ -178,8 +178,12 @@ Tauri provides the best balance of:
 ### Phase 3: Offline & Sync (Week 3) 🟡
 - [x] Local SQLite database (schema + migrations)
 - [x] Online/offline indicator
-- [ ] Sync engine (bidirectional sync logic)
-- [ ] Background sync service
+- [x] Sync engine with push/pull & conflict resolution
+- [x] Auto-sync on reconnect
+- [x] Initial sync on first launch
+- [x] SyncIndicator with details dropdown
+- [ ] Background periodic sync (every 5min when idle)
+- [ ] React Query offline-first data layer
 
 ### Phase 4: Polish & Ship (Week 4)
 - [ ] App icon design

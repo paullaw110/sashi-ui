@@ -255,8 +255,8 @@ export function OfflineProvider({ children }: OfflineProviderProps) {
           syncNow();
         });
 
-        // Periodic online check and pending count update (every 30 seconds)
-        const interval = setInterval(async () => {
+        // Periodic online check (every 30 seconds)
+        const onlineCheckInterval = setInterval(async () => {
           try {
             const online = await invoke<boolean>("check_online");
             setSyncStatus(prev => ({ ...prev, isOnline: online }));
@@ -266,10 +266,38 @@ export function OfflineProvider({ children }: OfflineProviderProps) {
           }
         }, 30000);
 
+        // Background sync (every 5 minutes when online and not actively syncing)
+        const backgroundSyncInterval = setInterval(async () => {
+          try {
+            const online = await invoke<boolean>("check_online");
+            if (online && !syncInProgressRef.current) {
+              console.log("Background sync triggered");
+              // Use the sync function directly without UI updates
+              const { fullSync, getPendingCount } = await import("@/lib/offline");
+              const result = await fullSync();
+              
+              if (result.success) {
+                const now = new Date().toISOString();
+                localStorage.setItem("sashi-last-sync", now);
+                const pendingCount = await getPendingCount();
+                setSyncStatus(prev => ({
+                  ...prev,
+                  lastSync: now,
+                  pendingChanges: pendingCount,
+                }));
+                console.log(`Background sync complete: ${result.pulled.tasks} tasks synced`);
+              }
+            }
+          } catch (e) {
+            console.error("Background sync failed:", e);
+          }
+        }, 5 * 60 * 1000); // 5 minutes
+
         return () => {
           unlistenOnline();
           unlistenSync();
-          clearInterval(interval);
+          clearInterval(onlineCheckInterval);
+          clearInterval(backgroundSyncInterval);
         };
       } catch (error) {
         console.error("Failed to setup Tauri offline listeners:", error);
