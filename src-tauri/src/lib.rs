@@ -1,14 +1,202 @@
 use tauri::{
     menu::{Menu, MenuItem, Submenu},
     tray::{TrayIconBuilder, MouseButton, MouseButtonState},
-    Manager, Emitter,
+    Manager, Emitter, AppHandle,
 };
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState, GlobalShortcutExt};
+use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicBool, Ordering};
+
+// Track online status
+static IS_ONLINE: AtomicBool = AtomicBool::new(true);
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Task {
+    pub id: String,
+    pub name: String,
+    pub status: String,
+    pub priority: Option<String>,
+    pub due: Option<String>,
+    pub duration: Option<i32>,
+    pub notes: Option<String>,
+    pub organization_id: Option<String>,
+    pub project_id: Option<String>,
+    pub parent_id: Option<String>,
+    pub prd: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+    pub synced_at: Option<String>,
+    pub is_dirty: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SyncStatus {
+    pub is_online: bool,
+    pub pending_changes: i32,
+    pub last_sync: Option<String>,
+}
+
+// Tauri commands
+#[tauri::command]
+async fn check_online() -> bool {
+    // Try to reach the API
+    match reqwest::get("https://sashi-ui.vercel.app/api/status").await {
+        Ok(response) => {
+            let online = response.status().is_success();
+            IS_ONLINE.store(online, Ordering::SeqCst);
+            online
+        }
+        Err(_) => {
+            IS_ONLINE.store(false, Ordering::SeqCst);
+            false
+        }
+    }
+}
+
+#[tauri::command]
+fn get_online_status() -> bool {
+    IS_ONLINE.load(Ordering::SeqCst)
+}
+
+#[tauri::command]
+async fn get_sync_status(app: AppHandle) -> Result<SyncStatus, String> {
+    let online = check_online().await;
+    
+    // Count pending changes from local SQLite
+    let pending = match app.try_state::<tauri_plugin_sql::DbInstances>() {
+        Some(_) => {
+            // Would query: SELECT COUNT(*) FROM tasks WHERE is_dirty = 1
+            0 // Placeholder
+        }
+        None => 0,
+    };
+
+    Ok(SyncStatus {
+        is_online: online,
+        pending_changes: pending,
+        last_sync: None,
+    })
+}
+
+#[tauri::command]
+fn emit_online_status(app: AppHandle, online: bool) {
+    IS_ONLINE.store(online, Ordering::SeqCst);
+    let _ = app.emit("online-status-changed", online);
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_http::init())
+        .plugin(
+            tauri_plugin_sql::Builder::new()
+                .add_migrations(
+                    "sqlite:sashi.db",
+                    vec![
+                        tauri_plugin_sql::Migration {
+                            version: 1,
+                            description: "create_tasks_table",
+                            sql: r#"
+                                CREATE TABLE IF NOT EXISTS tasks (
+                                    id TEXT PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    status TEXT NOT NULL DEFAULT 'todo',
+                                    priority TEXT,
+                                    due TEXT,
+                                    duration INTEGER,
+                                    notes TEXT,
+                                    organization_id TEXT,
+                                    project_id TEXT,
+                                    parent_id TEXT,
+                                    prd TEXT,
+                                    prd_context TEXT,
+                                    prd_chat TEXT,
+                                    created_at TEXT NOT NULL,
+                                    updated_at TEXT NOT NULL,
+                                    synced_at TEXT,
+                                    is_dirty INTEGER DEFAULT 0
+                                );
+                                CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+                                CREATE INDEX IF NOT EXISTS idx_tasks_due ON tasks(due);
+                                CREATE INDEX IF NOT EXISTS idx_tasks_parent ON tasks(parent_id);
+                                CREATE INDEX IF NOT EXISTS idx_tasks_dirty ON tasks(is_dirty);
+                            "#,
+                            kind: tauri_plugin_sql::MigrationKind::Up,
+                        },
+                        tauri_plugin_sql::Migration {
+                            version: 2,
+                            description: "create_organizations_table",
+                            sql: r#"
+                                CREATE TABLE IF NOT EXISTS organizations (
+                                    id TEXT PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    icon TEXT,
+                                    created_at TEXT NOT NULL,
+                                    updated_at TEXT NOT NULL,
+                                    synced_at TEXT,
+                                    is_dirty INTEGER DEFAULT 0
+                                );
+                            "#,
+                            kind: tauri_plugin_sql::MigrationKind::Up,
+                        },
+                        tauri_plugin_sql::Migration {
+                            version: 3,
+                            description: "create_projects_table",
+                            sql: r#"
+                                CREATE TABLE IF NOT EXISTS projects (
+                                    id TEXT PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    organization_id TEXT,
+                                    icon TEXT,
+                                    created_at TEXT NOT NULL,
+                                    updated_at TEXT NOT NULL,
+                                    synced_at TEXT,
+                                    is_dirty INTEGER DEFAULT 0,
+                                    FOREIGN KEY (organization_id) REFERENCES organizations(id)
+                                );
+                            "#,
+                            kind: tauri_plugin_sql::MigrationKind::Up,
+                        },
+                        tauri_plugin_sql::Migration {
+                            version: 4,
+                            description: "create_tags_table",
+                            sql: r#"
+                                CREATE TABLE IF NOT EXISTS tags (
+                                    id TEXT PRIMARY KEY,
+                                    name TEXT NOT NULL UNIQUE,
+                                    color TEXT,
+                                    created_at TEXT NOT NULL
+                                );
+                                CREATE TABLE IF NOT EXISTS task_tags (
+                                    task_id TEXT NOT NULL,
+                                    tag_id TEXT NOT NULL,
+                                    PRIMARY KEY (task_id, tag_id),
+                                    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+                                    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+                                );
+                            "#,
+                            kind: tauri_plugin_sql::MigrationKind::Up,
+                        },
+                        tauri_plugin_sql::Migration {
+                            version: 5,
+                            description: "create_sync_log",
+                            sql: r#"
+                                CREATE TABLE IF NOT EXISTS sync_log (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    entity_type TEXT NOT NULL,
+                                    entity_id TEXT NOT NULL,
+                                    action TEXT NOT NULL,
+                                    synced_at TEXT,
+                                    error TEXT
+                                );
+                            "#,
+                            kind: tauri_plugin_sql::MigrationKind::Up,
+                        },
+                    ],
+                )
+                .build(),
+        )
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
@@ -32,6 +220,12 @@ pub fn run() {
                 })
                 .build(),
         )
+        .invoke_handler(tauri::generate_handler![
+            check_online,
+            get_online_status,
+            get_sync_status,
+            emit_online_status,
+        ])
         .setup(|app| {
             // Logging in debug mode
             if cfg!(debug_assertions) {
@@ -75,6 +269,8 @@ pub fn run() {
                 &[
                     &MenuItem::with_id(app, "new_task", "New Task", true, Some("CmdOrCtrl+N"))?,
                     &MenuItem::with_id(app, "quick_add", "Quick Add...", true, Some("CmdOrCtrl+K"))?,
+                    &MenuItem::with_id(app, "separator_sync", "", false, None::<&str>)?,
+                    &MenuItem::with_id(app, "sync_now", "Sync Now", true, Some("CmdOrCtrl+Shift+R"))?,
                 ],
             )?;
 
@@ -140,6 +336,11 @@ pub fn run() {
                             let _ = window.emit("open-settings", ());
                         }
                     }
+                    "sync_now" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit("sync-now", ());
+                        }
+                    }
                     "reload" => {
                         if let Some(window) = app.get_webview_window("main") {
                             let _ = window.eval("location.reload()");
@@ -181,6 +382,8 @@ pub fn run() {
                     &MenuItem::with_id(app, "tray_show", "Show Sashi", true, None::<&str>)?,
                     &MenuItem::with_id(app, "tray_quick_add", "Quick Add Task", true, None::<&str>)?,
                     &MenuItem::with_id(app, "tray_separator", "", false, None::<&str>)?,
+                    &MenuItem::with_id(app, "tray_sync", "Sync Now", true, None::<&str>)?,
+                    &MenuItem::with_id(app, "tray_separator2", "", false, None::<&str>)?,
                     &MenuItem::with_id(app, "tray_quit", "Quit", true, None::<&str>)?,
                 ],
             )?;
@@ -202,6 +405,11 @@ pub fn run() {
                                 let _ = window.show();
                                 let _ = window.set_focus();
                                 let _ = window.emit("quick-add", ());
+                            }
+                        }
+                        "tray_sync" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.emit("sync-now", ());
                             }
                         }
                         "tray_quit" => {

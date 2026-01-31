@@ -6,6 +6,7 @@ import { Sidebar } from "./Sidebar";
 import { QuickAddTask } from "./QuickAddTask";
 import { CommandPalette } from "./CommandPalette";
 import { TauriEventListener } from "./TauriEventListener";
+import { SyncIndicator } from "./SyncIndicator";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -105,6 +106,11 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             className="w-6 h-6 rounded-lg object-cover grayscale"
           />
           <span className="font-display text-base text-[var(--text-primary)]">Sashi</span>
+        </div>
+        
+        {/* Sync indicator - shows in Tauri app */}
+        <div className="ml-auto">
+          <SyncIndicator />
         </div>
       </header>
 
