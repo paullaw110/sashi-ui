@@ -1,5 +1,7 @@
 # PRD: Organization Tab
 
+**Status:** ✅ Complete (2026-01-31)
+
 ## Overview
 A dedicated page for each organization that shows all its projects and tasks, allows editing org details, and provides a home base for creating new projects and tasks within that org.
 
