@@ -5,6 +5,7 @@ import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { QuickAddTask } from "./QuickAddTask";
 import { CommandPalette } from "./CommandPalette";
+import { TauriEventListener } from "./TauriEventListener";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -137,6 +138,15 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
 
       {/* Command Palette (Cmd+K) */}
       <CommandPalette onCreateTask={() => setQuickAddOpen(true)} />
+
+      {/* Tauri Event Listener for native app integration */}
+      <TauriEventListener 
+        onQuickAdd={() => setQuickAddOpen(true)}
+        onOpenSettings={() => {
+          // Navigate to settings or open settings modal
+          window.location.href = "/settings";
+        }}
+      />
     </div>
   );
 }
