@@ -61,7 +61,15 @@ import {
 import { RichEditor } from "./RichEditor";
 import { TagInput } from "./TagInput";
 import { PRDCreator } from "./PRDCreator";
+import { SubtaskList } from "./SubtaskList";
 import { toast } from "sonner";
+
+type Subtask = {
+  id: string;
+  name: string;
+  status: string;
+  description?: string | null;
+};
 
 type Tag = {
   id: string;
@@ -173,6 +181,9 @@ export function TaskDetailModal({
   const [showPrdCreator, setShowPrdCreator] = useState(false);
   const [prd, setPrd] = useState<string | null>(null);
 
+  // Subtasks state
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+
   // Sync with props when they change
   useEffect(() => {
     setOrganizations(initialOrganizations);
@@ -208,17 +219,32 @@ export function TaskDetailModal({
     }
   }, []);
 
-  // Fetch tags when modal opens
+  // Fetch subtasks for a task
+  const fetchSubtasks = useCallback(async (taskId: string) => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/subtasks`);
+      if (res.ok) {
+        const data = await res.json();
+        setSubtasks(data.subtasks || []);
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  // Fetch tags and subtasks when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchAllTags();
       if (task?.id) {
         fetchTaskTags(task.id);
+        fetchSubtasks(task.id);
       } else {
         setTaskTags([]);
+        setSubtasks([]);
       }
     }
-  }, [isOpen, task?.id, fetchAllTags, fetchTaskTags]);
+  }, [isOpen, task?.id, fetchAllTags, fetchTaskTags, fetchSubtasks]);
 
   // Initialize form when task changes
   useEffect(() => {
@@ -413,6 +439,25 @@ export function TaskDetailModal({
       toast.error("Failed to remove tag");
     }
   }, [localTaskId, task?.id]);
+
+  // Handle subtask status change
+  const handleSubtaskStatusChange = useCallback(async (subtaskId: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/tasks/${subtaskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to update");
+      
+      // Update local state optimistically
+      setSubtasks((prev) =>
+        prev.map((s) => (s.id === subtaskId ? { ...s, status: newStatus } : s))
+      );
+    } catch {
+      toast.error("Failed to update subtask");
+    }
+  }, []);
 
   // Debounced description save
   const descriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -945,6 +990,21 @@ export function TaskDetailModal({
                 Generate PRD with AI
               </Button>
             )}
+          </div>
+        )}
+
+        {/* Subtasks */}
+        {(task?.id || localTaskId) && (subtasks.length > 0 || prd) && (
+          <div className="mb-4">
+            <SubtaskList
+              parentId={localTaskId || task?.id || ""}
+              subtasks={subtasks}
+              onStatusChange={handleSubtaskStatusChange}
+              onSubtaskCreated={() => {
+                const taskId = localTaskId || task?.id;
+                if (taskId) fetchSubtasks(taskId);
+              }}
+            />
           </div>
         )}
 

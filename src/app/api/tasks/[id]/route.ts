@@ -12,13 +12,37 @@ export async function GET(
   try {
     const task = await db.query.tasks.findFirst({
       where: eq(schema.tasks.id, id),
+      with: {
+        project: true,
+        organization: true,
+        taskTags: {
+          with: {
+            tag: true,
+          },
+        },
+      },
     });
 
     if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ task });
+    // Fetch subtasks separately
+    const subtasks = await db.query.tasks.findMany({
+      where: eq(schema.tasks.parentId, id),
+      orderBy: (tasks, { asc }) => [asc(tasks.createdAt)],
+    });
+
+    // Transform tags to flat array
+    const relationalTags = task.taskTags?.map((tt: any) => tt.tag) || [];
+
+    return NextResponse.json({ 
+      task: {
+        ...task,
+        relationalTags,
+        subtasks,
+      }
+    });
   } catch (error) {
     console.error("Error fetching task:", error);
     return NextResponse.json({ error: "Failed to fetch task" }, { status: 500 });
