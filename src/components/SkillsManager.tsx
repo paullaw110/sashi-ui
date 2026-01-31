@@ -135,6 +135,7 @@ export function SkillsManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [skills, setSkills] = useState(CAST_SKILLS);
+  const [copiedSkill, setCopiedSkill] = useState<string | null>(null);
 
   // Calculate categories dynamically 
   const CATEGORIES = [
@@ -143,6 +144,15 @@ export function SkillsManager() {
     { id: "design", name: "Design", count: skills.filter(s => s.category === "design").length },
     { id: "media", name: "Media", count: skills.filter(s => s.category === "media").length },
   ];
+
+  const copyToClipboard = (text: string, skillId: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedSkill(skillId);
+      setTimeout(() => setCopiedSkill(null), 2000); // Clear after 2 seconds
+    }).catch(err => {
+      console.error('Failed to copy to clipboard:', err);
+    });
+  };
 
   const filteredSkills = skills.filter(skill => {
     const matchesSearch = skill.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -214,7 +224,13 @@ export function SkillsManager() {
           return (
             <div
               key={skill.id}
-              className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4 hover:border-[#333] transition-colors"
+              onClick={() => copyToClipboard(skill.trigger, skill.id)}
+              className={`bg-[#0a0a0a] border rounded-lg p-4 hover:bg-[#111] transition-colors cursor-pointer ${
+                copiedSkill === skill.id 
+                  ? 'border-green-500 bg-green-500/5' 
+                  : 'border-[#1a1a1a] hover:border-[#333]'
+              }`}
+              title={copiedSkill === skill.id ? 'Copied!' : `Click to copy: ${skill.trigger}`}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -251,8 +267,17 @@ export function SkillsManager() {
               </p>
               
               <div className="mb-4">
-                <p className="text-[10px] text-[#525252] mb-1">Trigger:</p>
-                <code className="text-[10px] text-[#e5e5e5] bg-[#1a1a1a] px-2 py-1 rounded font-mono">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] text-[#525252]">Trigger:</p>
+                  {copiedSkill === skill.id && (
+                    <span className="text-[9px] text-green-400 font-medium">Copied!</span>
+                  )}
+                </div>
+                <code className={`text-[10px] px-2 py-1 rounded font-mono ${
+                  copiedSkill === skill.id 
+                    ? 'text-green-400 bg-green-500/20' 
+                    : 'text-[#e5e5e5] bg-[#1a1a1a]'
+                }`}>
                   {skill.trigger}
                 </code>
               </div>
