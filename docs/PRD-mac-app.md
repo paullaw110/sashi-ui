@@ -1,6 +1,6 @@
 # PRD: Sashi UI Mac App
 
-**Status:** 🟡 Phase 1 Complete (2026-01-31)
+**Status:** 🟡 Phase 2 Complete (2026-01-31)
 
 ## Overview
 
@@ -168,12 +168,12 @@ Tauri provides the best balance of:
 - [x] Basic window management
 - [ ] Code signing setup (later)
 
-### Phase 2: Native Features (Week 2)
-- [ ] Menu bar icon + dropdown
-- [ ] Native menus (File, Edit, View, etc.)
-- [ ] Global keyboard shortcuts
-- [ ] System notifications
-- [ ] Dock badge
+### Phase 2: Native Features (Week 2) ✅
+- [x] Menu bar icon + dropdown
+- [x] Native menus (File, Edit, View, etc.)
+- [x] Global keyboard shortcuts (Cmd+K, Cmd+Shift+S)
+- [x] System notifications (plugin added)
+- [ ] Dock badge (requires task count integration)
 
 ### Phase 3: Offline & Sync (Week 3)
 - [ ] Local SQLite database
