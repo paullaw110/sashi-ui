@@ -18,10 +18,38 @@ This process ensures every feature is properly planned, tested, and deployed wit
 
 ---
 
+## **Command Structure**
+
+### **How to Cast Skills:**
+Use the format: `CAST: SKILL_NAME` followed by any required context.
+
+**Examples:**
+- `CAST: CREATE_PRD` - user dashboard with settings panel
+- `CAST: GENERATE_TASKS` 
+- `CAST: SETUP_BRANCH` - feature/user-dashboard
+- `CAST: GENERATE_TESTS`
+- `CAST: IMPLEMENT_FEATURE`
+- `CAST: VALIDATE_DEPLOY`
+
+### **Skill Chaining:**
+Skills are designed to chain together smoothly:
+```
+You: "CAST: CREATE_PRD - user dashboard feature"  
+Me: *generates PRD with clarifying questions*
+You: "1A, 2C, 3B"
+Me: *completes PRD*
+You: "CAST: GENERATE_TASKS"
+Me: *breaks down into actionable tasks*
+You: "CAST: IMPLEMENT_FEATURE" 
+Me: *unleashes coding agents in parallel*
+```
+
+---
+
 ## **Phase 1: Requirements & Planning**
 
 ### **Step 1.1: Create PRD**
-**Tool:** `create-prd.md` skill
+**Command:** `CAST: CREATE_PRD` ⚡
 **Output:** `/tasks/prd-[feature-name].md`
 
 **Process:**
@@ -41,7 +69,7 @@ This process ensures every feature is properly planned, tested, and deployed wit
 - Define error states and edge cases
 
 ### **Step 1.2: Generate Task Breakdown**
-**Tool:** `generate-tasks.md` skill
+**Command:** `CAST: GENERATE_TASKS` 🎯
 **Output:** `/tasks/tasks-[feature-name].md`
 
 **Process:**
@@ -62,7 +90,7 @@ This process ensures every feature is properly planned, tested, and deployed wit
 ## **Phase 2: Development Setup**
 
 ### **Step 2.1: Git Workflow Setup**
-**Tool:** `setup-feature-branch.md` skill (NEW)
+**Command:** `CAST: SETUP_BRANCH` 🌿
 **Dependencies:** `github` skill
 
 **Process:**
@@ -84,7 +112,7 @@ gh issue create --title "[Feature Name] - Epic" \
 ```
 
 ### **Step 2.2: Generate Test Suite**
-**Tool:** `generate-playwright-tests.md` skill (NEW)
+**Command:** `CAST: GENERATE_TESTS` 🧪
 **Dependencies:** Playwright setup
 
 **Process:**
@@ -125,7 +153,7 @@ test.describe('User Settings Feature', () => {
 ## **Phase 3: Implementation**
 
 ### **Step 3.1: Parallel Development**
-**Tool:** `feature-implementation.md` skill (NEW)
+**Command:** `CAST: IMPLEMENT_FEATURE` ⚔️
 **Dependencies:** `coding-agent` skill
 
 **Process:**
@@ -179,7 +207,7 @@ git push origin feature/[feature-name]
 ## **Phase 4: Quality Assurance**
 
 ### **Step 4.1: Full Test Suite Execution**
-**Tool:** `validate-and-deploy.md` skill (NEW)
+**Command:** `CAST: VALIDATE_DEPLOY` 🛡️
 
 **Pre-Deploy Checklist:**
 ```bash
@@ -263,10 +291,10 @@ gh pr merge --squash --auto
 4. **`skill-creator`** - Custom workflow tools
 
 ### **New Skills to Create:**
-1. **`setup-feature-branch.md`** - Git + GitHub automation
-2. **`generate-playwright-tests.md`** - Test generation from PRD
-3. **`feature-implementation.md`** - Coding agent orchestration
-4. **`validate-and-deploy.md`** - Quality gates + deployment
+1. **`CAST: SETUP_BRANCH`** 🌿 - Git + GitHub automation
+2. **`CAST: GENERATE_TESTS`** 🧪 - Test generation from PRD
+3. **`CAST: IMPLEMENT_FEATURE`** ⚔️ - Coding agent orchestration
+4. **`CAST: VALIDATE_DEPLOY`** 🛡️ - Quality gates + deployment
 
 ### **Development Tools:**
 - **Testing:** Playwright, Jest, Vitest

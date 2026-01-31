@@ -204,3 +204,50 @@ const { chromium } = require('playwright');
 ---
 
 Add whatever helps you do your job. This is your cheat sheet.
+
+---
+
+## sashi-ui Status & Queue (Work Tracking)
+
+**ALWAYS update when working — Paul sees this in the UI!**
+
+### Status (shows under avatar)
+```bash
+# Set to working
+curl -s -X POST "https://sashi-ui.vercel.app/api/status" \
+  -H "Content-Type: application/json" \
+  -d '{"state": "working", "task": "Brief description"}'
+
+# Set to idle (when done)
+curl -s -X POST "https://sashi-ui.vercel.app/api/status" \
+  -H "Content-Type: application/json" \
+  -d '{"state": "idle"}'
+
+# Check current status
+curl -s "https://sashi-ui.vercel.app/api/status" | jq
+```
+
+### Queue (shows on /queue page)
+```bash
+# Add task (in_progress)
+curl -s -X POST "https://sashi-ui.vercel.app/api/queue" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Description", "status": "in_progress"}' | jq '.item.id'
+
+# Add task (queued)
+curl -s -X POST "https://sashi-ui.vercel.app/api/queue" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Description", "status": "queued"}'
+
+# Complete a task (use "done" not "completed"!)
+curl -s -X PATCH "https://sashi-ui.vercel.app/api/queue/[id]" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "done"}'
+```
+
+### Workflow
+1. **Starting work**: Set status to "working" + add queue item as "in_progress"
+2. **Finishing work**: Mark queue item as "completed" + set status to "idle"
+3. **Upcoming work**: Add queue items as "queued"
+
+Paul checks sashi-ui to see what I'm working on — **keep it current!**
