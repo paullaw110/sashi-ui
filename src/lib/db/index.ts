@@ -197,6 +197,36 @@ async function initDb() {
       {
         name: "Create projects organization index", 
         sql: "CREATE INDEX IF NOT EXISTS idx_projects_organization ON projects(organization_id)"
+      },
+      // Icon fields
+      {
+        name: "Add icon to organizations",
+        sql: "ALTER TABLE organizations ADD COLUMN icon TEXT DEFAULT NULL"
+      },
+      {
+        name: "Add icon to projects",
+        sql: "ALTER TABLE projects ADD COLUMN icon TEXT DEFAULT NULL"
+      },
+      // PRD feature fields
+      {
+        name: "Add prd to tasks",
+        sql: "ALTER TABLE tasks ADD COLUMN prd TEXT DEFAULT NULL"
+      },
+      {
+        name: "Add prd_context to tasks",
+        sql: "ALTER TABLE tasks ADD COLUMN prd_context TEXT DEFAULT NULL"
+      },
+      {
+        name: "Add prd_chat to tasks",
+        sql: "ALTER TABLE tasks ADD COLUMN prd_chat TEXT DEFAULT NULL"
+      },
+      {
+        name: "Add parent_id to tasks",
+        sql: "ALTER TABLE tasks ADD COLUMN parent_id TEXT DEFAULT NULL"
+      },
+      {
+        name: "Create tasks parent index",
+        sql: "CREATE INDEX IF NOT EXISTS idx_tasks_parent ON tasks(parent_id)"
       }
     ];
     

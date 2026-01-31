@@ -55,6 +55,11 @@ export async function PATCH(
     if (body.duration !== undefined) updates.duration = body.duration;
     if (body.tags !== undefined) updates.tags = body.tags ? JSON.stringify(body.tags) : null;
     if (body.description !== undefined) updates.description = body.description;
+    // PRD fields
+    if (body.prd !== undefined) updates.prd = body.prd;
+    if (body.prdContext !== undefined) updates.prdContext = body.prdContext;
+    if (body.prdChat !== undefined) updates.prdChat = body.prdChat;
+    if (body.parentId !== undefined) updates.parentId = body.parentId;
 
     await db.update(schema.tasks)
       .set(updates)

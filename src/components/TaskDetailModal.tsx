@@ -17,6 +17,8 @@ import {
   Maximize2,
   X,
   Tags,
+  FileText,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -58,6 +60,7 @@ import {
 } from "@/components/ui/command";
 import { RichEditor } from "./RichEditor";
 import { TagInput } from "./TagInput";
+import { PRDCreator } from "./PRDCreator";
 import { toast } from "sonner";
 
 type Tag = {
@@ -76,6 +79,7 @@ type Task = {
   dueDate: string | null;
   dueTime: string | null;
   description?: string | null;
+  prd?: string | null;
   createdAt?: string;
 };
 
@@ -165,6 +169,10 @@ export function TaskDetailModal({
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
+  // PRD state
+  const [showPrdCreator, setShowPrdCreator] = useState(false);
+  const [prd, setPrd] = useState<string | null>(null);
+
   // Sync with props when they change
   useEffect(() => {
     setOrganizations(initialOrganizations);
@@ -223,8 +231,10 @@ export function TaskDetailModal({
       setOrganizationId(task.organizationId);
       setProjectId(task.projectId);
       setDescription(task.description || "");
+      setPrd(task.prd || null);
       setLocalTaskId(task.id);
       hasCreatedRef.current = true;
+      setShowPrdCreator(false);
     } else {
       // Reset for new task
       setName("");
@@ -235,8 +245,10 @@ export function TaskDetailModal({
       setOrganizationId(null);
       setProjectId(null);
       setDescription("");
+      setPrd(null);
       setLocalTaskId(null);
       hasCreatedRef.current = false;
+      setShowPrdCreator(false);
     }
   }, [task, isOpen, defaultDate]);
 
@@ -879,6 +891,62 @@ export function TaskDetailModal({
 
         {/* Divider */}
         <div className="border-t border-[var(--border-default)] my-4" />
+
+        {/* PRD Section */}
+        {(task?.id || localTaskId) && (
+          <div className="mb-4">
+            {showPrdCreator ? (
+              <div>
+                <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
+                  {prd ? "Edit PRD" : "Create PRD"}
+                </h3>
+                <PRDCreator
+                  taskId={localTaskId || task?.id || ""}
+                  taskName={name}
+                  existingPrd={prd}
+                  onClose={() => setShowPrdCreator(false)}
+                  onPrdSaved={(newPrd) => {
+                    setPrd(newPrd);
+                    router.refresh();
+                  }}
+                  onSubtasksCreated={() => {
+                    router.refresh();
+                  }}
+                />
+              </div>
+            ) : prd ? (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-2">
+                    <FileText size={14} />
+                    PRD
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPrdCreator(true)}
+                  >
+                    Edit
+                  </Button>
+                </div>
+                <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] p-3 max-h-[200px] overflow-y-auto">
+                  <p className="text-sm text-[var(--text-tertiary)] line-clamp-4">
+                    {prd.substring(0, 300)}...
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full justify-center gap-2"
+                onClick={() => setShowPrdCreator(true)}
+              >
+                <Sparkles size={14} />
+                Generate PRD with AI
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Description */}
         <div>

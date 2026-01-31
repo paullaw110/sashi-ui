@@ -47,6 +47,11 @@ export const tasks = sqliteTable("tasks", {
   tags: text("tags"), // JSON array stored as text
   description: text("description"), // HTML content from rich editor
   notionId: text("notion_id"), // for import tracking
+  // PRD fields
+  prd: text("prd"), // Generated PRD markdown
+  prdContext: text("prd_context"), // Original context dump
+  prdChat: text("prd_chat"), // JSON: clarification Q&A history
+  parentId: text("parent_id"), // For subtasks - references tasks.id
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 });
@@ -111,6 +116,14 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
     references: [organizations.id],
   }),
   taskTags: many(taskTags),
+  parent: one(tasks, {
+    fields: [tasks.parentId],
+    references: [tasks.id],
+    relationName: "subtasks",
+  }),
+  subtasks: many(tasks, {
+    relationName: "subtasks",
+  }),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
