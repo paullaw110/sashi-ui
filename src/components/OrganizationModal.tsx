@@ -105,7 +105,7 @@ export function OrganizationModal({
             <EmojiPicker
               value={icon}
               onChange={setIcon}
-              placeholder={<Building2 size={20} className="text-[var(--text-quaternary)]" />}
+              type="organization"
               size="lg"
             />
             <DialogTitle className="text-xl">

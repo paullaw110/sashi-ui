@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import dynamic from "next/dynamic";
-import { Smile, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
+import { Building2, Folder, X } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -11,24 +12,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// Dynamically import emoji-mart to avoid SSR issues
-const Picker = dynamic(
-  () => import("@emoji-mart/react").then((mod) => mod.default),
-  { ssr: false, loading: () => <div className="w-[352px] h-[435px] bg-[var(--bg-surface)]" /> }
-);
-
 interface EmojiPickerProps {
-  value?: string | null;
+  value: string | null;
   onChange: (emoji: string | null) => void;
-  placeholder?: React.ReactNode;
+  type?: "organization" | "project";
   size?: "sm" | "md" | "lg";
+  disabled?: boolean;
 }
 
 export function EmojiPicker({
   value,
   onChange,
-  placeholder,
+  type = "organization",
   size = "md",
+  disabled = false,
 }: EmojiPickerProps) {
   const [open, setOpen] = useState(false);
 
@@ -37,7 +34,8 @@ export function EmojiPicker({
     setOpen(false);
   };
 
-  const handleRemove = () => {
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
     onChange(null);
     setOpen(false);
   };
@@ -48,45 +46,59 @@ export function EmojiPicker({
     lg: "w-10 h-10 text-2xl",
   };
 
+  const DefaultIcon = type === "organization" ? Building2 : Folder;
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
+          type="button"
+          disabled={disabled}
           className={cn(
-            "flex items-center justify-center rounded-md hover:bg-[var(--bg-surface)] transition-colors",
-            sizeClasses[size],
-            !value && "text-[var(--text-quaternary)]"
+            "flex items-center justify-center rounded-lg transition-colors",
+            "hover:bg-[var(--bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+            disabled && "opacity-50 cursor-not-allowed",
+            sizeClasses[size]
           )}
         >
-          {value || placeholder || <Smile size={size === "sm" ? 14 : size === "md" ? 18 : 22} />}
+          {value ? (
+            <span className="leading-none">{value}</span>
+          ) : (
+            <DefaultIcon
+              className={cn(
+                "text-[var(--text-quaternary)]",
+                size === "sm" && "w-4 h-4",
+                size === "md" && "w-5 h-5",
+                size === "lg" && "w-6 h-6"
+              )}
+            />
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-auto p-0 border-[var(--border-default)] bg-[var(--bg-elevated)]"
+        className="w-auto p-0 border-[var(--border-strong)] bg-[var(--bg-elevated)]"
         align="start"
-        sideOffset={5}
+        sideOffset={4}
       >
         <div className="relative">
           <Picker
-            data={async () => {
-              const response = await import("@emoji-mart/data");
-              return response.default;
-            }}
+            data={data}
             onEmojiSelect={handleSelect}
             theme="dark"
             previewPosition="none"
             skinTonePosition="none"
             navPosition="bottom"
-            perLine={9}
-            emojiSize={22}
+            perLine={8}
+            maxFrequentRows={2}
             emojiButtonSize={32}
+            emojiSize={20}
           />
           {value && (
             <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-[var(--border-default)] bg-[var(--bg-elevated)]">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleRemove}
+                onClick={handleClear}
                 className="w-full text-red-400 hover:text-red-300 hover:bg-red-400/10"
               >
                 <X size={14} className="mr-2" />
@@ -100,40 +112,44 @@ export function EmojiPicker({
   );
 }
 
-// Inline emoji display with optional picker
+// Simple display-only icon component
+interface IconDisplayProps {
+  icon: string | null;
+  type?: "organization" | "project";
+  size?: "xs" | "sm" | "md" | "lg";
+  className?: string;
+}
+
 export function IconDisplay({
   icon,
-  fallback,
+  type = "organization",
   size = "md",
-  editable = false,
-  onChange,
-}: {
-  icon?: string | null;
-  fallback?: React.ReactNode;
-  size?: "sm" | "md" | "lg";
-  editable?: boolean;
-  onChange?: (icon: string | null) => void;
-}) {
+  className,
+}: IconDisplayProps) {
   const sizeClasses = {
+    xs: "text-xs",
     sm: "text-sm",
     md: "text-base",
     lg: "text-xl",
   };
 
-  if (editable && onChange) {
-    return (
-      <EmojiPicker
-        value={icon}
-        onChange={onChange}
-        placeholder={fallback}
-        size={size}
-      />
-    );
+  const iconSizes = {
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 20,
+  };
+
+  const DefaultIcon = type === "organization" ? Building2 : Folder;
+
+  if (icon) {
+    return <span className={cn(sizeClasses[size], className)}>{icon}</span>;
   }
 
   return (
-    <span className={cn(sizeClasses[size], !icon && "text-[var(--text-quaternary)]")}>
-      {icon || fallback}
-    </span>
+    <DefaultIcon
+      size={iconSizes[size]}
+      className={cn("text-[var(--text-quaternary)]", className)}
+    />
   );
 }

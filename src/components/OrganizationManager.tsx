@@ -6,6 +6,7 @@ import { Building2, Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { IconDisplay } from "./EmojiPicker";
 
 interface OrganizationManagerProps {
   onOrganizationSelect?: (organization: Organization | null) => void;
@@ -141,10 +142,14 @@ export default function OrganizationManager({
             )}
           >
             <div className={cn(
-              "w-8 h-8 rounded-md flex items-center justify-center",
+              "w-8 h-8 rounded-md flex items-center justify-center text-lg",
               selectedOrganizationId === org.id ? "bg-blue-500/20" : "bg-secondary"
             )}>
-              <Building2 size={16} className={selectedOrganizationId === org.id ? "text-blue-400" : "text-muted-foreground"} />
+              {org.icon ? (
+                <span>{org.icon}</span>
+              ) : (
+                <Building2 size={16} className={selectedOrganizationId === org.id ? "text-blue-400" : "text-muted-foreground"} />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <div className={cn(

@@ -21,12 +21,14 @@ import { toast } from "sonner";
 type Organization = {
   id: string;
   name: string;
+  icon?: string | null;
 };
 
 type Project = {
   id: string;
   name: string;
   organizationId: string | null;
+  icon?: string | null;
 };
 
 interface InlineOrgProjectCellProps {
@@ -34,6 +36,7 @@ interface InlineOrgProjectCellProps {
   taskId: string;
   currentId: string | null;
   currentName: string | null;
+  currentIcon?: string | null;
   organizationId?: string | null; // For project filtering
   organizations: Organization[];
   projects: Project[];
@@ -45,6 +48,7 @@ export function InlineOrgProjectCell({
   taskId,
   currentId,
   currentName,
+  currentIcon,
   organizationId,
   organizations,
   projects,
@@ -146,11 +150,12 @@ export function InlineOrgProjectCell({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "text-left w-full px-2 py-1 rounded hover:bg-[var(--bg-hover)] transition-colors text-sm",
+            "text-left w-full px-2 py-1 rounded hover:bg-[var(--bg-hover)] transition-colors text-sm flex items-center gap-1.5",
             currentName ? "text-[var(--text-secondary)]" : "text-[var(--text-quaternary)]"
           )}
         >
-          {currentName || "—"}
+          {currentIcon && <span className="text-sm">{currentIcon}</span>}
+          <span className="truncate">{currentName || "—"}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent 
@@ -203,9 +208,10 @@ export function InlineOrgProjectCell({
                       key={item.id}
                       value={item.id}
                       onSelect={() => handleSelect(item.id)}
-                      className="cursor-pointer"
+                      className="cursor-pointer flex items-center gap-2"
                     >
-                      {item.name}
+                      {item.icon && <span className="text-sm">{item.icon}</span>}
+                      <span>{item.name}</span>
                     </CommandItem>
                   ))}
               </CommandGroup>
