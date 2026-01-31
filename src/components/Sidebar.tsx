@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -16,6 +17,9 @@ import {
   Code2,
   BookOpen,
   PanelLeftClose,
+  Building2,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusIndicator } from "./StatusIndicator";
@@ -31,6 +35,12 @@ const NAV_ITEMS = [
   { href: "/library", icon: BookOpen, label: "Library" },
   { href: "/leads", icon: Target, label: "Leads" },
 ];
+
+type Organization = {
+  id: string;
+  name: string;
+  icon: string | null;
+};
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -48,6 +58,16 @@ export function Sidebar({
   isMobile = false 
 }: SidebarProps) {
   const pathname = usePathname();
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [orgsExpanded, setOrgsExpanded] = useState(true);
+
+  // Fetch organizations on mount
+  useEffect(() => {
+    fetch("/api/organizations")
+      .then((res) => res.json())
+      .then((data) => setOrganizations(data.organizations || []))
+      .catch(() => {});
+  }, []);
 
   // On mobile, use overlay behavior. On desktop, use collapse behavior
   const shouldShow = isMobile ? isOpen : !isCollapsed;
@@ -139,6 +159,48 @@ export function Sidebar({
               </Link>
             );
           })}
+
+          {/* Organizations Section */}
+          {organizations.length > 0 && (
+            <div className="pt-4 mt-4 border-t border-[var(--border-subtle)]">
+              <button
+                onClick={() => setOrgsExpanded(!orgsExpanded)}
+                className="flex items-center justify-between w-full px-3 py-2 text-[10px] uppercase tracking-widest text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <Building2 size={12} />
+                  Organizations
+                </span>
+                {orgsExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+              </button>
+              
+              {orgsExpanded && (
+                <div className="space-y-0.5 mt-1">
+                  {organizations.map((org) => {
+                    const isActive = pathname === `/organizations/${org.id}`;
+                    return (
+                      <Link
+                        key={org.id}
+                        href={`/organizations/${org.id}`}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors",
+                          isActive 
+                            ? "bg-[var(--bg-hover)] text-[var(--text-primary)]" 
+                            : "text-[var(--text-tertiary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-secondary)]"
+                        )}
+                      >
+                        <span className="w-4 text-center">
+                          {org.icon || "🏢"}
+                        </span>
+                        <span className="truncate">{org.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* Footer */}
