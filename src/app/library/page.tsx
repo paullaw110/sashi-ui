@@ -64,19 +64,30 @@ async function getConfigFiles() {
 }
 
 async function getSkills() {
-  // Read skills from built-in and custom locations
-  const skills = [
-    { name: "bluebubbles", description: "iMessage channel plugin" },
-    { name: "coding-agent", description: "Run Claude Code, Codex CLI, etc." },
-    { name: "github", description: "GitHub CLI (issues, PRs, CI)" },
-    { name: "notion", description: "Notion API (pages, databases)" },
-    { name: "skill-creator", description: "Build new skills" },
-    { name: "slack", description: "Slack actions (reactions, pins, etc.)" },
-    { name: "weather", description: "Weather forecasts" },
-    { name: "frontend-design", description: "Production-grade UI code" },
-    { name: "remotion", description: "Animated video clips" },
+  // CAST Spells - command patterns for sashi-ui development
+  const castSpells = [
+    { name: "CAST: CREATE_PRD", description: "Generate PRD with test scenarios", icon: "⚡", type: "spell" as const },
+    { name: "CAST: GENERATE_TASKS", description: "Break down into actionable tasks", icon: "🎯", type: "spell" as const },
+    { name: "CAST: SETUP_BRANCH", description: "Git workflow + draft PR automation", icon: "🌿", type: "spell" as const },
+    { name: "CAST: GENERATE_TESTS", description: "Playwright tests from acceptance criteria", icon: "🧪", type: "spell" as const },
+    { name: "CAST: IMPLEMENT_FEATURE", description: "Parallel coding agent orchestration", icon: "⚔️", type: "spell" as const },
+    { name: "CAST: VALIDATE_DEPLOY", description: "Quality gates + production deploy", icon: "🛡️", type: "spell" as const },
   ];
-  return skills;
+
+  // Clawdbot skills from built-in and custom locations
+  const clawdbotSkills = [
+    { name: "bluebubbles", description: "iMessage channel plugin", type: "skill" as const },
+    { name: "coding-agent", description: "Run Claude Code, Codex CLI, etc.", type: "skill" as const },
+    { name: "github", description: "GitHub CLI (issues, PRs, CI)", type: "skill" as const },
+    { name: "notion", description: "Notion API (pages, databases)", type: "skill" as const },
+    { name: "skill-creator", description: "Build new skills", type: "skill" as const },
+    { name: "slack", description: "Slack actions (reactions, pins, etc.)", type: "skill" as const },
+    { name: "weather", description: "Weather forecasts", type: "skill" as const },
+    { name: "frontend-design", description: "Production-grade UI code", type: "skill" as const },
+    { name: "remotion", description: "Animated video clips", type: "skill" as const },
+  ];
+
+  return [...castSpells, ...clawdbotSkills];
 }
 
 export default async function LibraryPage() {

@@ -38,6 +38,8 @@ type ConfigFile = {
 type Skill = {
   name: string;
   description: string;
+  type?: "spell" | "skill";
+  icon?: string;
 };
 
 type Report = {
@@ -356,24 +358,60 @@ export function LibraryPageClient({
 
           {/* Skills Tab */}
           <TabsContent value="skills">
-            <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {skills.map((skill) => (
-                <Card key={skill.name} className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] flex items-center justify-center">
-                      <Zap size={18} className="text-[var(--accent-primary)]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-[var(--text-primary)]">
-                        {skill.name}
-                      </h3>
-                      <p className="text-xs text-[var(--text-tertiary)] truncate">
-                        {skill.description}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+            <div className="space-y-8">
+              {/* CAST Spells */}
+              <div>
+                <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4 flex items-center gap-2">
+                  <span className="text-lg">✨</span>
+                  CAST Spells
+                </h2>
+                <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                  {skills.filter(s => s.type === "spell").map((skill) => (
+                    <Card key={skill.name} className="p-4 bg-gradient-to-br from-[var(--bg-elevated)] to-[var(--bg-surface)] border-[var(--border-subtle)] hover:border-[var(--accent-primary)]/30 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--accent-primary)]/10 flex items-center justify-center text-xl">
+                          {skill.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-[var(--text-primary)] text-sm font-mono">
+                            {skill.name}
+                          </h3>
+                          <p className="text-xs text-[var(--text-tertiary)] truncate">
+                            {skill.description}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clawdbot Skills */}
+              <div>
+                <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4 flex items-center gap-2">
+                  <Zap size={16} className="text-[var(--accent-primary)]" />
+                  Clawdbot Skills
+                </h2>
+                <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                  {skills.filter(s => s.type !== "spell").map((skill) => (
+                    <Card key={skill.name} className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] flex items-center justify-center">
+                          <Zap size={18} className="text-[var(--accent-primary)]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-[var(--text-primary)]">
+                            {skill.name}
+                          </h3>
+                          <p className="text-xs text-[var(--text-tertiary)] truncate">
+                            {skill.description}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             </div>
           </TabsContent>
 
