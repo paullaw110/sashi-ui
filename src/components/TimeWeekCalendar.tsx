@@ -58,6 +58,102 @@ function parseTimeToMinutes(time: string | null): number | null {
   return hours * 60 + minutes;
 }
 
+// Layout info for a task after collision detection
+type TaskLayout = {
+  task: Task;
+  column: number;
+  totalColumns: number;
+};
+
+// Check if two tasks overlap in time
+function tasksOverlap(a: Task, b: Task): boolean {
+  const aStart = parseTimeToMinutes(a.dueTime) ?? 0;
+  const aEnd = aStart + (a.duration || 30);
+  const bStart = parseTimeToMinutes(b.dueTime) ?? 0;
+  const bEnd = bStart + (b.duration || 30);
+  
+  return aStart < bEnd && bStart < aEnd;
+}
+
+// Calculate layout positions for overlapping tasks
+function calculateTaskLayouts(tasks: Task[]): TaskLayout[] {
+  if (tasks.length === 0) return [];
+  
+  // Sort by start time, then by duration (longer first)
+  const sorted = [...tasks].sort((a, b) => {
+    const aStart = parseTimeToMinutes(a.dueTime) ?? 0;
+    const bStart = parseTimeToMinutes(b.dueTime) ?? 0;
+    if (aStart !== bStart) return aStart - bStart;
+    return (b.duration || 30) - (a.duration || 30);
+  });
+  
+  const layouts: TaskLayout[] = [];
+  const columns: Task[][] = []; // Each column tracks which tasks are in it
+  
+  for (const task of sorted) {
+    // Find the first column where this task doesn't overlap with existing tasks
+    let placed = false;
+    for (let col = 0; col < columns.length; col++) {
+      const canPlace = columns[col].every(existingTask => !tasksOverlap(task, existingTask));
+      if (canPlace) {
+        columns[col].push(task);
+        layouts.push({ task, column: col, totalColumns: 0 }); // totalColumns filled later
+        placed = true;
+        break;
+      }
+    }
+    
+    // If no existing column works, create a new one
+    if (!placed) {
+      columns.push([task]);
+      layouts.push({ task, column: columns.length - 1, totalColumns: 0 });
+    }
+  }
+  
+  // Now calculate totalColumns for each task based on overlapping cluster
+  // For each task, find all tasks that overlap with it (directly or transitively)
+  const taskToLayout = new Map(layouts.map(l => [l.task.id, l]));
+  
+  for (const layout of layouts) {
+    // Find all tasks that overlap with this one at any point
+    const overlappingTasks = layouts.filter(other => 
+      other.task.id !== layout.task.id && tasksOverlap(layout.task, other.task)
+    );
+    
+    // The total columns is the max column index + 1 among this task and all overlapping
+    const maxCol = Math.max(
+      layout.column,
+      ...overlappingTasks.map(o => o.column)
+    );
+    
+    layout.totalColumns = maxCol + 1;
+  }
+  
+  // Ensure all overlapping tasks in a cluster share the same totalColumns
+  // by doing a second pass to propagate the max
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const layout of layouts) {
+      const overlapping = layouts.filter(other => 
+        other.task.id !== layout.task.id && tasksOverlap(layout.task, other.task)
+      );
+      for (const other of overlapping) {
+        if (other.totalColumns !== layout.totalColumns) {
+          const max = Math.max(layout.totalColumns, other.totalColumns);
+          if (layout.totalColumns !== max || other.totalColumns !== max) {
+            layout.totalColumns = max;
+            other.totalColumns = max;
+            changed = true;
+          }
+        }
+      }
+    }
+  }
+  
+  return layouts;
+}
+
 // Calculate top position for a time
 function getTopPosition(time: string | null): number {
   const minutes = parseTimeToMinutes(time);
@@ -105,12 +201,16 @@ function TimedTask({
   onResize,
   onResizePreview,
   style,
+  column = 0,
+  totalColumns = 1,
 }: {
   task: Task;
   onClick?: () => void;
   onResize?: (taskId: string, newDuration: number) => void;
   onResizePreview?: (taskId: string, previewDuration: number | null) => void;
   style?: React.CSSProperties;
+  column?: number;
+  totalColumns?: number;
 }) {
   const [isResizing, setIsResizing] = useState(false);
   const [previewDuration, setPreviewDuration] = useState<number | null>(null);
@@ -191,6 +291,12 @@ function TimedTask({
   const endMinutes = startMinutes + displayDuration;
   const endTimeDisplay = minutesToTimeString(endMinutes);
 
+  // Calculate horizontal position for overlapping tasks
+  const widthPercent = 100 / totalColumns;
+  const leftPercent = column * widthPercent;
+  // Add small gap between overlapping tasks
+  const gap = totalColumns > 1 ? 1 : 0; // 1px gap
+
   return (
     <div
       ref={setNodeRef}
@@ -202,9 +308,15 @@ function TimedTask({
           onClick?.();
         }
       }}
-      style={{ ...style, height: `${height}px`, minHeight: "28px" }}
+      style={{ 
+        ...style, 
+        height: `${height}px`, 
+        minHeight: "28px",
+        left: `calc(${leftPercent}% + ${gap}px)`,
+        width: `calc(${widthPercent}% - ${gap * 2}px)`,
+      }}
       className={cn(
-        "absolute left-0.5 right-0.5 px-1.5 py-1 rounded text-xs cursor-grab active:cursor-grabbing touch-none overflow-hidden group",
+        "absolute px-1.5 py-1 rounded text-xs cursor-grab active:cursor-grabbing touch-none overflow-hidden group",
         "bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--border-strong)]",
         "transition-[height,border-color] duration-75",
         task.status === "done" && "opacity-50",
@@ -694,6 +806,10 @@ export function TimeWeekCalendar({
               const timedTasks = dayData?.timed || [];
               const isCurrentDay = isToday(day);
               const isTargetDay = dragTarget?.dateKey === dateKey;
+              
+              // Calculate layouts for overlapping tasks
+              const taskLayouts = calculateTaskLayouts(timedTasks);
+              const layoutMap = new Map(taskLayouts.map(l => [l.task.id, l]));
 
               return (
                 <div
@@ -726,11 +842,13 @@ export function TimeWeekCalendar({
                     </div>
                   )}
 
-                  {/* Positioned timed tasks */}
+                  {/* Positioned timed tasks with overlap handling */}
                   {timedTasks.map((task) => {
                     const top = getTopPosition(task.dueTime);
                     // Don't render the task being dragged
                     if (task.id === activeId) return null;
+                    
+                    const layout = layoutMap.get(task.id);
                     
                     return (
                       <TimedTask
@@ -739,6 +857,8 @@ export function TimeWeekCalendar({
                         onClick={() => onTaskClick?.(task)}
                         onResize={onTaskResize}
                         onResizePreview={handleResizePreview}
+                        column={layout?.column ?? 0}
+                        totalColumns={layout?.totalColumns ?? 1}
                         style={{
                           top: `${top}px`,
                         }}
