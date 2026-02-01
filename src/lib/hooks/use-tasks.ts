@@ -21,9 +21,23 @@ export type Task = {
   organization?: { id: string; name: string } | null;
 };
 
+// Check if we're in Tauri
+function isTauri(): boolean {
+  return typeof window !== "undefined" && "__TAURI__" in window;
+}
+
+// Get API base URL - use Vercel API when in Tauri
+function getApiBaseUrl(): string {
+  if (isTauri()) {
+    return "https://sashi-ui.vercel.app";
+  }
+  return "";
+}
+
 // Fetch all tasks
 async function fetchTasks(): Promise<Task[]> {
-  const response = await fetch("/api/tasks?view=all");
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/tasks?view=all`);
   if (!response.ok) throw new Error("Failed to fetch tasks");
   const data = await response.json();
   return data.tasks;
@@ -34,7 +48,8 @@ async function updateTask({
   id,
   ...updates
 }: Partial<Task> & { id: string }): Promise<Task> {
-  const response = await fetch(`/api/tasks/${id}`, {
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/tasks/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
@@ -252,7 +267,8 @@ export function useCreateTask() {
 
   return useMutation({
     mutationFn: async (task: Omit<Task, "id">) => {
-      const response = await fetch("/api/tasks", {
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(task),
@@ -277,7 +293,8 @@ export function useDeleteTask() {
 
   return useMutation({
     mutationFn: async (taskId: string) => {
-      const response = await fetch(`/api/tasks/${taskId}`, {
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/tasks/${taskId}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete task");
@@ -316,7 +333,8 @@ export function useDeleteTask() {
             label: "Undo",
             onClick: async () => {
               // Quick undo via toast button
-              const response = await fetch("/api/tasks", {
+              const baseUrl = getApiBaseUrl();
+              const response = await fetch(`${baseUrl}/api/tasks`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(context.deletedTask),

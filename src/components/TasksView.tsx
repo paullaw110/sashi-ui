@@ -155,6 +155,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [defaultDate, setDefaultDate] = useState<Date | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
@@ -199,9 +200,10 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
     setIsPanelOpen(true);
   }, []);
 
-  const handleNewTask = useCallback(() => {
+  const handleNewTask = useCallback((date?: Date) => {
     setSelectedTask(null);
     setIsCreating(true);
+    setDefaultDate(date || null);
     setIsPanelOpen(true);
   }, []);
 
@@ -209,6 +211,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
     setIsPanelOpen(false);
     setSelectedTask(null);
     setIsCreating(false);
+    setDefaultDate(null);
   }, []);
 
   const handleSave = useCallback(async (taskData: Partial<Task>) => {
@@ -611,7 +614,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
         </div>
 
         <button 
-          onClick={handleNewTask}
+          onClick={() => handleNewTask()}
           className="flex items-center gap-1.5 text-xs text-[#0c0c0c] bg-[#e5e5e5] hover:bg-[#f5f5f5] px-3 py-1.5 rounded-lg font-medium transition-colors"
         >
           <Plus size={14} />
@@ -698,6 +701,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
             onTaskClick={handleTaskClick}
             onTaskMove={handleTaskMove}
             onTasksMove={handleTasksMove}
+            onAddTask={handleNewTask}
           />
         </div>
       )}
@@ -708,6 +712,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
         organizations={organizations}
         isOpen={isPanelOpen}
         isCreating={isCreating}
+        defaultDate={defaultDate}
         onClose={handleClosePanel}
         onSave={handleSave}
         onDelete={handleDelete}

@@ -47,6 +47,7 @@ interface MonthCalendarProps {
   onTaskClick?: (task: Task) => void;
   onTaskMove?: (taskId: string, newDate: Date) => void;
   onTasksMove?: (taskIds: string[], newDate: Date) => void;
+  onAddTask?: (date: Date) => void;
 }
 
 // Get status indicator icon
@@ -211,6 +212,7 @@ const DayCell = memo(function DayCell({
   draggingTaskIds,
   onTaskSelect,
   onTaskClick,
+  onAddTask,
   registerRef,
   todayRef,
   monthContext,
@@ -223,6 +225,7 @@ const DayCell = memo(function DayCell({
   draggingTaskIds: Set<string>;
   onTaskSelect: (taskId: string, e: React.MouseEvent) => void;
   onTaskClick?: (task: Task) => void;
+  onAddTask?: (date: Date) => void;
   registerRef: (taskId: string, element: HTMLElement | null) => void;
   todayRef?: React.RefObject<HTMLDivElement | null>;
   monthContext?: string;
@@ -240,7 +243,7 @@ const DayCell = memo(function DayCell({
     <div
       ref={setNodeRef}
       className={cn(
-        "border-r border-b border-[var(--border-subtle)] last:border-r-0 min-h-[120px] flex flex-col relative",
+        "border-r border-b border-[var(--border-subtle)] last:border-r-0 min-h-[120px] flex flex-col relative group/day",
         isOver && "bg-blue-500/10",
         !isInCurrentMonth && "bg-[var(--bg-base)]"
       )}
@@ -250,16 +253,28 @@ const DayCell = memo(function DayCell({
         <div ref={todayRef} className="absolute top-0 left-0" />
       )}
 
-      {/* Day Number */}
+      {/* Day Number Header with Add Button */}
       <div className={cn(
-        "px-2 py-1.5 text-xs font-medium border-b border-[var(--border-subtle)]",
+        "px-2 py-1.5 text-xs font-medium border-b border-[var(--border-subtle)] flex items-center justify-between",
         isCurrentDay
           ? "bg-blue-500/20 text-blue-400"
           : isInCurrentMonth
           ? "text-[var(--text-primary)]"
           : "text-[var(--text-quaternary)]"
       )}>
-        {dayNumber}
+        <span>{dayNumber}</span>
+        {onAddTask && isInCurrentMonth && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddTask(day);
+            }}
+            className="opacity-0 group-hover/day:opacity-100 p-0.5 rounded hover:bg-[var(--bg-hover)] transition-opacity"
+            title={`Add task for ${format(day, "MMM d")}`}
+          >
+            <Plus size={12} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]" />
+          </button>
+        )}
       </div>
 
       {/* Tasks Area - no overflow hidden, shows ALL tasks */}
@@ -293,6 +308,7 @@ const SingleMonth = memo(function SingleMonth({
   draggingTaskIds,
   onTaskSelect,
   onTaskClick,
+  onAddTask,
   registerRef,
   todayRef,
 }: {
@@ -302,6 +318,7 @@ const SingleMonth = memo(function SingleMonth({
   draggingTaskIds: Set<string>;
   onTaskSelect: (taskId: string, e: React.MouseEvent) => void;
   onTaskClick?: (task: Task) => void;
+  onAddTask?: (date: Date) => void;
   registerRef: (taskId: string, element: HTMLElement | null) => void;
   todayRef?: React.RefObject<HTMLDivElement | null>;
 }) {
@@ -340,6 +357,7 @@ const SingleMonth = memo(function SingleMonth({
               draggingTaskIds={draggingTaskIds}
               onTaskSelect={onTaskSelect}
               onTaskClick={onTaskClick}
+              onAddTask={onAddTask}
               registerRef={registerRef}
               todayRef={isCurrentDay ? todayRef : undefined}
               monthContext={monthKey}
@@ -356,6 +374,7 @@ export function MonthCalendar({
   onTaskClick,
   onTaskMove,
   onTasksMove,
+  onAddTask,
 }: MonthCalendarProps) {
   const [mounted, setMounted] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -778,6 +797,7 @@ export function MonthCalendar({
               draggingTaskIds={draggingTaskIds}
               onTaskSelect={handleTaskSelect}
               onTaskClick={onTaskClick}
+              onAddTask={onAddTask}
               registerRef={registerTaskElement}
               todayRef={isSameMonth(month, new Date()) ? todayRef : undefined}
             />
