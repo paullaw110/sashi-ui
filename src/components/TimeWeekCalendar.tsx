@@ -545,11 +545,11 @@ export function TimeWeekCalendar({
     setDragTarget(null);
   }, []);
 
-  // Track drag position for visual preview
+  // Track which slot is being hovered for preview
   const handleDragMove = useCallback((event: DragMoveEvent) => {
-    const { over, activatorEvent } = event;
+    const { over } = event;
     
-    if (!over || !gridRef.current) {
+    if (!over) {
       setDragTarget(null);
       return;
     }
@@ -569,16 +569,10 @@ export function TimeWeekCalendar({
       return;
     }
 
-    // Get mouse position relative to grid for precise time calculation
-    const gridRect = gridRef.current.getBoundingClientRect();
-    const scrollTop = scrollRef.current?.scrollTop || 0;
-    
-    // Calculate Y position within the scrollable grid
-    const clientY = (activatorEvent as MouseEvent)?.clientY || 0;
-    const deltaY = event.delta.y;
-    const currentY = clientY + deltaY - gridRect.top + scrollTop;
-    
-    const { time, displayTime } = pixelToTime(currentY);
+    // Use the hour from the slot - matches highlight and actual drop
+    const hour = parseInt(hourOrAllDay, 10);
+    const time = `${hour.toString().padStart(2, "0")}:00`;
+    const displayTime = format(setHours(new Date(), hour), "h a");
     setDragTarget({ dateKey, time, displayTime });
   }, []);
 
@@ -611,14 +605,14 @@ export function TimeWeekCalendar({
         // Dropped on all-day section - clear time
         onTaskMove(taskId, newDate, "");
       } else {
-        // Use the precise time from drag target if available
-        const newTime = dragTarget?.time || `${parseInt(hourOrAllDay, 10).toString().padStart(2, "0")}:00`;
+        // Use the hour from the slot ID - matches the highlight
+        const newTime = `${parseInt(hourOrAllDay, 10).toString().padStart(2, "0")}:00`;
         onTaskMove(taskId, newDate, newTime);
       }
       
       setDragTarget(null);
     },
-    [onTaskMove, dragTarget]
+    [onTaskMove]
   );
 
   const handleResizePreview = useCallback((taskId: string, duration: number | null) => {
