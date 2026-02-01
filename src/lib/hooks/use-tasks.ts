@@ -254,10 +254,15 @@ export function useUpdateTask() {
           });
         }
       }
+      
+      // Update cache with server response (more accurate than optimistic)
+      // but don't invalidate/refetch which causes flash
+      queryClient.setQueryData<Task[]>(["tasks"], (old) => {
+        if (!old) return old;
+        return old.map((task) => (task.id === data.id ? data : task));
+      });
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-    },
+    // No onSettled - optimistic update is source of truth, no refetch needed
   });
 }
 
@@ -332,7 +337,7 @@ export function useDeleteTask() {
           action: {
             label: "Undo",
             onClick: async () => {
-              // Quick undo via toast button
+              // Quick undo via toast button - restore task
               const baseUrl = getApiBaseUrl();
               const response = await fetch(`${baseUrl}/api/tasks`, {
                 method: "POST",
@@ -340,7 +345,12 @@ export function useDeleteTask() {
                 body: JSON.stringify(context.deletedTask),
               });
               if (response.ok) {
-                queryClient.invalidateQueries({ queryKey: ["tasks"] });
+                const { task } = await response.json();
+                // Add back to cache without full refetch
+                queryClient.setQueryData<Task[]>(["tasks"], (old) => {
+                  if (!old) return [task];
+                  return [...old, task];
+                });
                 toast.success("Task restored");
               }
             },
@@ -350,8 +360,6 @@ export function useDeleteTask() {
         toast.success("Task deleted");
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-    },
+    // No onSettled - optimistic delete is source of truth
   });
 }
