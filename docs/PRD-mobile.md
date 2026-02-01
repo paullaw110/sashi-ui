@@ -1,6 +1,6 @@
 # PRD: Mobile Optimization
 
-**Status:** 🟡 Draft (2026-01-31)
+**Status:** ✅ Complete (2026-01-31)
 
 ## Overview
 
@@ -59,7 +59,7 @@ Optimize Sashi UI for mobile devices (phones and small tablets). While the app h
 
 ## Implementation Plan
 
-### Phase 1: Critical Fixes (Week 1)
+### Phase 1: Critical Fixes (Week 1) ✅
 
 #### 1.1 Mobile Task List View
 **Problem:** Task table columns overflow on mobile
@@ -117,7 +117,7 @@ Optimize Sashi UI for mobile devices (phones and small tablets). While the app h
 [Calendar ▼] [List] [Filters (2)]
 ```
 
-### Phase 2: Touch Interactions (Week 2)
+### Phase 2: Touch Interactions (Week 2) ✅
 
 #### 2.1 Swipe Actions
 - Swipe right → Complete task
@@ -137,7 +137,7 @@ Replace modal with bottom sheet on mobile:
 - Auto-focus on task name input
 - "Add and continue" option for bulk entry
 
-### Phase 3: Polish (Week 3)
+### Phase 3: Polish (Week 3) ✅
 
 #### 3.1 Pull to Refresh
 - Add `usePullToRefresh` hook
