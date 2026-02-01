@@ -361,7 +361,7 @@ export function TaskTable({
               )}>
                 {task.name}
               </span>
-              {task.subtaskCount && task.subtaskCount > 0 && (
+              {task.subtaskCount != null && task.subtaskCount > 0 && (
                 <span className="shrink-0 text-[10px] text-[var(--text-quaternary)] bg-[var(--bg-surface)] px-1.5 py-0.5 rounded">
                   {task.subtaskDoneCount}/{task.subtaskCount}
                 </span>
