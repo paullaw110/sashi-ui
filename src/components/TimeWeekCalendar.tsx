@@ -409,15 +409,12 @@ function HourSlot({
   hour: number;
 }) {
   const slotId = `${dateKey}-${hour}`;
-  const { setNodeRef, isOver } = useDroppable({ id: slotId });
+  const { setNodeRef } = useDroppable({ id: slotId });
 
   return (
     <div
       ref={setNodeRef}
-      className={cn(
-        "border-t border-[var(--border-subtle)] relative transition-colors",
-        isOver && "bg-[var(--accent-primary)]/15"
-      )}
+      className="border-t border-[var(--border-subtle)] relative"
       style={{ height: HOUR_HEIGHT }}
     />
   );
@@ -725,15 +722,13 @@ export function TimeWeekCalendar({
           {weekDays.map((day) => {
             const isCurrentDay = isToday(day);
             const dateKey = format(day, "yyyy-MM-dd");
-            const isTargetDay = dragTarget?.dateKey === dateKey;
             
             return (
               <div
                 key={dateKey}
                 className={cn(
-                  "flex-1 min-w-0 px-2 py-2 text-center border-r border-[var(--border-subtle)] last:border-r-0 transition-colors",
-                  isCurrentDay && "bg-[var(--bg-surface)]",
-                  isTargetDay && "bg-[var(--accent-primary)]/10"
+                  "flex-1 min-w-0 px-2 py-2 text-center border-r border-[var(--border-subtle)] last:border-r-0",
+                  isCurrentDay && "bg-[var(--bg-surface)]"
                 )}
               >
                 <div className="text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest">
