@@ -5,9 +5,12 @@ import { desc } from "drizzle-orm";
 import { AppLayout } from "@/components/AppLayout";
 import { NotesView } from "@/components/NotesView";
 
-export const dynamic = "force-dynamic";
+// In static export (Tauri), skip server-side data fetching
+const isStaticExport = process.env.NEXT_PUBLIC_API_URL !== undefined;
 
 async function getNotes() {
+  if (isStaticExport) return [];
+  
   const notes = await db.query.notes.findMany({
     orderBy: [desc(schema.notes.updatedAt)],
   });

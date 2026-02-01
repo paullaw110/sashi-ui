@@ -13,6 +13,11 @@ import Breadcrumb from "./Breadcrumb";
 import { format } from "date-fns";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 import { useMoveTask, useMoveTasks, useUpdateTask, useDeleteTask, useTasks } from "@/lib/hooks/use-tasks";
+import { useIsMobile } from "@/lib/hooks/use-media-query";
+import { MobileTaskList } from "./MobileTaskList";
+import { MobileDayCalendar } from "./MobileDayCalendar";
+import { MobileTaskDetail } from "./MobileTaskDetail";
+import { MobileFilters } from "./MobileFilters";
 
 type Task = {
   id: string;
@@ -132,6 +137,7 @@ function getPriorityBadge(priority: string | null) {
 
 export function TasksView({ tasks: serverTasks, projects, organizations = [] }: TasksViewProps) {
   const router = useRouter();
+  const isMobile = useIsMobile();
   
   // Use React Query for tasks - server data as initial, then React Query manages it
   // This enables optimistic updates to reflect immediately in the UI
@@ -335,6 +341,148 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
 
   const hasActiveFilters = searchQuery || filterStatus || filterPriority || selectedOrganization;
 
+  // Mobile filter groups for MobileFilters component
+  const mobileFilterGroups = [
+    {
+      id: "status",
+      label: "Status",
+      options: [
+        { value: "not_started", label: "Todo" },
+        { value: "in_progress", label: "In Progress" },
+        { value: "waiting", label: "Waiting" },
+        { value: "done", label: "Done" },
+      ],
+    },
+    {
+      id: "priority",
+      label: "Priority",
+      options: [
+        { value: "non-negotiable", label: "Non-Negotiable" },
+        { value: "critical", label: "Critical" },
+        { value: "high", label: "High" },
+        { value: "medium", label: "Medium" },
+        { value: "low", label: "Low" },
+      ],
+    },
+  ];
+
+  const mobileFilterValues = {
+    status: filterStatus || "",
+    priority: filterPriority || "",
+  };
+
+  const handleMobileFilterChange = (groupId: string, value: string | string[]) => {
+    if (groupId === "status") {
+      setFilterStatus(value as string || null);
+    } else if (groupId === "priority") {
+      setFilterPriority(value as string || null);
+    }
+  };
+
+  // Mobile task update handler
+  const handleMobileUpdateTask = useCallback(async (id: string, data: Partial<Task>) => {
+    await updateTask.mutateAsync({ id, ...data } as { id: string } & Partial<Task>);
+  }, [updateTask]);
+
+  // Mobile render
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-[calc(100vh-120px)]">
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between px-1 py-2 shrink-0">
+          {/* View Toggle */}
+          <div className="flex items-center bg-[var(--bg-elevated)] rounded-lg p-0.5 border border-[var(--border-subtle)]">
+            <button
+              onClick={() => setView("calendar")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors",
+                view === "calendar"
+                  ? "bg-[var(--bg-hover)] text-[var(--text-primary)]"
+                  : "text-[var(--text-quaternary)]"
+              )}
+            >
+              <Calendar size={14} />
+              Day
+            </button>
+            <button
+              onClick={() => setView("list")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors",
+                view === "list"
+                  ? "bg-[var(--bg-hover)] text-[var(--text-primary)]"
+                  : "text-[var(--text-quaternary)]"
+              )}
+            >
+              <List size={14} />
+              List
+            </button>
+          </div>
+
+          {/* Mobile Filters */}
+          <MobileFilters
+            groups={mobileFilterGroups}
+            values={mobileFilterValues}
+            onChange={handleMobileFilterChange}
+            onClear={clearAllFilters}
+          />
+        </div>
+
+        {/* Mobile Content */}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {view === "list" ? (
+            <MobileTaskList
+              tasks={filteredTasks.map(t => ({
+                id: t.id,
+                name: t.name,
+                status: t.status,
+                priority: t.priority,
+                dueDate: t.dueDate,
+                notes: t.description || null,
+                organizationId: t.organizationId,
+                projectId: t.projectId,
+                organization: t.organization,
+                project: t.project,
+              }))}
+              onUpdateTask={(id, data) => handleMobileUpdateTask(id, data as Partial<Task>)}
+              onDeleteTask={handleDelete}
+              onAddTask={handleNewTask}
+              organizations={organizations}
+              projects={projects}
+            />
+          ) : (
+            <MobileDayCalendar
+              tasks={filteredTasks.map(t => ({
+                id: t.id,
+                name: t.name,
+                status: t.status,
+                priority: t.priority,
+                dueDate: t.dueDate,
+              }))}
+              onSelectTask={(task) => {
+                const fullTask = filteredTasks.find(t => t.id === task.id);
+                if (fullTask) handleTaskClick(fullTask);
+              }}
+              onCompleteTask={(id) => handleStatusChange(id, "done")}
+            />
+          )}
+        </div>
+
+        {/* Desktop modals still work for task details */}
+        <TaskDetailModal
+          task={selectedTask}
+          projects={projects}
+          organizations={organizations}
+          isOpen={isPanelOpen}
+          isCreating={isCreating}
+          onClose={handleClosePanel}
+          onSave={handleSave}
+          onDelete={handleDelete}
+        />
+      </div>
+    );
+  }
+
+  // Desktop render
   return (
     <div className={cn("flex flex-col", view === "calendar" && "h-[calc(100vh-180px)]")}>
       {/* Organization Panel */}

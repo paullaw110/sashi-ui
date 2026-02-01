@@ -2,9 +2,13 @@ import { readdir, readFile } from "fs/promises";
 import path from "path";
 import { LibraryPageClient } from "./LibraryPageClient";
 
-export const dynamic = "force-dynamic";
+// In static export (Tauri), this page will render with empty data
+// Library features are only available in web mode with file system access
+const isStaticExport = process.env.NEXT_PUBLIC_API_URL !== undefined;
 
 async function getPRDs() {
+  if (isStaticExport) return [];
+  
   const docsDir = path.join(process.cwd(), "docs");
   try {
     const files = await readdir(docsDir);
@@ -40,6 +44,8 @@ async function getPRDs() {
 }
 
 async function getConfigFiles() {
+  if (isStaticExport) return [];
+  
   const workspaceDir = path.join(process.cwd(), "..");
   const configFiles = ["AGENTS.md", "SOUL.md", "USER.md", "TOOLS.md", "HEARTBEAT.md"];
   

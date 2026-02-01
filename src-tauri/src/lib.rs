@@ -349,6 +349,7 @@ pub fn run() {
                         }
                     }
                     "toggle_devtools" => {
+                        #[cfg(debug_assertions)]
                         if let Some(window) = app.get_webview_window("main") {
                             if window.is_devtools_open() {
                                 window.close_devtools();
