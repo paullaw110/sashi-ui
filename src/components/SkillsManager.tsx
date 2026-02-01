@@ -24,7 +24,7 @@ type Skill = {
   id: string;
   name: string;
   description: string;
-  category: "spell" | "skill";
+  category: "spell" | "workspace" | "builtin";
   icon: string | typeof Zap;
   status: "active" | "building" | "available";
   trigger: string;
@@ -33,151 +33,163 @@ type Skill = {
   usageCount?: number;
 };
 
-// CAST Spells - Command-based workflow skills
+// CAST Spells - Separate workflow skills (stored in ~/clawd/skills/)
 const CAST_SPELLS: Skill[] = [
   {
-    id: "create-prd",
+    id: "cast-create-prd",
     name: "CAST: CREATE_PRD",
-    description: "Generate comprehensive PRD with stakeholder analysis, acceptance criteria, and test scenarios",
+    description: "Generate comprehensive PRDs with acceptance criteria, test scenarios, and implementation phases",
     category: "spell",
     icon: "⚡",
     status: "active",
-    trigger: "CAST: CREATE_PRD [feature name]",
-    location: "sashi-ui workflow",
-    lastUsed: null,
-    usageCount: 0,
+    trigger: "CAST: CREATE_PRD [feature description]",
+    location: "~/clawd/skills/cast-create-prd/",
   },
   {
-    id: "generate-tasks",
+    id: "cast-generate-tasks",
     name: "CAST: GENERATE_TASKS",
-    description: "Break down PRDs into actionable development tasks with effort estimates and dependencies",
+    description: "Break down PRDs into actionable development tasks with dependencies",
     category: "spell",
     icon: "🎯",
     status: "active",
-    trigger: "CAST: GENERATE_TASKS",
-    location: "sashi-ui workflow",
-    lastUsed: null,
-    usageCount: 0,
+    trigger: "CAST: GENERATE_TASKS [PRD filename]",
+    location: "~/clawd/skills/cast-generate-tasks/",
   },
   {
-    id: "setup-branch",
+    id: "cast-setup-branch",
     name: "CAST: SETUP_BRANCH",
-    description: "Initialize feature branch with proper Git structure, draft PR, and CI setup",
+    description: "Initialize Git feature branch with draft PR and conventional commit setup",
     category: "spell",
     icon: "🌿",
-    status: "building",
+    status: "active",
     trigger: "CAST: SETUP_BRANCH [feature-name]",
-    location: "In development",
-    lastUsed: null,
-    usageCount: 0,
+    location: "~/clawd/skills/cast-setup-branch/",
   },
   {
-    id: "generate-tests",
+    id: "cast-generate-tests",
     name: "CAST: GENERATE_TESTS",
-    description: "Generate Playwright tests from PRD acceptance criteria for test-first development",
+    description: "Generate Playwright E2E tests from PRD Gherkin scenarios",
     category: "spell",
     icon: "🧪",
-    status: "building",
-    trigger: "CAST: GENERATE_TESTS",
-    location: "In development",
-    lastUsed: null,
-    usageCount: 0,
+    status: "active",
+    trigger: "CAST: GENERATE_TESTS [PRD filename]",
+    location: "~/clawd/skills/cast-generate-tests/",
   },
   {
-    id: "implement-feature",
+    id: "cast-implement-feature",
     name: "CAST: IMPLEMENT_FEATURE",
-    description: "Parallel backend + frontend development with coding agent orchestration",
+    description: "Execute feature implementation phase by phase following PRD",
     category: "spell",
     icon: "⚔️",
-    status: "building",
-    trigger: "CAST: IMPLEMENT_FEATURE",
-    location: "In development",
-    lastUsed: null,
-    usageCount: 0,
+    status: "active",
+    trigger: "CAST: IMPLEMENT_FEATURE [PRD filename]",
+    location: "~/clawd/skills/cast-implement-feature/",
   },
   {
-    id: "validate-deploy",
+    id: "cast-validate-deploy",
     name: "CAST: VALIDATE_DEPLOY",
-    description: "QA validation and production deployment with quality gates",
+    description: "Run quality gates (build, types, tests) and deploy to production",
     category: "spell",
     icon: "🛡️",
-    status: "building",
+    status: "active",
     trigger: "CAST: VALIDATE_DEPLOY",
-    location: "In development",
-    lastUsed: null,
-    usageCount: 0,
+    location: "~/clawd/skills/cast-validate-deploy/",
   },
 ];
 
-// Clawdbot Skills
-const CLAWDBOT_SKILLS: Skill[] = [
+// Workspace Skills (~/clawd/skills/)
+const WORKSPACE_SKILLS: Skill[] = [
   {
     id: "frontend-design",
     name: "Frontend Design",
     description: "Create distinctive, production-grade frontend interfaces with high design quality",
-    category: "skill",
+    category: "workspace",
     icon: Code,
     status: "active",
     trigger: "Auto-triggers when building web components/pages",
-    location: "Built-in skill",
+    location: "~/clawd/skills/frontend-design/",
   },
+  {
+    id: "remotion",
+    name: "Remotion",
+    description: "Create animated video clips from designs using React-based video framework",
+    category: "workspace",
+    icon: Code,
+    status: "active",
+    trigger: "Auto-triggers for video/animation requests",
+    location: "~/clawd/skills/remotion/",
+  },
+];
+
+// Built-in Clawdbot Skills
+const BUILTIN_SKILLS: Skill[] = [
   {
     id: "github",
     name: "GitHub",
     description: "GitHub CLI for issues, PRs, CI runs, and API queries",
-    category: "skill",
+    category: "builtin",
     icon: GitBranch,
     status: "active",
     trigger: "Auto-triggers for git operations",
-    location: "Built-in skill",
+    location: "Built-in (clawdbot)",
   },
   {
     id: "notion",
     name: "Notion",
     description: "Notion API for creating and managing pages, databases, and blocks",
-    category: "skill",
+    category: "builtin",
     icon: FileText,
     status: "active",
     trigger: "Auto-triggers for Notion operations",
-    location: "Built-in skill",
+    location: "Built-in (clawdbot)",
   },
   {
     id: "slack",
     name: "Slack",
     description: "Slack actions including reactions, pins, and channel management",
-    category: "skill",
+    category: "builtin",
     icon: Globe,
     status: "active",
     trigger: "Auto-triggers for Slack operations",
-    location: "Built-in skill",
+    location: "Built-in (clawdbot)",
   },
   {
     id: "weather",
     name: "Weather",
     description: "Get current weather and forecasts (no API key required)",
-    category: "skill",
+    category: "builtin",
     icon: Globe,
     status: "active",
     trigger: "Weather queries",
-    location: "Built-in skill",
+    location: "Built-in (clawdbot)",
   },
   {
     id: "coding-agent",
     name: "Coding Agent",
     description: "Run Claude Code, Codex CLI, or other coding agents",
-    category: "skill",
+    category: "builtin",
     icon: Brain,
     status: "active",
     trigger: "Complex coding tasks",
-    location: "Built-in skill",
+    location: "Built-in (clawdbot)",
+  },
+  {
+    id: "skill-creator",
+    name: "Skill Creator",
+    description: "Create or update AgentSkills with proper structure",
+    category: "builtin",
+    icon: Zap,
+    status: "active",
+    trigger: "Requests to create/update skills",
+    location: "Built-in (clawdbot)",
   },
 ];
 
-const ALL_SKILLS = [...CAST_SPELLS, ...CLAWDBOT_SKILLS];
+const ALL_SKILLS = [...CAST_SPELLS, ...WORKSPACE_SKILLS, ...BUILTIN_SKILLS];
 
 export function SkillsManager() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<"all" | "spell" | "skill">("all");
+  const [selectedCategory, setSelectedCategory] = useState<"all" | "spell" | "workspace" | "builtin">("all");
   const [copiedSkill, setCopiedSkill] = useState<string | null>(null);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -185,7 +197,8 @@ export function SkillsManager() {
   const categories = [
     { id: "all" as const, name: "All", count: ALL_SKILLS.length },
     { id: "spell" as const, name: "CAST Spells", count: CAST_SPELLS.length },
-    { id: "skill" as const, name: "Clawdbot Skills", count: CLAWDBOT_SKILLS.length },
+    { id: "workspace" as const, name: "Workspace", count: WORKSPACE_SKILLS.length },
+    { id: "builtin" as const, name: "Built-in", count: BUILTIN_SKILLS.length },
   ];
 
   const copyToClipboard = (text: string, skillId: string, event: React.MouseEvent) => {
@@ -303,8 +316,10 @@ export function SkillsManager() {
                     {skill.status}
                   </span>
                 </div>
-                <p className="text-xs text-[var(--text-tertiary)] capitalize">
-                  {skill.category === "spell" ? "Workflow Spell" : "Clawdbot Skill"}
+                <p className="text-xs text-[var(--text-tertiary)]">
+                  {skill.category === "spell" ? "CAST Spell" : 
+                   skill.category === "workspace" ? "Workspace Skill" : 
+                   "Built-in Skill"}
                 </p>
               </div>
             </div>
@@ -368,8 +383,10 @@ export function SkillsManager() {
                       {selectedSkill.status}
                     </span>
                   </div>
-                  <p className="text-sm text-[var(--text-tertiary)] capitalize">
-                    {selectedSkill.category === "spell" ? "Workflow Spell" : "Clawdbot Skill"}
+                  <p className="text-sm text-[var(--text-tertiary)]">
+                    {selectedSkill.category === "spell" ? "CAST Spell" : 
+                     selectedSkill.category === "workspace" ? "Workspace Skill" : 
+                     "Built-in Skill"}
                   </p>
                 </div>
               </div>
@@ -419,19 +436,26 @@ export function SkillsManager() {
 
               {/* Documentation */}
               <div>
-                <h3 className="text-sm font-medium text-[var(--text-primary)] mb-2">Documentation</h3>
+                <h3 className="text-sm font-medium text-[var(--text-primary)] mb-2">About</h3>
                 <div className="bg-[var(--bg-surface)] rounded-lg p-4">
-                  {selectedSkill.status === "active" ? (
-                    <div className="space-y-2 text-sm text-[var(--text-tertiary)]">
-                      <p>This {selectedSkill.category === "spell" ? "spell" : "skill"} is currently active and ready to use.</p>
-                      <p>Use the trigger command above to invoke it in any channel.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2 text-sm text-[var(--text-tertiary)]">
-                      <p>This spell is currently in development as part of the CAST workflow system.</p>
-                      <p>Once implementation is complete, you&apos;ll be able to use this workflow command.</p>
-                    </div>
-                  )}
+                  <div className="space-y-2 text-sm text-[var(--text-tertiary)]">
+                    {selectedSkill.category === "spell" ? (
+                      <>
+                        <p>CAST spells are explicit workflow commands you invoke by name.</p>
+                        <p>Type the trigger command in any channel to activate this spell.</p>
+                      </>
+                    ) : selectedSkill.category === "workspace" ? (
+                      <>
+                        <p>Workspace skills are stored in <code className="text-xs bg-[var(--bg-base)] px-1 rounded">~/clawd/skills/</code></p>
+                        <p>They auto-trigger based on context and can be customized.</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>Built-in skills come with Clawdbot and are globally available.</p>
+                        <p>They auto-trigger when relevant tasks are detected.</p>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
