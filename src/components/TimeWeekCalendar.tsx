@@ -409,12 +409,15 @@ function HourSlot({
   hour: number;
 }) {
   const slotId = `${dateKey}-${hour}`;
-  const { setNodeRef } = useDroppable({ id: slotId });
+  const { setNodeRef, isOver } = useDroppable({ id: slotId });
 
   return (
     <div
       ref={setNodeRef}
-      className="border-t border-[var(--border-subtle)] relative"
+      className={cn(
+        "border-t border-[var(--border-subtle)] relative transition-colors",
+        isOver && "bg-[var(--accent-primary)]/15"
+      )}
       style={{ height: HOUR_HEIGHT }}
     />
   );
@@ -447,38 +450,6 @@ function AllDayCell({
           onClick={() => onTaskClick?.(task)}
         />
       ))}
-    </div>
-  );
-}
-
-// Ghost preview component for drag
-function DragGhostPreview({
-  task,
-  targetTime,
-  targetDate,
-}: {
-  task: Task;
-  targetTime: string | null;
-  targetDate: string | null;
-}) {
-  if (!targetTime || !targetDate) return null;
-
-  const duration = task.duration || 30;
-  const height = getHeightFromDuration(duration);
-  const startMinutes = parseTimeToMinutes(targetTime) || 0;
-  const endMinutes = startMinutes + duration;
-  
-  return (
-    <div 
-      className="pointer-events-none"
-      style={{ height: `${height}px` }}
-    >
-      <div className="h-full px-2 py-1 bg-[var(--accent-primary)]/20 border-2 border-dashed border-[var(--accent-primary)] rounded text-xs">
-        <div className="font-medium text-[var(--accent-primary)] truncate">{task.name}</div>
-        <div className="text-[10px] text-[var(--accent-primary)]">
-          {minutesToTimeString(startMinutes)} → {minutesToTimeString(endMinutes)}
-        </div>
-      </div>
     </div>
   );
 }
@@ -800,7 +771,6 @@ export function TimeWeekCalendar({
               const dayData = tasksByDate.get(dateKey);
               const timedTasks = dayData?.timed || [];
               const isCurrentDay = isToday(day);
-              const isTargetDay = dragTarget?.dateKey === dateKey;
               
               // Calculate layouts for overlapping tasks
               const taskLayouts = calculateTaskLayouts(timedTasks);
@@ -822,20 +792,6 @@ export function TimeWeekCalendar({
                       hour={hour}
                     />
                   ))}
-
-                  {/* Ghost preview when dragging to this day */}
-                  {activeTask && isTargetDay && dragTarget?.time && (
-                    <div
-                      className="absolute left-0.5 right-0.5 pointer-events-none z-40"
-                      style={{ top: `${getTopPosition(dragTarget.time)}px` }}
-                    >
-                      <DragGhostPreview
-                        task={activeTask}
-                        targetTime={dragTarget.time}
-                        targetDate={dateKey}
-                      />
-                    </div>
-                  )}
 
                   {/* Positioned timed tasks with overlap handling */}
                   {timedTasks.map((task) => {
