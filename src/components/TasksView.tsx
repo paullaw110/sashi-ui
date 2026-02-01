@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, Building2, ArrowUpDown } from "lucide-react";
+import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, Building2, ArrowUpDown, CheckSquare, Square } from "lucide-react";
+import { BulkActionsBar } from "./BulkActionsBar";
 import { cn } from "@/lib/utils";
 import { TaskDetailModal } from "./TaskDetailModal";
 import { OrganizationModal } from "./OrganizationModal";
@@ -168,6 +169,11 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
   const [isCreatingOrg, setIsCreatingOrg] = useState(false);
   const [orgRefreshTrigger, setOrgRefreshTrigger] = useState(0);
+
+  // Multi-select state
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const lastSelectedIndexRef = useRef<number | null>(null);
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -343,6 +349,111 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
   }, []);
 
   const hasActiveFilters = searchQuery || filterStatus || filterPriority || selectedOrganization;
+
+  // Multi-select handlers
+  const toggleMultiSelectMode = useCallback(() => {
+    setIsMultiSelectMode(prev => !prev);
+    setSelectedTaskIds(new Set());
+    lastSelectedIndexRef.current = null;
+  }, []);
+
+  const exitMultiSelectMode = useCallback(() => {
+    setIsMultiSelectMode(false);
+    setSelectedTaskIds(new Set());
+    lastSelectedIndexRef.current = null;
+  }, []);
+
+  const toggleTaskSelection = useCallback((taskId: string, index: number, shiftKey: boolean) => {
+    setSelectedTaskIds(prev => {
+      const next = new Set(prev);
+      
+      // Shift+click for range selection
+      if (shiftKey && lastSelectedIndexRef.current !== null) {
+        const start = Math.min(lastSelectedIndexRef.current, index);
+        const end = Math.max(lastSelectedIndexRef.current, index);
+        for (let i = start; i <= end; i++) {
+          if (filteredTasks[i]) {
+            next.add(filteredTasks[i].id);
+          }
+        }
+      } else {
+        // Toggle single selection
+        if (next.has(taskId)) {
+          next.delete(taskId);
+        } else {
+          next.add(taskId);
+        }
+        lastSelectedIndexRef.current = index;
+      }
+      
+      return next;
+    });
+  }, [filteredTasks]);
+
+  const selectAllTasks = useCallback(() => {
+    if (selectedTaskIds.size === filteredTasks.length) {
+      // Deselect all
+      setSelectedTaskIds(new Set());
+    } else {
+      // Select all
+      setSelectedTaskIds(new Set(filteredTasks.map(t => t.id)));
+    }
+  }, [filteredTasks, selectedTaskIds.size]);
+
+  const handleBulkUpdate = useCallback(async (updates: {
+    status?: string;
+    priority?: string | null;
+    projectId?: string | null;
+    organizationId?: string | null;
+    dueDate?: string | null;
+  }) => {
+    const taskIds = Array.from(selectedTaskIds);
+    try {
+      const response = await fetch("/api/tasks/bulk", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskIds, updates }),
+      });
+      
+      if (!response.ok) throw new Error("Bulk update failed");
+      
+      router.refresh();
+      exitMultiSelectMode();
+    } catch (error) {
+      console.error("Bulk update error:", error);
+    }
+  }, [selectedTaskIds, router, exitMultiSelectMode]);
+
+  const handleBulkDelete = useCallback(async () => {
+    const taskIds = Array.from(selectedTaskIds);
+    try {
+      const response = await fetch("/api/tasks/bulk", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskIds }),
+      });
+      
+      if (!response.ok) throw new Error("Bulk delete failed");
+      
+      router.refresh();
+      exitMultiSelectMode();
+    } catch (error) {
+      console.error("Bulk delete error:", error);
+    }
+  }, [selectedTaskIds, router, exitMultiSelectMode]);
+
+  // Keyboard shortcuts for multi-select
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape" && isMultiSelectMode) {
+      exitMultiSelectMode();
+    }
+  }, [isMultiSelectMode, exitMultiSelectMode]);
+
+  // Register keyboard listener
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   // Mobile filter groups for MobileFilters component
   const mobileFilterGroups = [
@@ -611,6 +722,22 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
               Clear
             </button>
           )}
+
+          {/* Multi-Select Toggle */}
+          {view === "list" && (
+            <button
+              onClick={toggleMultiSelectMode}
+              className={cn(
+                "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors border",
+                isMultiSelectMode
+                  ? "bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border-[var(--accent-primary)]/30"
+                  : "text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] border-[var(--border-default)] hover:border-[var(--border-strong)]"
+              )}
+            >
+              <CheckSquare size={14} />
+              {isMultiSelectMode ? "Cancel" : "Select"}
+            </button>
+          )}
         </div>
 
         <button 
@@ -624,34 +751,81 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
 
       {/* Content */}
       {view === "list" ? (
-        <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)] flex flex-col min-h-0 flex-1">
+        <div className={cn(
+          "bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)] flex flex-col min-h-0 flex-1",
+          isMultiSelectMode && selectedTaskIds.size > 0 && "pb-16" // Space for bulk actions bar
+        )}>
           {/* Table Header */}
-          <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[var(--border-subtle)] text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest shrink-0">
-            <div className="col-span-5">Task</div>
-            <div className="col-span-2">Context</div>
-            <div className="col-span-2">Priority</div>
-            <div className="col-span-2">Status</div>
-            <div className="col-span-1">Due</div>
+          <div className={cn(
+            "grid gap-4 px-4 py-3 border-b border-[var(--border-subtle)] text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest shrink-0",
+            isMultiSelectMode ? "grid-cols-[40px_1fr_1fr_1fr_1fr_80px]" : "grid-cols-12"
+          )}>
+            {isMultiSelectMode && (
+              <div className="flex items-center justify-center">
+                <button
+                  onClick={selectAllTasks}
+                  className="p-0.5 hover:opacity-70 transition-opacity"
+                >
+                  {selectedTaskIds.size === filteredTasks.length && filteredTasks.length > 0 ? (
+                    <CheckSquare size={16} className="text-[var(--accent-primary)]" />
+                  ) : (
+                    <Square size={16} />
+                  )}
+                </button>
+              </div>
+            )}
+            <div className={isMultiSelectMode ? "" : "col-span-5"}>Task</div>
+            <div className={isMultiSelectMode ? "" : "col-span-2"}>Context</div>
+            <div className={isMultiSelectMode ? "" : "col-span-2"}>Priority</div>
+            <div className={isMultiSelectMode ? "" : "col-span-2"}>Status</div>
+            <div className={isMultiSelectMode ? "" : "col-span-1"}>Due</div>
           </div>
 
           {/* Task Rows */}
           <div className="divide-y divide-[#161616] overflow-y-auto flex-1 min-h-0">
-            {filteredTasks.map((task) => (
+            {filteredTasks.map((task, index) => (
               <div
                 key={task.id}
-                onClick={() => handleTaskClick(task)}
+                onClick={(e) => {
+                  if (isMultiSelectMode) {
+                    toggleTaskSelection(task.id, index, e.shiftKey);
+                  } else {
+                    handleTaskClick(task);
+                  }
+                }}
                 className={cn(
-                  "grid grid-cols-12 gap-4 px-4 py-3 hover:bg-[var(--bg-surface)] cursor-pointer transition-colors items-center",
-                  task.status === "done" && "opacity-40"
+                  "grid gap-4 px-4 py-3 hover:bg-[var(--bg-surface)] cursor-pointer transition-colors items-center",
+                  isMultiSelectMode ? "grid-cols-[40px_1fr_1fr_1fr_1fr_80px]" : "grid-cols-12",
+                  task.status === "done" && "opacity-40",
+                  selectedTaskIds.has(task.id) && "bg-[var(--accent-primary)]/5"
                 )}
               >
-                <div className="col-span-5 flex items-center gap-3">
-                  <button
-                    onClick={(e) => cycleStatus(e, task)}
-                    className="hover:opacity-70 transition-opacity shrink-0"
-                  >
-                    {getStatusIcon(task.status)}
-                  </button>
+                {isMultiSelectMode && (
+                  <div className="flex items-center justify-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleTaskSelection(task.id, index, e.shiftKey);
+                      }}
+                      className="p-0.5 hover:opacity-70 transition-opacity"
+                    >
+                      {selectedTaskIds.has(task.id) ? (
+                        <CheckSquare size={16} className="text-[var(--accent-primary)]" />
+                      ) : (
+                        <Square size={16} className="text-[var(--text-quaternary)]" />
+                      )}
+                    </button>
+                  </div>
+                )}
+                <div className={cn("flex items-center gap-3", isMultiSelectMode ? "" : "col-span-5")}>
+                  {!isMultiSelectMode && (
+                    <button
+                      onClick={(e) => cycleStatus(e, task)}
+                      className="hover:opacity-70 transition-opacity shrink-0"
+                    >
+                      {getStatusIcon(task.status)}
+                    </button>
+                  )}
                   <span className={cn(
                     "text-sm truncate font-medium",
                     task.status === "done" ? "text-[var(--text-quaternary)] line-through" : "text-[var(--text-primary)]"
@@ -659,20 +833,20 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
                     {task.name}
                   </span>
                 </div>
-                <div className="col-span-2">
+                <div className={isMultiSelectMode ? "" : "col-span-2"}>
                   <Breadcrumb
                     organization={task.organization}
                     project={task.project}
                     className="truncate"
                   />
                 </div>
-                <div className="col-span-2">
+                <div className={isMultiSelectMode ? "" : "col-span-2"}>
                   {getPriorityBadge(task.priority)}
                 </div>
-                <div className="col-span-2">
+                <div className={isMultiSelectMode ? "" : "col-span-2"}>
                   {getStatusBadge(task.status)}
                 </div>
-                <div className="col-span-1">
+                <div className={isMultiSelectMode ? "" : "col-span-1"}>
                   <span className="text-xs text-[var(--text-quaternary)]">
                     {task.dueDate ? format(new Date(task.dueDate), "MMM d") : "—"}
                   </span>
@@ -738,6 +912,18 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
         onSave={handleSaveOrganization}
         onDelete={handleDeleteOrganization}
       />
+
+      {/* Bulk Actions Bar */}
+      {isMultiSelectMode && selectedTaskIds.size > 0 && (
+        <BulkActionsBar
+          selectedCount={selectedTaskIds.size}
+          onCancel={exitMultiSelectMode}
+          onBulkUpdate={handleBulkUpdate}
+          onBulkDelete={handleBulkDelete}
+          projects={projects}
+          organizations={organizations}
+        />
+      )}
     </div>
   );
 }
