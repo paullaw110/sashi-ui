@@ -39,7 +39,11 @@ async function updateTask({
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
   });
-  if (!response.ok) throw new Error("Failed to update task");
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error("[updateTask] Failed:", { id, updates, status: response.status, errorData });
+    throw new Error(errorData.details || "Failed to update task");
+  }
   const data = await response.json();
   return data.task;
 }

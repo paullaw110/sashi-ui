@@ -57,6 +57,7 @@ export async function PATCH(
   
   try {
     const body = await request.json();
+    console.log("[PATCH /api/tasks/[id]] id:", id, "body:", JSON.stringify(body));
     const now = new Date();
 
     const updates: Record<string, unknown> = { updatedAt: now };
@@ -101,7 +102,8 @@ export async function PATCH(
     return NextResponse.json({ task });
   } catch (error) {
     console.error("Error updating task:", error);
-    return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: "Failed to update task", details: message }, { status: 500 });
   }
 }
 
