@@ -1,6 +1,6 @@
 # PRD: Bulk Select & Actions
 
-**Status:** 🟡 In Progress  
+**Status:** ✅ Complete  
 **Created:** 2026-02-01  
 **Author:** Sashi  
 
