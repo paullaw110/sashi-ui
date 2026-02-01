@@ -446,6 +446,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
               onUpdateTask={(id, data) => handleMobileUpdateTask(id, data as Partial<Task>)}
               onDeleteTask={handleDelete}
               onAddTask={handleNewTask}
+              onRefresh={async () => { router.refresh(); }}
               organizations={organizations}
               projects={projects}
             />
@@ -463,6 +464,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
                 if (fullTask) handleTaskClick(fullTask);
               }}
               onCompleteTask={(id) => handleStatusChange(id, "done")}
+              onRefresh={async () => { router.refresh(); }}
             />
           )}
         </div>

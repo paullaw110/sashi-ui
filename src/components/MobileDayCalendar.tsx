@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-reac
 import { format, addDays, subDays, isToday, isSameDay, parseISO, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { MobileTaskRow } from "./MobileTaskRow";
+import { PullToRefresh } from "./PullToRefresh";
 
 interface Task {
   id: string;
@@ -22,6 +23,7 @@ interface MobileDayCalendarProps {
   onSelectTask: (task: Task) => void;
   onCompleteTask: (id: string) => void;
   onDateChange?: (date: Date) => void;
+  onRefresh?: () => Promise<void>;
 }
 
 export function MobileDayCalendar({
@@ -29,6 +31,7 @@ export function MobileDayCalendar({
   onSelectTask,
   onCompleteTask,
   onDateChange,
+  onRefresh,
 }: MobileDayCalendarProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -164,8 +167,9 @@ export function MobileDayCalendar({
         </div>
       )}
 
-      {/* Day content - swipeable */}
-      <div {...handlers} className="flex-1 overflow-y-auto">
+      {/* Day content - swipeable with pull to refresh */}
+      <PullToRefresh onRefresh={onRefresh || (async () => {})} className="flex-1">
+        <div {...handlers} className="h-full overflow-y-auto">
         {dayTasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-center px-4">
             <p className="text-[var(--text-tertiary)]">
@@ -256,7 +260,8 @@ export function MobileDayCalendar({
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </PullToRefresh>
     </div>
   );
 }

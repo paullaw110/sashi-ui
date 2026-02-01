@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { MobileTaskRow } from "./MobileTaskRow";
 import { MobileTaskDetail } from "./MobileTaskDetail";
+import { PullToRefresh } from "./PullToRefresh";
 import { cn } from "@/lib/utils";
 
 interface Task {
@@ -28,6 +29,7 @@ interface MobileTaskListProps {
   onUpdateTask: (id: string, data: Partial<Task>) => void;
   onDeleteTask?: (id: string) => void;
   onAddTask?: () => void;
+  onRefresh?: () => Promise<void>;
   showAddButton?: boolean;
   organizations?: Array<{ id: string; name: string }>;
   projects?: Array<{ id: string; name: string; organizationId?: string | null }>;
@@ -39,6 +41,7 @@ export function MobileTaskList({
   onUpdateTask,
   onDeleteTask,
   onAddTask,
+  onRefresh,
   showAddButton = true,
   organizations = [],
   projects = [],
@@ -96,8 +99,11 @@ export function MobileTaskList({
         </div>
       )}
 
-      {/* Task list */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Task list with pull to refresh */}
+      <PullToRefresh 
+        onRefresh={onRefresh || (async () => {})} 
+        className="flex-1 overflow-y-auto"
+      >
         {todoTasks.length === 0 && doneTasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-center px-4">
             <p className="text-[var(--text-tertiary)]">No tasks yet</p>
@@ -144,7 +150,7 @@ export function MobileTaskList({
             )}
           </>
         )}
-      </div>
+      </PullToRefresh>
 
       {/* Floating Add Button */}
       {showAddButton && onAddTask && (
