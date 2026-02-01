@@ -192,3 +192,17 @@ export const leads = sqliteTable("leads", {
 
 export type Lead = typeof leads.$inferSelect;
 export type NewLead = typeof leads.$inferInsert;
+
+// Sashi Reports (morning/nightly summaries)
+export const reports = sqliteTable("reports", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(), // 'morning' | 'nightly'
+  date: text("date").notNull(), // YYYY-MM-DD
+  title: text("title").notNull(),
+  content: text("content").notNull(), // Markdown content
+  metadata: text("metadata"), // JSON: task counts, highlights, etc.
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export type Report = typeof reports.$inferSelect;
+export type NewReport = typeof reports.$inferInsert;

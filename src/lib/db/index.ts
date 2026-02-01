@@ -126,6 +126,19 @@ CREATE TABLE IF NOT EXISTS leads (
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
 CREATE INDEX IF NOT EXISTS idx_leads_industry ON leads(industry);
 CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(qualification_score);
+
+CREATE TABLE IF NOT EXISTS reports (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  date TEXT NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  metadata TEXT,
+  created_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_date ON reports(date);
+CREATE INDEX IF NOT EXISTS idx_reports_type ON reports(type);
 `;
 
 // Database connection validation and initialization
