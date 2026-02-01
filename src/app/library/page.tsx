@@ -63,45 +63,16 @@ async function getConfigFiles() {
   return configs.filter((c): c is { filename: string; content: string } => c !== null);
 }
 
-async function getSkills() {
-  // CAST Spells - command patterns for sashi-ui development
-  const castSpells = [
-    { name: "CAST: CREATE_PRD", description: "Generate PRD with test scenarios", icon: "⚡", type: "spell" as const },
-    { name: "CAST: GENERATE_TASKS", description: "Break down into actionable tasks", icon: "🎯", type: "spell" as const },
-    { name: "CAST: SETUP_BRANCH", description: "Git workflow + draft PR automation", icon: "🌿", type: "spell" as const },
-    { name: "CAST: GENERATE_TESTS", description: "Playwright tests from acceptance criteria", icon: "🧪", type: "spell" as const },
-    { name: "CAST: IMPLEMENT_FEATURE", description: "Parallel coding agent orchestration", icon: "⚔️", type: "spell" as const },
-    { name: "CAST: VALIDATE_DEPLOY", description: "Quality gates + production deploy", icon: "🛡️", type: "spell" as const },
-  ];
-
-  // Clawdbot skills from built-in and custom locations
-  const clawdbotSkills = [
-    { name: "bluebubbles", description: "iMessage channel plugin", type: "skill" as const },
-    { name: "coding-agent", description: "Run Claude Code, Codex CLI, etc.", type: "skill" as const },
-    { name: "github", description: "GitHub CLI (issues, PRs, CI)", type: "skill" as const },
-    { name: "notion", description: "Notion API (pages, databases)", type: "skill" as const },
-    { name: "skill-creator", description: "Build new skills", type: "skill" as const },
-    { name: "slack", description: "Slack actions (reactions, pins, etc.)", type: "skill" as const },
-    { name: "weather", description: "Weather forecasts", type: "skill" as const },
-    { name: "frontend-design", description: "Production-grade UI code", type: "skill" as const },
-    { name: "remotion", description: "Animated video clips", type: "skill" as const },
-  ];
-
-  return [...castSpells, ...clawdbotSkills];
-}
-
 export default async function LibraryPage() {
-  const [prds, configs, skills] = await Promise.all([
+  const [prds, configs] = await Promise.all([
     getPRDs(),
     getConfigFiles(),
-    getSkills(),
   ]);
   
   return (
     <LibraryPageClient
       prds={prds}
       configs={configs}
-      skills={skills}
     />
   );
 }
