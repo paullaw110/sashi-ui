@@ -489,7 +489,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
 
   // Desktop render
   return (
-    <div className={cn("flex flex-col", view === "calendar" && "h-[calc(100vh-180px)]")}>
+    <div className="flex flex-col h-[calc(100vh-180px)]">
       {/* Organization Panel */}
       {showOrganizations && (
         <div className="mb-4 p-4 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg">
@@ -624,9 +624,9 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
 
       {/* Content */}
       {view === "list" ? (
-        <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)]">
+        <div className="bg-[var(--bg-elevated)] rounded-lg border border-[var(--border-subtle)] flex flex-col min-h-0 flex-1">
           {/* Table Header */}
-          <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[var(--border-subtle)] text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest">
+          <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[var(--border-subtle)] text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest shrink-0">
             <div className="col-span-5">Task</div>
             <div className="col-span-2">Context</div>
             <div className="col-span-2">Priority</div>
@@ -635,7 +635,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
           </div>
 
           {/* Task Rows */}
-          <div className="divide-y divide-[#161616]">
+          <div className="divide-y divide-[#161616] overflow-y-auto flex-1 min-h-0">
             {filteredTasks.map((task) => (
               <div
                 key={task.id}
@@ -688,7 +688,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-3 border-t border-[var(--border-subtle)]">
+          <div className="px-4 py-3 border-t border-[var(--border-subtle)] shrink-0">
             <span className="text-xs text-[var(--text-quaternary)]">
               {filteredTasks.length} task{filteredTasks.length !== 1 && "s"}
             </span>
