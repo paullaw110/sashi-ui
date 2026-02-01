@@ -470,16 +470,22 @@ export function WeekCalendar({
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
-      setActiveId(null);
-      setDraggingTaskIds(new Set());
 
-      if (!over) return;
+      if (!over) {
+        setActiveId(null);
+        setDraggingTaskIds(new Set());
+        return;
+      }
 
       const draggedId = active.id as string;
       const targetDateKey = over.id as string;
 
       // Validate it's a date key (YYYY-MM-DD format)
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDateKey)) return;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDateKey)) {
+        setActiveId(null);
+        setDraggingTaskIds(new Set());
+        return;
+      }
 
       const newDate = new Date(targetDateKey + "T12:00:00");
 
@@ -488,12 +494,17 @@ export function WeekCalendar({
         ? Array.from(selectedTasks)
         : [draggedId];
 
-      // Optimistically update UI for all tasks being moved
+      // Optimistically update UI BEFORE clearing drag state
+      // This prevents the flash where task appears at old position
       setOptimisticMoves((prev) => {
         const next = new Map(prev);
         taskIdsToMove.forEach((id) => next.set(id, targetDateKey));
         return next;
       });
+
+      // Now clear drag state - task will render at new position immediately
+      setActiveId(null);
+      setDraggingTaskIds(new Set());
 
       // Call the appropriate callback
       if (taskIdsToMove.length > 1 && onTasksMove) {
