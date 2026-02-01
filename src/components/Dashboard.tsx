@@ -181,7 +181,7 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     <>
       <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
         {/* Left Column - Task Lists */}
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-y-auto min-h-0">
           <TaskTable
             tasks={filteredTodayTasks}
             projects={projects}
