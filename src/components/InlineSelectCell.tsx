@@ -108,7 +108,9 @@ export function InlineSelectCell({
   // Render badge for status
   const renderStatusBadge = (option: Option | null) => {
     if (!option) {
-      return null;
+      return (
+        <span className="inline-block w-6 h-5" />
+      );
     }
     return (
       <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-secondary)] whitespace-nowrap">
@@ -121,7 +123,9 @@ export function InlineSelectCell({
   // Render badge for priority
   const renderPriorityBadge = (option: Option | null) => {
     if (!option) {
-      return null;
+      return (
+        <span className="inline-block w-6 h-5" />
+      );
     }
     return (
       <span className={cn(
