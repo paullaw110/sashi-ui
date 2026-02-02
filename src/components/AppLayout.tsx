@@ -132,7 +132,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             )}
           </div>
         )}
-        <div className="px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8 flex-1 min-h-0 flex flex-col">
+        <div className="px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8 flex-1 min-h-0 flex flex-col overflow-y-auto">
           {children}
         </div>
       </main>

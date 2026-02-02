@@ -734,7 +734,7 @@ export function TimeWeekCalendar({
       // Trigger the actual update
       onTaskMove(taskId, newDate, newTime || "");
     },
-    [onTaskMove]
+    [onTaskMove, dragTarget]
   );
 
   const handleResizePreview = useCallback((taskId: string, duration: number | null) => {

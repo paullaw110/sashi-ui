@@ -266,7 +266,7 @@ export function NotesView({ notes: initialNotes }: NotesViewProps) {
                 content={content}
                 onChange={handleContentChange}
                 placeholder="Start writing..."
-                className="border-0 rounded-none h-full"
+                className="border-0 rounded-none"
               />
             </div>
           </>

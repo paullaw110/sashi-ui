@@ -754,6 +754,7 @@ export function TaskDetailModal({
                         <CommandSeparator />
                         <CommandGroup>
                           <CommandItem
+                            value={`create-${orgSearch}`}
                             onSelect={handleCreateOrg}
                             className="cursor-pointer"
                             disabled={isCreatingOrg}
@@ -835,6 +836,7 @@ export function TaskDetailModal({
                         <CommandSeparator />
                         <CommandGroup>
                           <CommandItem
+                            value={`create-${projectSearch}`}
                             onSelect={handleCreateProject}
                             className="cursor-pointer"
                             disabled={isCreatingProject}

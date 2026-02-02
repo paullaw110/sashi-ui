@@ -105,13 +105,8 @@ export function LibraryPageClient({
   };
 
   return (
-    <AppLayout>
-      <div className="p-6 max-w-7xl mx-auto">
-        <h1 className="text-2xl font-display font-bold text-[var(--text-primary)] mb-6">
-          Library
-        </h1>
-
-        <Tabs defaultValue="prds" className="space-y-6">
+    <AppLayout title="Library" subtitle="PRDs, reports, skills, and configuration">
+      <Tabs defaultValue="prds" className="space-y-6">
           <TabsList>
             <TabsTrigger value="prds" className="gap-2">
               <FileText size={14} />
@@ -402,7 +397,6 @@ export function LibraryPageClient({
             </div>
           </TabsContent>
         </Tabs>
-      </div>
     </AppLayout>
   );
 }

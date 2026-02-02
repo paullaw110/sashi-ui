@@ -162,7 +162,16 @@ export async function POST(request: NextRequest) {
 
     await db.insert(schema.tasks).values(newTask);
 
-    return NextResponse.json({ task: newTask }, { status: 201 });
+    // Query back with relations for complete task data
+    const task = await db.query.tasks.findFirst({
+      where: eq(schema.tasks.id, newTask.id),
+      with: {
+        project: true,
+        organization: true,
+      },
+    });
+
+    return NextResponse.json({ task }, { status: 201 });
   } catch (error) {
     console.error("Error creating task:", error);
     return NextResponse.json({ error: "Failed to create task" }, { status: 500 });

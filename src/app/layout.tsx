@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/lib/query-provider";
 import { OfflineProvider } from "@/components/OfflineProvider";
+import { AgentationProvider } from "@/components/AgentationProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,8 +39,8 @@ export default function RootLayout({
             {children}
           </OfflineProvider>
         </QueryProvider>
-        <Toaster 
-          theme="dark" 
+        <Toaster
+          theme="dark"
           position="bottom-right"
           toastOptions={{
             style: {
@@ -49,6 +50,7 @@ export default function RootLayout({
             },
           }}
         />
+        <AgentationProvider />
       </body>
     </html>
   );

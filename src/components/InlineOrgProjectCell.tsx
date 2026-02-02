@@ -155,7 +155,7 @@ export function InlineOrgProjectCell({
           )}
         >
           {currentIcon && <span className="text-sm">{currentIcon}</span>}
-          <span className="truncate">{currentName || "—"}</span>
+          <span className="truncate">{currentName || ""}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent 

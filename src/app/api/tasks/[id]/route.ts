@@ -92,6 +92,10 @@ export async function PATCH(
 
     const task = await db.query.tasks.findFirst({
       where: eq(schema.tasks.id, id),
+      with: {
+        project: true,
+        organization: true,
+      },
     });
 
     // Revalidate all pages that show tasks

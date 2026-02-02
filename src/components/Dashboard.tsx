@@ -6,6 +6,7 @@ import { TimeWeekCalendar } from "./TimeWeekCalendar";
 import { TaskDetailModal } from "./TaskDetailModal";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 import { useTasks, useUpdateTask, useDeleteTask, useMoveTask, Task } from "@/lib/hooks/use-tasks";
+import { useQueryClient } from "@tanstack/react-query";
 import { format, startOfDay, endOfDay, addDays, startOfWeek, endOfWeek } from "date-fns";
 
 interface DashboardProps {
@@ -22,11 +23,43 @@ type TableTask = Task & {
   organization?: Organization | null;
 };
 
+// Sort order for status (ascending: active work first, done last)
+const STATUS_ORDER: Record<string, number> = {
+  in_progress: 0,
+  not_started: 1,
+  waiting: 2,
+  done: 3,
+};
+
+// Sort order for priority (descending: highest priority first)
+const PRIORITY_ORDER: Record<string, number> = {
+  "non-negotiable": 0,
+  critical: 1,
+  high: 2,
+  medium: 3,
+  low: 4,
+};
+
+function sortTasks<T extends { status: string; priority: string | null }>(tasks: T[]): T[] {
+  return [...tasks].sort((a, b) => {
+    // First sort by status (ascending)
+    const statusA = STATUS_ORDER[a.status] ?? 99;
+    const statusB = STATUS_ORDER[b.status] ?? 99;
+    if (statusA !== statusB) return statusA - statusB;
+
+    // Then sort by priority (descending - highest priority first)
+    const priorityA = a.priority ? (PRIORITY_ORDER[a.priority] ?? 99) : 100;
+    const priorityB = b.priority ? (PRIORITY_ORDER[b.priority] ?? 99) : 100;
+    return priorityA - priorityB;
+  });
+}
+
 export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organizations = [] }: DashboardProps) {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [defaultDate, setDefaultDate] = useState<Date | null>(null);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   // Combine server data as initial data for React Query
   // This dedupes tasks that appear in multiple lists
@@ -39,36 +72,41 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
   // React Query for optimistic updates (cast to handle minor type differences)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: allTasks } = useTasks(initialTasks as any) as { data: Task[] | undefined };
+  const queryClient = useQueryClient();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const moveTask = useMoveTask();
 
   // Filter tasks for today (due today, including done - they show grayed out)
   const filteredTodayTasks = useMemo((): TableTask[] => {
-    if (!allTasks) return todayTasks as TableTask[];
+    if (!allTasks) return sortTasks(todayTasks as TableTask[]);
     const now = new Date();
     const dayStart = startOfDay(now);
     const dayEnd = endOfDay(now);
-    
-    return (allTasks.filter(task => {
+
+    const filtered = allTasks.filter(task => {
       if (!task.dueDate) return false;
       const due = new Date(task.dueDate);
       return due >= dayStart && due <= dayEnd;
-    }) as TableTask[]);
+    }) as TableTask[];
+
+    return sortTasks(filtered);
   }, [allTasks, todayTasks]);
 
   // Filter tasks for next (tomorrow, including done)
   const filteredNextTasks = useMemo((): TableTask[] => {
-    if (!allTasks) return nextTasks as TableTask[];
+    if (!allTasks) return sortTasks(nextTasks as TableTask[]);
     const tomorrow = addDays(new Date(), 1);
     const dayStart = startOfDay(tomorrow);
     const dayEnd = endOfDay(tomorrow);
-    
-    return (allTasks.filter(task => {
+
+    const filtered = allTasks.filter(task => {
       if (!task.dueDate) return false;
       const due = new Date(task.dueDate);
       return due >= dayStart && due <= dayEnd;
-    }) as TableTask[]);
+    }) as TableTask[];
+
+    return sortTasks(filtered);
   }, [allTasks, nextTasks]);
 
   // Filter tasks for week view
@@ -98,13 +136,50 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     setIsPanelOpen(true);
   }, []);
 
-  const handleNewTodayTask = useCallback(() => {
-    handleNewTask(new Date());
-  }, [handleNewTask]);
+  // Create task via API and add to cache
+  const handleInlineCreate = useCallback(async (name: string, dueDate?: string) => {
+    const response = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        dueDate: dueDate || null,
+        status: "not_started"
+      }),
+    });
 
-  const handleNewNextTask = useCallback(() => {
-    handleNewTask(addDays(new Date(), 1));
-  }, [handleNewTask]);
+    const data = await response.json();
+    const task = data.task || null;
+
+    // Add to React Query cache so subsequent updates work
+    if (task) {
+      queryClient.setQueryData<Task[]>(["tasks"], (old) => {
+        if (!old) return [task];
+        return [...old, task];
+      });
+    }
+
+    return task;
+  }, [queryClient]);
+
+  // Create task inline and set editing mode
+  const handleNewTodayTask = useCallback(async () => {
+    const task = await handleInlineCreate("Task", format(new Date(), "yyyy-MM-dd"));
+    if (task) {
+      setEditingTaskId(task.id);
+    }
+  }, [handleInlineCreate]);
+
+  const handleNewNextTask = useCallback(async () => {
+    const task = await handleInlineCreate("Task", format(addDays(new Date(), 1), "yyyy-MM-dd"));
+    if (task) {
+      setEditingTaskId(task.id);
+    }
+  }, [handleInlineCreate]);
+
+  const handleEditingComplete = useCallback(() => {
+    setEditingTaskId(null);
+  }, []);
 
   const handleClosePanel = useCallback(() => {
     setIsPanelOpen(false);
@@ -131,27 +206,6 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
   const handleDelete = useCallback(async (id: string) => {
     await deleteTask.mutateAsync(id);
   }, [deleteTask]);
-
-  // Use React Query mutation for instant status change
-  const handleStatusChange = useCallback(async (taskId: string, newStatus: string) => {
-    await updateTask.mutateAsync({ id: taskId, status: newStatus });
-  }, [updateTask]);
-
-  // Inline create still uses fetch (optimistic handled by TaskTable)
-  const handleInlineCreate = useCallback(async (name: string, dueDate?: string) => {
-    const response = await fetch("/api/tasks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        name, 
-        dueDate: dueDate || null,
-        status: "not_started" 
-      }),
-    });
-    
-    const data = await response.json();
-    return data.task || null;
-  }, []);
 
   // Use React Query mutation for instant field updates
   const handleTaskUpdate = useCallback(async (taskId: string, field: string, value: string | null) => {
@@ -189,12 +243,11 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
             title="Today"
             showFilters={true}
             hideDueColumn={true}
-            defaultDueDate={format(new Date(), "yyyy-MM-dd")}
             onTaskClick={handleTaskClick}
             onNewTask={handleNewTodayTask}
-            onStatusChange={handleStatusChange}
             onTaskUpdate={handleTaskUpdate}
-            onInlineCreate={handleInlineCreate}
+            editingTaskId={editingTaskId}
+            onEditingComplete={handleEditingComplete}
           />
 
           <TaskTable
@@ -204,12 +257,11 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
             title="Next"
             showFilters={false}
             hideDueColumn={true}
-            defaultDueDate={format(addDays(new Date(), 1), "yyyy-MM-dd")}
             onTaskClick={handleTaskClick}
             onNewTask={handleNewNextTask}
-            onStatusChange={handleStatusChange}
             onTaskUpdate={handleTaskUpdate}
-            onInlineCreate={handleInlineCreate}
+            editingTaskId={editingTaskId}
+            onEditingComplete={handleEditingComplete}
           />
         </div>
 
