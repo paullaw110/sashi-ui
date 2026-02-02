@@ -47,8 +47,8 @@ interface TimeWeekCalendarProps {
   onTaskResize?: (taskId: string, newDuration: number) => void;
 }
 
-// Hours to display (6am to 10pm)
-const HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 6-22
+// Hours to display (full 24 hours)
+const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0-23
 const HOUR_HEIGHT = 48; // pixels per hour
 
 // Parse time string to minutes from midnight
@@ -158,8 +158,7 @@ function calculateTaskLayouts(tasks: Task[]): TaskLayout[] {
 function getTopPosition(time: string | null): number {
   const minutes = parseTimeToMinutes(time);
   if (minutes === null) return 0;
-  const startMinutes = 6 * 60; // 6am
-  return ((minutes - startMinutes) / 60) * HOUR_HEIGHT;
+  return (minutes / 60) * HOUR_HEIGHT;
 }
 
 // Calculate height from duration
@@ -179,15 +178,14 @@ function minutesToTimeString(minutes: number): string {
 
 // Convert pixel position to time (snapped to 15 min)
 function pixelToTime(pixelY: number): { time: string; displayTime: string } {
-  const startMinutes = 6 * 60; // 6am
-  const rawMinutes = startMinutes + (pixelY / HOUR_HEIGHT) * 60;
+  const rawMinutes = (pixelY / HOUR_HEIGHT) * 60;
   // Snap to 15 min increments
   const snappedMinutes = Math.round(rawMinutes / 15) * 15;
-  const clampedMinutes = Math.max(6 * 60, Math.min(22 * 60, snappedMinutes));
-  
+  const clampedMinutes = Math.max(0, Math.min(23 * 60 + 45, snappedMinutes));
+
   const h = Math.floor(clampedMinutes / 60);
   const m = clampedMinutes % 60;
-  
+
   return {
     time: `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`,
     displayTime: minutesToTimeString(clampedMinutes),
@@ -321,8 +319,6 @@ function TimedTask({
         "transition-[height,border-color] duration-75",
         task.status === "done" && "opacity-50",
         task.priority === "non-negotiable" && "border-l-2 border-l-red-500",
-        task.priority === "critical" && "border-l-2 border-l-red-500",
-        task.priority === "high" && "border-l-2 border-l-amber-500",
         isDragging && "opacity-30 z-50",
         isResizing && "z-50 ring-2 ring-[var(--accent-primary)]/50 cursor-ns-resize"
       )}
@@ -409,17 +405,94 @@ function HourSlot({
   hour: number;
 }) {
   const slotId = `${dateKey}-${hour}`;
-  const { setNodeRef, isOver } = useDroppable({ id: slotId });
+  const { setNodeRef } = useDroppable({ id: slotId });
 
   return (
     <div
       ref={setNodeRef}
-      className={cn(
-        "border-t border-[var(--border-subtle)] relative transition-colors",
-        isOver && "bg-[var(--accent-primary)]/15"
-      )}
+      className="border-t border-[var(--border-subtle)] relative"
       style={{ height: HOUR_HEIGHT }}
     />
+  );
+}
+
+// Drop preview overlay - shows dashed outline at exact drop position
+function DropPreview({
+  time,
+  duration,
+}: {
+  time: string;
+  duration: number;
+}) {
+  const top = getTopPosition(time);
+  const height = getHeightFromDuration(duration);
+
+  return (
+    <div
+      className="absolute left-1 right-1 border-2 border-dashed border-[var(--accent-primary)] rounded bg-[var(--accent-primary)]/5 pointer-events-none z-10"
+      style={{
+        top: `${top}px`,
+        height: `${height}px`,
+        minHeight: "28px",
+      }}
+    />
+  );
+}
+
+// Hook to get current time position
+function useCurrentTimePosition() {
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const minutesSinceMidnight = hours * 60 + minutes;
+  const top = (minutesSinceMidnight / 60) * HOUR_HEIGHT;
+
+  // Format time for badge (e.g., "11:44AM")
+  const period = hours >= 12 ? "PM" : "AM";
+  const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+  const timeString = `${displayHour}:${minutes.toString().padStart(2, "0")}${period}`;
+
+  return { top, timeString };
+}
+
+// Background line - thin, faded, spans full width with time badge
+function CurrentTimeIndicatorBackground() {
+  const { top, timeString } = useCurrentTimePosition();
+
+  return (
+    <div
+      className="absolute left-0 right-0 z-20 pointer-events-none"
+      style={{ top: `${top}px` }}
+    >
+      <div className="flex items-center">
+        {/* Time badge - positioned in time column, vertically centered on line */}
+        <div className="absolute left-1 top-1/2 -translate-y-1/2 bg-[var(--accent-primary)] text-[var(--bg-base)] text-[10px] font-semibold px-1.5 py-0.5 rounded">
+          {timeString}
+        </div>
+        {/* Thin faded line spans full width */}
+        <div className="flex-1 h-px bg-[var(--accent-primary)]/30" />
+      </div>
+    </div>
+  );
+}
+
+// Current day line - thick, solid, only for today's column
+function CurrentTimeIndicatorLine() {
+  const { top } = useCurrentTimePosition();
+
+  return (
+    <div
+      className="absolute left-0 right-0 z-20 pointer-events-none"
+      style={{ top: `${top}px` }}
+    >
+      <div className="h-[2px] bg-[var(--accent-primary)]" />
+    </div>
   );
 }
 
@@ -464,6 +537,10 @@ export function TimeWeekCalendar({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dragTarget, setDragTarget] = useState<{ dateKey: string; time: string; displayTime: string } | null>(null);
   const [resizePreview, setResizePreview] = useState<{ taskId: string; duration: number } | null>(null);
+  // Track where the user clicked within the task for accurate positioning
+  const [dragClickOffset, setDragClickOffset] = useState<number>(0);
+  // Optimistic moves to prevent flash on drop
+  const [optimisticMoves, setOptimisticMoves] = useState<Map<string, { dateKey: string; time: string | null }>>(new Map());
   const scrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -481,10 +558,15 @@ export function TimeWeekCalendar({
   // Scroll to 8am on mount
   useEffect(() => {
     if (scrollRef.current && currentDate) {
-      const scrollTo = (8 - 6) * HOUR_HEIGHT; // 8am position
+      const scrollTo = 8 * HOUR_HEIGHT; // 8am position
       scrollRef.current.scrollTop = scrollTo;
     }
   }, [currentDate]);
+
+  // Clear optimistic moves when tasks prop changes (server sync)
+  useEffect(() => {
+    setOptimisticMoves(new Map());
+  }, [tasks]);
 
   const weekStart = currentDate
     ? startOfWeek(currentDate, { weekStartsOn: 0 })
@@ -494,7 +576,7 @@ export function TimeWeekCalendar({
     : new Date();
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
-  // Group tasks by date and time
+  // Group tasks by date and time, applying optimistic overrides
   const tasksByDate = useMemo(() => {
     const map = new Map<string, { timed: Task[]; allDay: Task[] }>();
 
@@ -503,20 +585,29 @@ export function TimeWeekCalendar({
     });
 
     tasks.forEach((task) => {
-      if (!task.dueDate) return;
-      const dateKey = format(new Date(task.dueDate), "yyyy-MM-dd");
-      const entry = map.get(dateKey);
+      // Check for optimistic move override
+      const optimistic = optimisticMoves.get(task.id);
+      const effectiveDateKey = optimistic?.dateKey || (task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd") : null);
+      const effectiveTime = optimistic ? optimistic.time : task.dueTime;
+
+      if (!effectiveDateKey) return;
+      const entry = map.get(effectiveDateKey);
       if (!entry) return;
 
-      if (task.dueTime) {
-        entry.timed.push(task);
+      // Create task with effective values if optimistic
+      const effectiveTask = optimistic
+        ? { ...task, dueTime: effectiveTime }
+        : task;
+
+      if (effectiveTime) {
+        entry.timed.push(effectiveTask);
       } else {
-        entry.allDay.push(task);
+        entry.allDay.push(effectiveTask);
       }
     });
 
     return map;
-  }, [tasks, weekDays]);
+  }, [tasks, weekDays, optimisticMoves]);
 
   // Check if any day has all-day tasks
   const hasAllDayTasks = useMemo(() => {
@@ -543,13 +634,20 @@ export function TimeWeekCalendar({
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as string);
     setDragTarget(null);
+
+    // Calculate where within the task the user clicked for accurate positioning
+    const activeRect = event.active.rect.current.initial;
+    const pointerY = (event.activatorEvent as PointerEvent)?.clientY || 0;
+    if (activeRect) {
+      setDragClickOffset(pointerY - activeRect.top);
+    }
   }, []);
 
   // Track which slot is being hovered for preview
   const handleDragMove = useCallback((event: DragMoveEvent) => {
     const { over } = event;
-    
-    if (!over) {
+
+    if (!over || !gridRef.current) {
       setDragTarget(null);
       return;
     }
@@ -569,19 +667,30 @@ export function TimeWeekCalendar({
       return;
     }
 
-    // Use the hour from the slot - matches highlight and actual drop
-    const hour = parseInt(hourOrAllDay, 10);
-    const time = `${hour.toString().padStart(2, "0")}:00`;
-    const displayTime = format(setHours(new Date(), hour), "h a");
+    // Use the translated rect which tracks the dragged element's current position
+    const activeRect = event.active.rect.current.translated;
+    if (!activeRect) {
+      setDragTarget(null);
+      return;
+    }
+
+    const gridRect = gridRef.current.getBoundingClientRect();
+
+    // Calculate pointer Y: task's current top + where user clicked within the task
+    const pointerY = activeRect.top + dragClickOffset;
+    // Convert to grid-relative position (gridRect.top already accounts for scroll)
+    const currentY = pointerY - gridRect.top;
+
+    const { time, displayTime } = pixelToTime(currentY);
     setDragTarget({ dateKey, time, displayTime });
-  }, []);
+  }, [dragClickOffset]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
-      setActiveId(null);
-      
+
       if (!over || !onTaskMove) {
+        setActiveId(null);
         setDragTarget(null);
         return;
       }
@@ -592,6 +701,7 @@ export function TimeWeekCalendar({
       // Parse the drop target: "YYYY-MM-DD-HH" or "YYYY-MM-DD-allday"
       const parts = overId.split("-");
       if (parts.length < 4) {
+        setActiveId(null);
         setDragTarget(null);
         return;
       }
@@ -601,16 +711,28 @@ export function TimeWeekCalendar({
 
       const newDate = new Date(dateKey + "T12:00:00");
 
+      // Determine the new time
+      let newTime: string | null;
       if (hourOrAllDay === "allday") {
-        // Dropped on all-day section - clear time
-        onTaskMove(taskId, newDate, "");
+        newTime = null; // Dropped on all-day section - clear time
       } else {
-        // Use the hour from the slot ID - matches the highlight
-        const newTime = `${parseInt(hourOrAllDay, 10).toString().padStart(2, "0")}:00`;
-        onTaskMove(taskId, newDate, newTime);
+        // Use the precise time from drag target if available
+        newTime = dragTarget?.time || `${parseInt(hourOrAllDay, 10).toString().padStart(2, "0")}:00`;
       }
-      
+
+      // Set optimistic move FIRST (before clearing activeId) to prevent flash
+      setOptimisticMoves((prev) => {
+        const next = new Map(prev);
+        next.set(taskId, { dateKey, time: newTime });
+        return next;
+      });
+
+      // NOW clear drag state - task will render at optimistic position immediately
+      setActiveId(null);
       setDragTarget(null);
+
+      // Trigger the actual update
+      onTaskMove(taskId, newDate, newTime || "");
     },
     [onTaskMove]
   );
@@ -681,7 +803,7 @@ export function TimeWeekCalendar({
         {/* Day headers (sticky) */}
         <div className="flex border-b border-[var(--border-subtle)] shrink-0">
           {/* Time column spacer */}
-          <div className="w-12 shrink-0 border-r border-[var(--border-subtle)]" />
+          <div className="w-16 shrink-0 border-r border-[var(--border-subtle)]" />
           
           {/* Day headers */}
           {weekDays.map((day) => {
@@ -718,7 +840,7 @@ export function TimeWeekCalendar({
         {hasAllDayTasks && (
           <div className="flex border-b border-[var(--border-subtle)] shrink-0 bg-[var(--bg-base)]">
             {/* Label */}
-            <div className="w-12 shrink-0 border-r border-[var(--border-subtle)] px-1 py-1 text-[10px] text-[var(--text-quaternary)]">
+            <div className="w-16 shrink-0 border-r border-[var(--border-subtle)] px-1 py-1 text-[10px] text-[var(--text-quaternary)]">
               All day
             </div>
             
@@ -745,9 +867,9 @@ export function TimeWeekCalendar({
 
         {/* Scrollable time grid */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
-          <div ref={gridRef} className="flex min-w-0">
+          <div ref={gridRef} className="flex min-w-0 min-h-full relative">
             {/* Time labels */}
-            <div className="w-12 shrink-0 border-r border-[var(--border-subtle)]">
+            <div className="w-16 shrink-0 border-r border-[var(--border-subtle)] min-h-full">
               {HOURS.map((hour) => (
                 <div
                   key={hour}
@@ -774,18 +896,29 @@ export function TimeWeekCalendar({
                 <div
                   key={dateKey}
                   className={cn(
-                    "flex-1 min-w-0 border-r border-[var(--border-subtle)] last:border-r-0 relative",
+                    "flex-1 min-w-0 min-h-full border-r border-[var(--border-subtle)] last:border-r-0 relative",
                     isCurrentDay && "bg-[var(--bg-surface)]/30"
                   )}
                 >
                   {/* Hour slots (for drop targets) */}
                   {HOURS.map((hour) => (
-                    <HourSlot 
-                      key={hour} 
-                      dateKey={dateKey} 
+                    <HourSlot
+                      key={hour}
+                      dateKey={dateKey}
                       hour={hour}
                     />
                   ))}
+
+                  {/* Current time indicator - thick solid line for today only */}
+                  {isCurrentDay && <CurrentTimeIndicatorLine />}
+
+                  {/* Drop preview overlay - dashed outline showing where task will land */}
+                  {dragTarget && dragTarget.dateKey === dateKey && dragTarget.time && activeTask && (
+                    <DropPreview
+                      time={dragTarget.time}
+                      duration={activeTask.duration || 30}
+                    />
+                  )}
 
                   {/* Positioned timed tasks with overlap handling */}
                   {timedTasks.map((task) => {
@@ -813,18 +946,39 @@ export function TimeWeekCalendar({
                 </div>
               );
             })}
+
+            {/* Current time indicator - thin faded line spans full width */}
+            {weekDays.some(day => isToday(day)) && <CurrentTimeIndicatorBackground />}
           </div>
         </div>
       </div>
 
-      {/* Drag overlay - follows cursor */}
+      {/* Drag overlay - follows cursor, matches task card size */}
       <DragOverlay>
         {activeTask ? (
-          <div className="px-3 py-2 rounded bg-[var(--bg-active)] shadow-xl border border-[var(--accent-primary)]/50 text-xs text-[var(--text-primary)] cursor-grabbing font-medium max-w-[160px]">
-            <div className="truncate">{activeTask.name}</div>
-            {dragTarget && (
-              <div className="text-[var(--accent-primary)] text-[10px] mt-0.5">
-                → {dragTarget.displayTime}
+          <div
+            className={cn(
+              "px-1.5 py-1 rounded text-xs cursor-grabbing overflow-hidden",
+              "bg-[var(--bg-surface)] border border-[var(--accent-primary)]/50 shadow-xl",
+              activeTask.status === "done" && "opacity-50",
+              activeTask.priority === "non-negotiable" && "border-l-2 border-l-red-500"
+            )}
+            style={{
+              width: "140px",
+              height: `${getHeightFromDuration(activeTask.duration || 30)}px`,
+              minHeight: "28px",
+            }}
+          >
+            <div className="font-medium truncate text-[var(--text-primary)] text-[11px]">
+              {activeTask.name}
+            </div>
+            {activeTask.dueTime && (
+              <div className="text-[10px] text-[var(--text-tertiary)]">
+                {dragTarget ? (
+                  <span className="text-[var(--accent-primary)]">{dragTarget.displayTime}</span>
+                ) : (
+                  activeTask.dueTime.substring(0, 5)
+                )}
               </div>
             )}
           </div>
