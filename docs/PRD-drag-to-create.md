@@ -149,6 +149,12 @@ No new API endpoints needed. Uses existing:
 - [ ] Add escape key handler to cancel during drag
 - [ ] Cursor changes: `crosshair` while dragging on empty, `grab` on tasks
 
+### Phase 5: Day Header + Button
+- [ ] Add "+" button to day column headers
+- [ ] Click opens TaskModal with that day pre-filled (no time)
+- [ ] Button appears on hover or always visible (TBD)
+- [ ] Works for adding all-day tasks or tasks without specific time
+
 ## Acceptance Criteria
 
 - [ ] User can click and drag on empty calendar space to create selection
@@ -229,6 +235,7 @@ Feature: Drag to Create Events
 - Multi-day event creation (drag across columns)
 - Touch/mobile drag-to-create (different UX needed)
 - Drag-to-create in MonthCalendar view
+- Drag-to-create in all-day section (use + button instead)
 - Conflict resolution when dragging over existing tasks
 - Recurring event creation from drag
 
@@ -250,5 +257,7 @@ Feature: Drag to Create Events
 ## Open Questions
 
 1. ~~**Side panel vs modal?**~~ — **DECIDED: Modal** (consistent with existing edit flow)
-2. **Should clicking (without drag) also create?** — Leaning no, too easy to misclick. But could add as setting later.
-3. **Duration in modal display?** — Show as "2 hours" or "9:00 AM – 11:00 AM" or both? Both feels cleanest.
+2. ~~**Should clicking (without drag) also create?**~~ — **DECIDED: No** (keep as no action)
+3. ~~**Duration in modal display?**~~ — **DECIDED: Start and end time** (9:00 AM – 11:00 AM)
+4. ~~**All-day section drag?**~~ — **DECIDED: No** (add + button on day header instead)
+5. ~~**Minimum drag threshold?**~~ — **DECIDED: 5px** before showing preview
