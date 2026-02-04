@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, Building2, ArrowUpDown, CheckSquare, Square } from "lucide-react";
 import { BulkActionsBar } from "./BulkActionsBar";
+import { TaskSearchFilterBar } from "./TaskSearchFilterBar";
 import { cn } from "@/lib/utils";
 import { TaskDetailModal } from "./TaskDetailModal";
 import { OrganizationModal } from "./OrganizationModal";
@@ -159,6 +160,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
   const [defaultDate, setDefaultDate] = useState<Date | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
+  const [filterProjectId, setFilterProjectId] = useState<string | null>(null);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showOrganizations, setShowOrganizations] = useState(false);
@@ -183,6 +185,9 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
       // Priority filter
       if (filterPriority && task.priority !== filterPriority) return false;
       
+      // Project filter
+      if (filterProjectId && task.projectId !== filterProjectId) return false;
+      
       // Organization filter
       if (selectedOrganization) {
         if (task.organizationId !== selectedOrganization.id) return false;
@@ -198,7 +203,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
       
       return true;
     });
-  }, [tasks, filterStatus, filterPriority, selectedOrganization, searchQuery]);
+  }, [tasks, filterStatus, filterPriority, filterProjectId, selectedOrganization, searchQuery]);
 
   const handleTaskClick = useCallback((task: Task) => {
     setSelectedTask(task);
@@ -345,10 +350,33 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
     setSearchQuery("");
     setFilterStatus(null);
     setFilterPriority(null);
+    setFilterProjectId(null);
     setSelectedOrganization(null);
   }, []);
 
-  const hasActiveFilters = searchQuery || filterStatus || filterPriority || selectedOrganization;
+  const hasActiveFilters = searchQuery || filterStatus || filterPriority || filterProjectId || selectedOrganization;
+
+  // Filter state for TaskSearchFilterBar
+  const filterState = useMemo(() => ({
+    searchQuery,
+    status: filterStatus,
+    priority: filterPriority,
+    projectId: filterProjectId,
+    organizationId: selectedOrganization?.id || null,
+  }), [searchQuery, filterStatus, filterPriority, filterProjectId, selectedOrganization]);
+
+  const handleFiltersChange = useCallback((updates: Partial<typeof filterState>) => {
+    if (updates.searchQuery !== undefined) setSearchQuery(updates.searchQuery);
+    if (updates.status !== undefined) setFilterStatus(updates.status);
+    if (updates.priority !== undefined) setFilterPriority(updates.priority);
+    if (updates.projectId !== undefined) setFilterProjectId(updates.projectId);
+    if (updates.organizationId !== undefined) {
+      const org = updates.organizationId 
+        ? organizations.find(o => o.id === updates.organizationId) || null
+        : null;
+      setSelectedOrganization(org);
+    }
+  }, [organizations]);
 
   // Multi-select handlers
   const toggleMultiSelectMode = useCallback(() => {
@@ -675,54 +703,6 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
             </button>
           </div>
 
-          {/* Search Input */}
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-quaternary)]" />
-            <input
-              type="text"
-              placeholder="Search tasks..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="text-xs text-[var(--text-primary)] bg-[var(--bg-elevated)] border border-[var(--border-default)] pl-9 pr-3 py-1.5 rounded hover:border-[var(--border-strong)] focus:border-[#404040] focus:outline-none transition-colors w-48"
-            />
-          </div>
-
-          {/* Filters */}
-          <select
-            value={filterStatus || ""}
-            onChange={(e) => setFilterStatus(e.target.value || null)}
-            className="text-xs text-[var(--text-quaternary)] bg-[var(--bg-elevated)] border border-[var(--border-default)] px-2 py-1.5 rounded hover:border-[var(--border-strong)] focus:outline-none transition-colors"
-          >
-            <option value="">All Status</option>
-            <option value="not_started">Todo</option>
-            <option value="in_progress">In Progress</option>
-            <option value="waiting">Waiting</option>
-            <option value="done">Done</option>
-          </select>
-          <select
-            value={filterPriority || ""}
-            onChange={(e) => setFilterPriority(e.target.value || null)}
-            className="text-xs text-[var(--text-quaternary)] bg-[var(--bg-elevated)] border border-[var(--border-default)] px-2 py-1.5 rounded hover:border-[var(--border-strong)] focus:outline-none transition-colors"
-          >
-            <option value="">All Priority</option>
-            <option value="non-negotiable">Non-Negotiable</option>
-            <option value="critical">Critical</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-
-          {/* Clear Filters Button */}
-          {hasActiveFilters && (
-            <button
-              onClick={clearAllFilters}
-              className="flex items-center gap-1.5 text-xs text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] border border-[var(--border-default)] hover:border-[var(--border-strong)] px-2 py-1.5 rounded transition-colors"
-            >
-              <X size={12} />
-              Clear
-            </button>
-          )}
-
           {/* Multi-Select Toggle */}
           {view === "list" && (
             <button
@@ -748,6 +728,17 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
           New Task
         </button>
       </div>
+
+      {/* Search & Filter Bar */}
+      <TaskSearchFilterBar
+        filters={filterState}
+        onFiltersChange={handleFiltersChange}
+        onClearAll={clearAllFilters}
+        projects={projects}
+        organizations={organizations}
+        taskCount={filteredTasks.length}
+        className="mb-4"
+      />
 
       {/* Content */}
       {view === "list" ? (

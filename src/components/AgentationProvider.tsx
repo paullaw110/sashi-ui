@@ -1,11 +1,9 @@
 "use client";
 
-import { Agentation } from "agentation";
+// Agentation dev tool - disabled until package is installed
+// import { Agentation } from "agentation";
 
 export function AgentationProvider() {
-  if (process.env.NODE_ENV !== "development") {
-    return null;
-  }
-
-  return <Agentation />;
+  // Agentation is a dev-only tool, return null when not available
+  return null;
 }
