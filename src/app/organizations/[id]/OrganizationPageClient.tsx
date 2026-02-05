@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { EmojiPicker } from "@/components/EmojiPicker";
 
 type Organization = {
   id: string;
@@ -256,11 +257,24 @@ export function OrganizationPageClient({
         {/* Header */}
         <div className="flex items-start justify-between mb-8">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-[var(--bg-surface)] flex items-center justify-center text-3xl">
-              {organization.icon || (
-                <Building2 size={28} className="text-[var(--text-quaternary)]" />
-              )}
-            </div>
+            <EmojiPicker
+              value={organization.icon}
+              onChange={async (emoji) => {
+                try {
+                  const response = await fetch(`/api/organizations/${organization.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ icon: emoji }),
+                  });
+                  if (!response.ok) throw new Error("Failed to update icon");
+                  router.refresh();
+                } catch (error) {
+                  toast.error("Failed to update icon");
+                }
+              }}
+              type="organization"
+              size="lg"
+            />
             <div>
               <h1 className="text-2xl font-display font-bold text-[var(--text-primary)]">
                 {organization.name}
