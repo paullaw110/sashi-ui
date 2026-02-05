@@ -2,15 +2,13 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, Building2, ArrowUpDown, CheckSquare, Square } from "lucide-react";
+import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, CheckSquare, Square } from "lucide-react";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { TaskSearchFilterBar } from "./TaskSearchFilterBar";
 import { cn } from "@/lib/utils";
 import { TaskDetailModal } from "./TaskDetailModal";
 import { OrganizationModal } from "./OrganizationModal";
 import { MonthCalendar } from "./MonthCalendar";
-import OrganizationManager from "./OrganizationManager";
-import MigrationWizard from "./MigrationWizard";
 import Breadcrumb from "./Breadcrumb";
 import { format } from "date-fns";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
@@ -163,8 +161,6 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
   const [filterProjectId, setFilterProjectId] = useState<string | null>(null);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [showOrganizations, setShowOrganizations] = useState(false);
-  const [showMigrationWizard, setShowMigrationWizard] = useState(false);
 
   // Organization modal state
   const [selectedOrgForEdit, setSelectedOrgForEdit] = useState<Organization | null>(null);
@@ -629,19 +625,6 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
   // Desktop render
   return (
     <div className="flex flex-col h-[calc(100vh-180px)]">
-      {/* Organization Panel */}
-      {showOrganizations && (
-        <div className="mb-4 p-4 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg">
-          <OrganizationManager
-            onOrganizationSelect={setSelectedOrganization}
-            selectedOrganizationId={selectedOrganization?.id || null}
-            onCreateClick={handleCreateOrganization}
-            onEditClick={handleEditOrganization}
-            onRefresh={orgRefreshTrigger}
-          />
-        </div>
-      )}
-
       {/* Header with view toggle and filters */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <div className="flex items-center gap-4">
@@ -670,36 +653,6 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
             >
               <List size={14} />
               List
-            </button>
-          </div>
-
-          {/* Organization Controls */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowOrganizations(!showOrganizations)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors border",
-                showOrganizations
-                  ? "bg-[var(--bg-hover)] text-[var(--text-primary)] border-[var(--border-strong)]"
-                  : "text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] border-[var(--border-default)] hover:border-[var(--border-strong)]"
-              )}
-            >
-              <Building2 size={14} />
-              Organizations
-            </button>
-
-            {selectedOrganization && (
-              <div className="px-2 py-1 text-xs bg-[var(--bg-surface)] text-[var(--text-primary)] rounded border border-[var(--border-default)]">
-                {selectedOrganization.name}
-              </div>
-            )}
-
-            <button
-              onClick={() => setShowMigrationWizard(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors border border-[var(--border-default)] hover:border-[var(--border-strong)] text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)]"
-            >
-              <ArrowUpDown size={14} />
-              Migrate Projects
             </button>
           </div>
 
@@ -882,17 +835,6 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
         onSave={handleSave}
         onDelete={handleDelete}
       />
-
-      {/* Migration Wizard */}
-      {showMigrationWizard && (
-        <MigrationWizard
-          onComplete={() => {
-            setShowMigrationWizard(false);
-            router.refresh();
-          }}
-          onCancel={() => setShowMigrationWizard(false)}
-        />
-      )}
 
       {/* Organization Modal */}
       <OrganizationModal
