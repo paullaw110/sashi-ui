@@ -436,6 +436,31 @@ Cron job at 11 PM that:
 
 ---
 
+## Key Learnings from @pbteja1998 Video Interview
+
+### Architecture Patterns
+1. **Single point of contact** — Only talk to Sashi, who delegates to others
+2. **Specialist focus** — Each agent does ONE thing well (not generalists)
+3. **Spontaneous collaboration** — Agents join tasks when they can add value (e.g., Vision saw Shuri's research and added SEO data unprompted)
+4. **Deliverables required** — Every task must have a document/output to be marked done
+5. **Dashboard built by agents** — He asked Jarvis to build Mission Control, and Jarvis coded it
+
+### What Works
+- 15-minute heartbeat polling is the right cadence
+- Giving agents access to analytics lets them diagnose problems
+- Agents creating their own tasks based on insights they find
+- "Office chat" for non-task discussions between agents
+
+### The New Bottleneck
+> "Previously the bottleneck was execution. Now every task is very good. The bottleneck is prioritization — figuring out which of 97 items to do first."
+
+This means we should consider:
+- Priority scoring on tasks
+- Sashi helping with prioritization decisions
+- Impact/effort estimation from agents
+
+---
+
 ## Open Questions
 1. Should agents share the same workspace (collaborative) or have isolated workspaces?
    - **Recommendation:** Isolated workspaces, shared via Mission Control database
@@ -443,6 +468,8 @@ Cron job at 11 PM that:
    - **Recommendation:** Yes, use Sonnet for agents, reserve Opus for Sashi
 3. How do agents access sashi-ui data?
    - **Recommendation:** API calls to sashi-ui.vercel.app/api/*
+4. Should we add "Office Chat" for non-task agent discussions?
+   - **Recommendation:** Phase 2 — start with task comments first
 
 ---
 
