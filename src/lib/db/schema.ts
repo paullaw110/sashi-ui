@@ -206,3 +206,142 @@ export const reports = sqliteTable("reports", {
 
 export type Report = typeof reports.$inferSelect;
 export type NewReport = typeof reports.$inferInsert;
+
+// ============================================
+// MISSION CONTROL - Multi-Agent System
+// ============================================
+
+// Agents table - Sashi, Kira, Mu, etc.
+export const agents = sqliteTable("agents", {
+  id: text("id").primaryKey(), // e.g., "sashi", "kira", "mu"
+  name: text("name").notNull(), // Display name: "Sashi", "Kira", "Mu"
+  role: text("role").notNull(), // "Squad Lead", "Researcher", "Designer"
+  description: text("description"), // Longer description of capabilities
+  avatar: text("avatar"), // emoji like "⚡" or image URL
+  status: text("status").notNull().default("idle"), // idle | active | blocked
+  sessionKey: text("session_key").notNull(), // e.g., "agent:kira:main"
+  model: text("model"), // e.g., "anthropic/claude-sonnet-4-20250514"
+  currentTaskId: text("current_task_id").references(() => tasks.id),
+  lastActiveAt: integer("last_active_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+// Task comments - threaded discussions on tasks
+export const taskComments = sqliteTable("task_comments", {
+  id: text("id").primaryKey(),
+  taskId: text("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  agentId: text("agent_id").notNull().references(() => agents.id),
+  content: text("content").notNull(), // The comment text (supports @mentions)
+  attachments: text("attachments"), // JSON array of document/file references
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+// Activity feed - real-time log of all agent actions
+export const activityFeed = sqliteTable("activity_feed", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(), // task_created | task_updated | comment_added | agent_status_changed | task_assigned
+  agentId: text("agent_id").references(() => agents.id),
+  taskId: text("task_id").references(() => tasks.id),
+  message: text("message").notNull(), // Human-readable activity description
+  metadata: text("metadata"), // JSON for extra context
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+// Notifications - @mentions and alerts for agents
+export const notifications = sqliteTable("notifications", {
+  id: text("id").primaryKey(),
+  mentionedAgentId: text("mentioned_agent_id").notNull().references(() => agents.id),
+  fromAgentId: text("from_agent_id").references(() => agents.id),
+  taskId: text("task_id").references(() => tasks.id),
+  commentId: text("comment_id").references(() => taskComments.id),
+  content: text("content").notNull(), // Notification message
+  delivered: integer("delivered", { mode: "boolean" }).notNull().default(false),
+  read: integer("read", { mode: "boolean" }).notNull().default(false),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+// Task subscriptions - auto-subscribe agents to task threads
+export const taskSubscriptions = sqliteTable("task_subscriptions", {
+  taskId: text("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  agentId: text("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+// Relations for Mission Control tables
+export const agentsRelations = relations(agents, ({ one, many }) => ({
+  currentTask: one(tasks, {
+    fields: [agents.currentTaskId],
+    references: [tasks.id],
+  }),
+  comments: many(taskComments),
+  activities: many(activityFeed),
+  notifications: many(notifications, { relationName: "mentionedAgent" }),
+  sentNotifications: many(notifications, { relationName: "fromAgent" }),
+  subscriptions: many(taskSubscriptions),
+}));
+
+export const taskCommentsRelations = relations(taskComments, ({ one }) => ({
+  task: one(tasks, {
+    fields: [taskComments.taskId],
+    references: [tasks.id],
+  }),
+  agent: one(agents, {
+    fields: [taskComments.agentId],
+    references: [agents.id],
+  }),
+}));
+
+export const activityFeedRelations = relations(activityFeed, ({ one }) => ({
+  agent: one(agents, {
+    fields: [activityFeed.agentId],
+    references: [agents.id],
+  }),
+  task: one(tasks, {
+    fields: [activityFeed.taskId],
+    references: [tasks.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  mentionedAgent: one(agents, {
+    fields: [notifications.mentionedAgentId],
+    references: [agents.id],
+    relationName: "mentionedAgent",
+  }),
+  fromAgent: one(agents, {
+    fields: [notifications.fromAgentId],
+    references: [agents.id],
+    relationName: "fromAgent",
+  }),
+  task: one(tasks, {
+    fields: [notifications.taskId],
+    references: [tasks.id],
+  }),
+  comment: one(taskComments, {
+    fields: [notifications.commentId],
+    references: [taskComments.id],
+  }),
+}));
+
+export const taskSubscriptionsRelations = relations(taskSubscriptions, ({ one }) => ({
+  task: one(tasks, {
+    fields: [taskSubscriptions.taskId],
+    references: [tasks.id],
+  }),
+  agent: one(agents, {
+    fields: [taskSubscriptions.agentId],
+    references: [agents.id],
+  }),
+}));
+
+// Type exports for Mission Control
+export type Agent = typeof agents.$inferSelect;
+export type NewAgent = typeof agents.$inferInsert;
+export type TaskComment = typeof taskComments.$inferSelect;
+export type NewTaskComment = typeof taskComments.$inferInsert;
+export type ActivityFeedItem = typeof activityFeed.$inferSelect;
+export type NewActivityFeedItem = typeof activityFeed.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
+export type TaskSubscription = typeof taskSubscriptions.$inferSelect;
+export type NewTaskSubscription = typeof taskSubscriptions.$inferInsert;

@@ -139,6 +139,74 @@ CREATE TABLE IF NOT EXISTS reports (
 
 CREATE INDEX IF NOT EXISTS idx_reports_date ON reports(date);
 CREATE INDEX IF NOT EXISTS idx_reports_type ON reports(type);
+
+-- Mission Control: Agents table
+CREATE TABLE IF NOT EXISTS agents (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL,
+  description TEXT,
+  avatar TEXT,
+  status TEXT NOT NULL DEFAULT 'idle',
+  session_key TEXT NOT NULL,
+  model TEXT,
+  current_task_id TEXT,
+  last_active_at INTEGER,
+  created_at INTEGER NOT NULL
+);
+
+-- Mission Control: Task comments (threaded discussions)
+CREATE TABLE IF NOT EXISTS task_comments (
+  id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL,
+  agent_id TEXT NOT NULL,
+  content TEXT NOT NULL,
+  attachments TEXT,
+  created_at INTEGER NOT NULL,
+  FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+  FOREIGN KEY (agent_id) REFERENCES agents(id)
+);
+
+-- Mission Control: Activity feed
+CREATE TABLE IF NOT EXISTS activity_feed (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  agent_id TEXT,
+  task_id TEXT,
+  message TEXT NOT NULL,
+  metadata TEXT,
+  created_at INTEGER NOT NULL
+);
+
+-- Mission Control: Notifications (@mentions)
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  mentioned_agent_id TEXT NOT NULL,
+  from_agent_id TEXT,
+  task_id TEXT,
+  comment_id TEXT,
+  content TEXT NOT NULL,
+  delivered INTEGER NOT NULL DEFAULT 0,
+  read INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  FOREIGN KEY (mentioned_agent_id) REFERENCES agents(id),
+  FOREIGN KEY (from_agent_id) REFERENCES agents(id)
+);
+
+-- Mission Control: Task subscriptions
+CREATE TABLE IF NOT EXISTS task_subscriptions (
+  task_id TEXT NOT NULL,
+  agent_id TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (task_id, agent_id),
+  FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+  FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_comments_task ON task_comments(task_id);
+CREATE INDEX IF NOT EXISTS idx_activity_feed_created ON activity_feed(created_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_agent ON notifications(mentioned_agent_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_delivered ON notifications(delivered);
 `;
 
 // Database connection validation and initialization
