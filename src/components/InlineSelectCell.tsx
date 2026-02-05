@@ -109,7 +109,7 @@ export function InlineSelectCell({
   const renderStatusBadge = (option: Option | null) => {
     if (!option) {
       return (
-        <span className="inline-block w-6 h-5" />
+        <span className="inline-block w-full h-7" />
       );
     }
     return (
@@ -124,7 +124,7 @@ export function InlineSelectCell({
   const renderPriorityBadge = (option: Option | null) => {
     if (!option) {
       return (
-        <span className="inline-block w-6 h-5" />
+        <span className="inline-block w-full h-7" />
       );
     }
     return (

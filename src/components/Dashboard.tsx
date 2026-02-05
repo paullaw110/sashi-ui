@@ -4,8 +4,10 @@ import { useState, useCallback, useMemo } from "react";
 import { TaskTable } from "./TaskTable";
 import { TimeWeekCalendar } from "./TimeWeekCalendar";
 import { TaskDetailModal } from "./TaskDetailModal";
+import { EventDetailModal } from "./EventDetailModal";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 import { useTasks, useUpdateTask, useDeleteTask, useMoveTask, Task } from "@/lib/hooks/use-tasks";
+import { useEvents, useMoveEvent, useUpdateEvent, CalendarEvent } from "@/lib/hooks/use-events";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, startOfDay, endOfDay, addDays, startOfWeek, endOfWeek } from "date-fns";
 
@@ -55,11 +57,22 @@ function sortTasks<T extends { status: string; priority: string | null }>(tasks:
 }
 
 export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organizations = [] }: DashboardProps) {
+  // Task modal state
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [defaultDate, setDefaultDate] = useState<Date | null>(null);
+  const [defaultTime, setDefaultTime] = useState<string | null>(null);
+  const [defaultDuration, setDefaultDuration] = useState<number | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
+  // Event modal state
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [isEventPanelOpen, setIsEventPanelOpen] = useState(false);
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [defaultEventDate, setDefaultEventDate] = useState<Date | null>(null);
+  const [defaultEventStartTime, setDefaultEventStartTime] = useState<string | null>(null);
+  const [defaultEventEndTime, setDefaultEventEndTime] = useState<string | null>(null);
 
   // Combine server data as initial data for React Query
   // This dedupes tasks that appear in multiple lists
@@ -76,6 +89,14 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const moveTask = useMoveTask();
+
+  // Controlled date state for calendar navigation
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const weekStart = startOfWeek(calendarDate, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(calendarDate, { weekStartsOn: 0 });
+  const { data: weekEvents = [] } = useEvents(weekStart, weekEnd);
+  const moveEvent = useMoveEvent();
+  const updateEvent = useUpdateEvent();
 
   // Filter tasks for today (due today, including done - they show grayed out)
   const filteredTodayTasks = useMemo((): TableTask[] => {
@@ -133,7 +154,24 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     setSelectedTask(null);
     setIsCreating(true);
     setDefaultDate(date || null);
+    setDefaultTime(null);
+    setDefaultDuration(null);
     setIsPanelOpen(true);
+  }, []);
+
+  // Handle drag-to-create from calendar - opens EventDetailModal
+  const handleDragCreate = useCallback(({ dateKey, startTime, endTime }: {
+    dateKey: string;
+    startTime: string;
+    endTime: string;
+    duration: number;
+  }) => {
+    setSelectedEvent(null);
+    setIsCreatingEvent(true);
+    setDefaultEventDate(new Date(dateKey + "T12:00:00"));
+    setDefaultEventStartTime(startTime);
+    setDefaultEventEndTime(endTime);
+    setIsEventPanelOpen(true);
   }, []);
 
   // Create task via API and add to cache
@@ -182,10 +220,33 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
   }, []);
 
   const handleClosePanel = useCallback(() => {
+    // Invalidate tasks cache to refetch after potential creation/update
+    if (isCreating) {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    }
     setIsPanelOpen(false);
     setSelectedTask(null);
     setIsCreating(false);
     setDefaultDate(null);
+    setDefaultTime(null);
+    setDefaultDuration(null);
+  }, [isCreating, queryClient]);
+
+  // Event click handler
+  const handleEventClick = useCallback((event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setIsCreatingEvent(false);
+    setIsEventPanelOpen(true);
+  }, []);
+
+  // Close event panel
+  const handleCloseEventPanel = useCallback(() => {
+    setIsEventPanelOpen(false);
+    setSelectedEvent(null);
+    setIsCreatingEvent(false);
+    setDefaultEventDate(null);
+    setDefaultEventStartTime(null);
+    setDefaultEventEndTime(null);
   }, []);
 
   // Use React Query mutation for instant updates
@@ -231,6 +292,48 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
     await updateTask.mutateAsync({ id: taskId, duration: newDuration } as { id: string; duration: number } & Partial<Task>);
   }, [updateTask]);
 
+  // Use React Query mutation for instant event moves
+  const handleEventMove = useCallback(async (eventId: string, newDate: Date, newTime?: string) => {
+    await moveEvent.mutateAsync({
+      eventId,
+      newDate,
+      newTime: newTime || undefined,
+    });
+  }, [moveEvent]);
+
+  // Helper function to parse time string to minutes
+  const parseTimeToMinutes = (time: string | null): number | null => {
+    if (!time) return null;
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Use React Query mutation for instant event resize
+  const handleEventResize = useCallback(async (eventId: string, newDuration: number) => {
+    const event = weekEvents.find(e => e.id === eventId);
+
+    console.log('📏 Event resize called:', {
+      eventId,
+      newDuration,
+      currentStartTime: event?.startTime,
+      currentEndTime: event?.endTime
+    });
+
+    if (!event?.startTime) return;
+
+    // Calculate new end time from start time + duration
+    const startMins = parseTimeToMinutes(event.startTime) || 0;
+    const endMins = startMins + newDuration;
+    const hours = Math.floor(endMins / 60);
+    const minutes = endMins % 60;
+    const newEndTime = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+
+    await updateEvent.mutateAsync({
+      id: eventId,
+      endTime: newEndTime
+    } as any);
+  }, [weekEvents, updateEvent]);
+
   return (
     <>
       <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
@@ -267,11 +370,18 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
 
         {/* Right Column - Week View with Time (hidden on mobile) */}
         <div className="hidden lg:flex lg:flex-col lg:min-h-0 lg:flex-1">
-          <TimeWeekCalendar 
-            tasks={filteredWeekTasks} 
+          <TimeWeekCalendar
+            tasks={filteredWeekTasks}
+            events={weekEvents}
+            currentDate={calendarDate}
+            onDateChange={setCalendarDate}
             onTaskClick={handleTaskClick}
+            onEventClick={handleEventClick}
             onTaskMove={handleTaskMove}
+            onEventMove={handleEventMove}
             onTaskResize={handleTaskResize}
+            onEventResize={handleEventResize}
+            onDragCreate={handleDragCreate}
           />
         </div>
       </div>
@@ -283,9 +393,21 @@ export function Dashboard({ todayTasks, weekTasks, nextTasks, projects, organiza
         isOpen={isPanelOpen}
         isCreating={isCreating}
         defaultDate={defaultDate}
+        defaultTime={defaultTime}
+        defaultDuration={defaultDuration}
         onClose={handleClosePanel}
         onSave={handleSave}
         onDelete={handleDelete}
+      />
+
+      <EventDetailModal
+        event={selectedEvent}
+        isOpen={isEventPanelOpen}
+        isCreating={isCreatingEvent}
+        defaultDate={defaultEventDate}
+        defaultStartTime={defaultEventStartTime}
+        defaultEndTime={defaultEventEndTime}
+        onClose={handleCloseEventPanel}
       />
     </>
   );

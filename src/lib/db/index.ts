@@ -207,6 +207,38 @@ CREATE INDEX IF NOT EXISTS idx_task_comments_task ON task_comments(task_id);
 CREATE INDEX IF NOT EXISTS idx_activity_feed_created ON activity_feed(created_at);
 CREATE INDEX IF NOT EXISTS idx_notifications_agent ON notifications(mentioned_agent_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_delivered ON notifications(delivered);
+
+CREATE TABLE IF NOT EXISTS events (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  location TEXT,
+  start_date INTEGER NOT NULL,
+  start_time TEXT,
+  end_time TEXT,
+  is_all_day INTEGER DEFAULT 0,
+  color TEXT DEFAULT '#3b82f6',
+  recurrence_rule TEXT,
+  recurrence_end INTEGER,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS event_exceptions (
+  id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  original_date INTEGER NOT NULL,
+  is_cancelled INTEGER DEFAULT 0,
+  modified_name TEXT,
+  modified_start_time TEXT,
+  modified_end_time TEXT,
+  modified_location TEXT,
+  created_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_events_start_date ON events(start_date);
+CREATE INDEX IF NOT EXISTS idx_event_exceptions_event ON event_exceptions(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_exceptions_date ON event_exceptions(original_date);
 `;
 
 // Database connection validation and initialization
@@ -244,10 +276,13 @@ async function validateConnection() {
 // Initialize database schema
 async function initDb() {
   console.log("🔄 Initializing Turso database...");
-  
+
   try {
     // First validate connection
     await validateConnection();
+
+    // Enable foreign keys (disabled by default in SQLite)
+    await client.execute("PRAGMA foreign_keys = ON");
     
     // Execute schema initialization statements
     const statements = initSQL.split(';').filter(s => s.trim());
@@ -308,6 +343,33 @@ async function initDb() {
       {
         name: "Create tasks parent index",
         sql: "CREATE INDEX IF NOT EXISTS idx_tasks_parent ON tasks(parent_id)"
+      },
+      // Tags and task tags tables
+      {
+        name: "Create tags table",
+        sql: `CREATE TABLE IF NOT EXISTS tags (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL UNIQUE,
+          color TEXT,
+          created_at INTEGER NOT NULL
+        )`
+      },
+      {
+        name: "Create task_tags table",
+        sql: `CREATE TABLE IF NOT EXISTS task_tags (
+          task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+          tag_id TEXT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+          created_at INTEGER NOT NULL,
+          PRIMARY KEY (task_id, tag_id)
+        )`
+      },
+      {
+        name: "Create task_tags task index",
+        sql: "CREATE INDEX IF NOT EXISTS idx_task_tags_task ON task_tags(task_id)"
+      },
+      {
+        name: "Create task_tags tag index",
+        sql: "CREATE INDEX IF NOT EXISTS idx_task_tags_tag ON task_tags(tag_id)"
       }
     ];
     

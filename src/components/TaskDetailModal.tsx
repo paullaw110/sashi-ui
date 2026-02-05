@@ -107,6 +107,8 @@ interface TaskDetailModalProps {
   isOpen: boolean;
   isCreating?: boolean;
   defaultDate?: Date | null;
+  defaultTime?: string | null;
+  defaultDuration?: number | null;
   organizations: Organization[];
   projects: Project[];
   onClose: () => void;
@@ -135,6 +137,8 @@ export function TaskDetailModal({
   isOpen,
   isCreating = false,
   defaultDate,
+  defaultTime,
+  defaultDuration,
   organizations: initialOrganizations,
   projects: initialProjects,
   onClose,
@@ -267,7 +271,7 @@ export function TaskDetailModal({
       setStatus("not_started");
       setPriority(null);
       setDueDate(defaultDate || undefined);
-      setDueTime("");
+      setDueTime(defaultTime || "");
       setOrganizationId(null);
       setProjectId(null);
       setDescription("");
@@ -276,7 +280,7 @@ export function TaskDetailModal({
       hasCreatedRef.current = false;
       setShowPrdCreator(false);
     }
-  }, [task, isOpen, defaultDate]);
+  }, [task, isOpen, defaultDate, defaultTime]);
 
   // Auto-save function for existing tasks
   const autoSave = useCallback(async (updates: Partial<Task>) => {
@@ -309,6 +313,7 @@ export function TaskDetailModal({
           priority,
           dueDate: dueDate ? `${format(dueDate, "yyyy-MM-dd")}T12:00:00.000Z` : null,
           dueTime: dueTime || null,
+          duration: defaultDuration || null,
           organizationId,
           projectId,
           description: description || null,
@@ -326,7 +331,7 @@ export function TaskDetailModal({
     } finally {
       setIsSaving(false);
     }
-  }, [status, priority, dueDate, dueTime, organizationId, projectId, description, router]);
+  }, [status, priority, dueDate, dueTime, defaultDuration, organizationId, projectId, description, router]);
 
   // Handle name blur - create task if new, or save if existing
   const handleNameBlur = useCallback(() => {

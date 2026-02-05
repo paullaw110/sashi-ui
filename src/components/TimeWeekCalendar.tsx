@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DndContext,
@@ -40,11 +40,34 @@ type Task = {
   description?: string | null;
 };
 
+type CalendarEvent = {
+  id: string;
+  name: string;
+  description: string | null;
+  location: string | null;
+  startDate: string;
+  startTime: string | null;
+  endTime: string | null;
+  isAllDay: boolean;
+  color: string;
+  recurrenceRule: string | null;
+  recurrenceEnd: string | null;
+  instanceDate?: number;
+  isRecurringInstance?: boolean;
+};
+
 interface TimeWeekCalendarProps {
   tasks: Task[];
+  events?: CalendarEvent[];
+  currentDate?: Date;
+  onDateChange?: (date: Date) => void;
   onTaskClick?: (task: Task) => void;
+  onEventClick?: (event: CalendarEvent) => void;
   onTaskMove?: (taskId: string, newDate: Date, newTime?: string) => void;
+  onEventMove?: (eventId: string, newDate: Date, newTime?: string) => void;
   onTaskResize?: (taskId: string, newDuration: number) => void;
+  onEventResize?: (eventId: string, newDuration: number) => void;
+  onDragCreate?: (params: { dateKey: string; startTime: string; endTime: string; duration: number }) => void;
 }
 
 // Hours to display (full 24 hours)
@@ -298,6 +321,7 @@ function TimedTask({
   return (
     <div
       ref={setNodeRef}
+      data-task-id={task.id}
       {...(isResizing ? {} : listeners)}
       {...attributes}
       onClick={(e) => {
@@ -306,16 +330,16 @@ function TimedTask({
           onClick?.();
         }
       }}
-      style={{ 
-        ...style, 
-        height: `${height}px`, 
+      style={{
+        ...style,
+        height: `${height}px`,
         minHeight: "28px",
         left: `calc(${leftPercent}% + ${gap}px)`,
         width: `calc(${widthPercent}% - ${gap * 2}px)`,
       }}
       className={cn(
         "absolute px-1.5 py-1 rounded text-xs cursor-grab active:cursor-grabbing touch-none overflow-hidden group",
-        "bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--border-strong)]",
+        "bg-[var(--bg-surface)] border border-[var(--border-default)]",
         "transition-[height,border-color] duration-75",
         task.status === "done" && "opacity-50",
         task.priority === "non-negotiable" && "border-l-2 border-l-red-500",
@@ -361,6 +385,218 @@ function TimedTask({
   );
 }
 
+// Calculate duration from start and end time
+function calculateEventDuration(startTime: string | null, endTime: string | null): number {
+  if (!startTime || !endTime) return 60; // Default 1 hour
+  const startMins = parseTimeToMinutes(startTime) || 0;
+  const endMins = parseTimeToMinutes(endTime) || 0;
+  return Math.max(15, endMins - startMins);
+}
+
+// Timed event (similar to task but with event styling)
+function TimedEvent({
+  event,
+  onClick,
+  onResize,
+  onResizePreview,
+  style,
+  column = 0,
+  totalColumns = 1,
+}: {
+  event: CalendarEvent;
+  onClick?: () => void;
+  onResize?: (eventId: string, newDuration: number) => void;
+  onResizePreview?: (eventId: string, previewDuration: number | null) => void;
+  style?: React.CSSProperties;
+  column?: number;
+  totalColumns?: number;
+}) {
+  const [isResizing, setIsResizing] = useState(false);
+  const [previewDuration, setPreviewDuration] = useState<number | null>(null);
+  const justResizedRef = useRef(false);
+  const resizeRef = useRef<{
+    startY: number;
+    initialDuration: number;
+    pointerId: number;
+  } | null>(null);
+  const handleRef = useRef<HTMLDivElement>(null);
+
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `event-${event.id}`,
+    data: { event, isEvent: true },
+    disabled: isResizing,
+  });
+
+  const baseDuration = calculateEventDuration(event.startTime, event.endTime);
+  const displayDuration = previewDuration ?? baseDuration;
+  const height = getHeightFromDuration(displayDuration);
+
+  // Pointer-based resize for proper drag behavior
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (handleRef.current) {
+      handleRef.current.setPointerCapture(e.pointerId);
+    }
+
+    resizeRef.current = {
+      startY: e.clientY,
+      initialDuration: baseDuration,
+      pointerId: e.pointerId,
+    };
+    setIsResizing(true);
+    justResizedRef.current = true;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!resizeRef.current || !isResizing) return;
+
+    const deltaY = e.clientY - resizeRef.current.startY;
+    const deltaMinutes = (deltaY / HOUR_HEIGHT) * 60;
+    const newDuration = Math.max(15, Math.round((resizeRef.current.initialDuration + deltaMinutes) / 15) * 15);
+
+    setPreviewDuration(newDuration);
+    onResizePreview?.(event.id, newDuration);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!resizeRef.current) return;
+
+    if (handleRef.current) {
+      handleRef.current.releasePointerCapture(e.pointerId);
+    }
+
+    if (previewDuration !== null && onResize && previewDuration !== baseDuration) {
+      onResize(event.id, previewDuration);
+    }
+
+    resizeRef.current = null;
+    setIsResizing(false);
+    setPreviewDuration(null);
+    onResizePreview?.(event.id, null);
+
+    setTimeout(() => {
+      justResizedRef.current = false;
+    }, 100);
+  };
+
+  // Calculate end time for display
+  const startMinutes = parseTimeToMinutes(event.startTime) || 0;
+  const endMinutes = startMinutes + displayDuration;
+  const endTimeDisplay = minutesToTimeString(endMinutes);
+
+  // Calculate horizontal position for overlapping events
+  const widthPercent = 100 / totalColumns;
+  const leftPercent = column * widthPercent;
+  const gap = totalColumns > 1 ? 1 : 0;
+
+  return (
+    <div
+      ref={setNodeRef}
+      data-event-id={event.id}
+      {...listeners}
+      {...attributes}
+      style={{
+        ...style,
+        height: `${height}px`,
+        minHeight: "28px",
+        left: `calc(${leftPercent}% + ${gap}px)`,
+        width: `calc(${widthPercent}% - ${gap * 2}px)`,
+        backgroundColor: `${event.color}20`,
+        borderColor: event.color,
+      }}
+      className={cn(
+        "absolute px-1.5 py-1 rounded text-xs cursor-grab active:cursor-grabbing touch-none overflow-hidden group",
+        "border-l-2 transition-opacity",
+        isDragging && "opacity-30 z-50",
+        isResizing && "z-50 ring-2 ring-[var(--accent-primary)]/50 cursor-ns-resize"
+      )}
+    >
+      <div
+        className="font-medium truncate text-[11px]"
+        style={{ color: event.color }}
+      >
+        {event.name}
+      </div>
+      {event.startTime && (
+        <div className="text-[10px] opacity-70" style={{ color: event.color }}>
+          {event.startTime.substring(0, 5)} – {endTimeDisplay}
+        </div>
+      )}
+      {event.location && (
+        <div className="text-[10px] opacity-60 truncate" style={{ color: event.color }}>
+          {event.location}
+        </div>
+      )}
+
+      {/* Edit icon - appears on hover */}
+      {onClick && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          className="absolute top-0.5 right-0.5 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/20 transition-opacity z-30"
+          style={{ color: event.color }}
+        >
+          <Pencil size={12} />
+        </button>
+      )}
+
+      {/* Resize handle */}
+      {onResize && (
+        <div
+          ref={handleRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize bg-transparent hover:bg-[var(--accent-primary)]/10 transition-all z-20 touch-none group/resize flex items-end justify-center"
+        >
+          <div
+            className="w-8 h-1 rounded-full bg-[var(--border-default)] opacity-0 group-hover:opacity-100 group-hover/resize:opacity-100 group-hover/resize:bg-[var(--accent-primary)] mb-0.5 transition-all"
+            style={{ backgroundColor: event.color }}
+          />
+        </div>
+      )}
+
+      {/* Resize tooltip */}
+      {isResizing && previewDuration !== null && (
+        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded shadow-lg text-[11px] font-medium text-[var(--accent-primary)] whitespace-nowrap z-50">
+          {previewDuration} min → {endTimeDisplay}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// All-day event (in the all-day row)
+function AllDayEvent({
+  event,
+  onClick,
+}: {
+  event: CalendarEvent;
+  onClick?: () => void;
+}) {
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
+      style={{
+        backgroundColor: `${event.color}20`,
+        borderColor: event.color,
+      }}
+      className="px-1.5 py-0.5 mb-0.5 rounded text-[11px] cursor-pointer truncate border-l-2"
+    >
+      <span style={{ color: event.color }}>{event.name}</span>
+    </div>
+  );
+}
+
 // All-day task (in the all-day row)
 function AllDayTask({
   task,
@@ -385,7 +621,7 @@ function AllDayTask({
       }}
       className={cn(
         "px-1.5 py-0.5 mb-0.5 rounded text-[11px] cursor-grab active:cursor-grabbing touch-none truncate",
-        "bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--border-strong)]",
+        "bg-[var(--bg-surface)] border border-[var(--border-default)]",
         task.status === "done" && "opacity-50",
         task.priority === "non-negotiable" && "border-l-2 border-l-red-500",
         isDragging && "opacity-30"
@@ -436,6 +672,34 @@ function DropPreview({
         minHeight: "28px",
       }}
     />
+  );
+}
+
+// Create selection preview - shows during drag-to-create
+function CreateSelectionPreview({
+  startTime,
+  endTime,
+  durationMinutes,
+}: {
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+}) {
+  const top = getTopPosition(startTime);
+  const height = getHeightFromDuration(durationMinutes);
+
+  return (
+    <div
+      className="absolute left-1 right-1 rounded-md bg-[var(--accent-primary)]/20 border-2 border-[var(--accent-primary)] pointer-events-none z-30 flex items-start justify-center pt-1"
+      style={{
+        top: `${top}px`,
+        height: `${Math.max(height, 24)}px`,
+      }}
+    >
+      <div className="text-[11px] font-medium text-[var(--accent-primary)] bg-[var(--bg-elevated)] px-2 py-0.5 rounded shadow-sm border border-[var(--border-default)]">
+        {minutesToTimeString(parseTimeToMinutes(startTime) || 0)} – {minutesToTimeString(parseTimeToMinutes(endTime) || 0)}
+      </div>
+    </div>
   );
 }
 
@@ -500,11 +764,15 @@ function CurrentTimeIndicatorLine() {
 function AllDayCell({
   dateKey,
   tasks,
+  events,
   onTaskClick,
+  onEventClick,
 }: {
   dateKey: string;
   tasks: Task[];
+  events: CalendarEvent[];
   onTaskClick?: (task: Task) => void;
+  onEventClick?: (event: CalendarEvent) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `${dateKey}-allday` });
 
@@ -516,6 +784,13 @@ function AllDayCell({
         isOver && "bg-[var(--accent-primary)]/15"
       )}
     >
+      {events.map((event) => (
+        <AllDayEvent
+          key={event.id}
+          event={event}
+          onClick={() => onEventClick?.(event)}
+        />
+      ))}
       {tasks.map((task) => (
         <AllDayTask
           key={task.id}
@@ -529,11 +804,29 @@ function AllDayCell({
 
 export function TimeWeekCalendar({
   tasks,
+  events = [],
+  currentDate: externalDate,
+  onDateChange,
   onTaskClick,
+  onEventClick,
   onTaskMove,
+  onEventMove,
   onTaskResize,
+  onEventResize,
+  onDragCreate,
 }: TimeWeekCalendarProps) {
-  const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  // Use external date if provided (controlled), otherwise internal fallback
+  const [internalDate, setInternalDate] = useState<Date | null>(null);
+  const currentDate = externalDate || internalDate;
+
+  // Wrapper to update both internal state and notify parent
+  const updateCurrentDate = useCallback((date: Date) => {
+    if (!externalDate) {
+      setInternalDate(date);
+    }
+    onDateChange?.(date);
+  }, [externalDate, onDateChange]);
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dragTarget, setDragTarget] = useState<{ dateKey: string; time: string; displayTime: string } | null>(null);
   const [resizePreview, setResizePreview] = useState<{ taskId: string; duration: number } | null>(null);
@@ -541,6 +834,16 @@ export function TimeWeekCalendar({
   const [dragClickOffset, setDragClickOffset] = useState<number>(0);
   // Optimistic moves to prevent flash on drop
   const [optimisticMoves, setOptimisticMoves] = useState<Map<string, { dateKey: string; time: string | null }>>(new Map());
+  // Drag-to-create state
+  const [dragCreate, setDragCreate] = useState<{
+    dateKey: string;
+    startY: number;
+    currentY: number;
+    startTime: string;
+    endTime: string;
+    durationMinutes: number;
+  } | null>(null);
+  const [isDragCreating, setIsDragCreating] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -550,10 +853,12 @@ export function TimeWeekCalendar({
     })
   );
 
-  // Set date on client only
+  // Initialize internal date (only if not controlled from parent)
   useEffect(() => {
-    setCurrentDate(new Date());
-  }, []);
+    if (!externalDate) {
+      setInternalDate(new Date());
+    }
+  }, [externalDate]);
 
   // Scroll to 8am on mount
   useEffect(() => {
@@ -567,6 +872,18 @@ export function TimeWeekCalendar({
   useEffect(() => {
     setOptimisticMoves(new Map());
   }, [tasks]);
+
+  // Escape key handler for drag-to-create
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (dragCreate || isDragCreating)) {
+        setDragCreate(null);
+        setIsDragCreating(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [dragCreate, isDragCreating]);
 
   const weekStart = currentDate
     ? startOfWeek(currentDate, { weekStartsOn: 0 })
@@ -609,26 +926,65 @@ export function TimeWeekCalendar({
     return map;
   }, [tasks, weekDays, optimisticMoves]);
 
-  // Check if any day has all-day tasks
-  const hasAllDayTasks = useMemo(() => {
+  // Group events by date
+  const eventsByDate = useMemo(() => {
+    const map = new Map<string, { timed: CalendarEvent[]; allDay: CalendarEvent[] }>();
+
+    weekDays.forEach((day) => {
+      map.set(format(day, "yyyy-MM-dd"), { timed: [], allDay: [] });
+    });
+
+    events.forEach((event) => {
+      const dateKey = event.startDate ? format(new Date(event.startDate), "yyyy-MM-dd") : null;
+      if (!dateKey) return;
+      const entry = map.get(dateKey);
+      if (!entry) return;
+
+      if (event.isAllDay || !event.startTime) {
+        entry.allDay.push(event);
+      } else {
+        entry.timed.push(event);
+      }
+    });
+
+    return map;
+  }, [events, weekDays]);
+
+  // Check if any day has all-day tasks or events
+  const hasAllDayItems = useMemo(() => {
     for (const [, data] of tasksByDate) {
       if (data.allDay.length > 0) return true;
     }
+    for (const [, data] of eventsByDate) {
+      if (data.allDay.length > 0) return true;
+    }
     return false;
-  }, [tasksByDate]);
+  }, [tasksByDate, eventsByDate]);
 
-  // Get max number of all-day tasks for any day
-  const maxAllDayTasks = useMemo(() => {
+  // Get max number of all-day items for any day
+  const maxAllDayItems = useMemo(() => {
     let max = 0;
-    for (const [, data] of tasksByDate) {
-      max = Math.max(max, data.allDay.length);
+    for (const [dateKey, data] of tasksByDate) {
+      const eventData = eventsByDate.get(dateKey);
+      const total = data.allDay.length + (eventData?.allDay.length || 0);
+      max = Math.max(max, total);
     }
     return max;
-  }, [tasksByDate]);
+  }, [tasksByDate, eventsByDate]);
 
   const activeTask = useMemo(
     () => tasks.find((t) => t.id === activeId) || null,
     [activeId, tasks]
+  );
+
+  // For events, activeId is prefixed with "event-"
+  const activeEvent = useMemo(
+    () => {
+      if (!activeId?.startsWith("event-")) return null;
+      const eventId = activeId.replace("event-", "");
+      return events.find((e) => e.id === eventId) || null;
+    },
+    [activeId, events]
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -689,13 +1045,15 @@ export function TimeWeekCalendar({
     (event: DragEndEvent) => {
       const { active, over } = event;
 
-      if (!over || !onTaskMove) {
+      const activeIdStr = active.id as string;
+      const isEvent = activeIdStr.startsWith("event-");
+
+      if (!over || (!onTaskMove && !isEvent) || (!onEventMove && isEvent)) {
         setActiveId(null);
         setDragTarget(null);
         return;
       }
 
-      const taskId = active.id as string;
       const overId = over.id as string;
 
       // Parse the drop target: "YYYY-MM-DD-HH" or "YYYY-MM-DD-allday"
@@ -720,21 +1078,47 @@ export function TimeWeekCalendar({
         newTime = dragTarget?.time || `${parseInt(hourOrAllDay, 10).toString().padStart(2, "0")}:00`;
       }
 
-      // Set optimistic move FIRST (before clearing activeId) to prevent flash
-      setOptimisticMoves((prev) => {
-        const next = new Map(prev);
-        next.set(taskId, { dateKey, time: newTime });
-        return next;
-      });
+      if (isEvent) {
+        // Handle event move
+        const eventId = activeIdStr.replace("event-", "");
+        const originalEvent = events.find(e => e.id === eventId);
 
-      // NOW clear drag state - task will render at optimistic position immediately
-      setActiveId(null);
-      setDragTarget(null);
+        console.log('🔵 Event drag ended:', {
+          eventId,
+          dateKey,
+          newTime,
+          dragTarget,
+          originalEvent: {
+            id: originalEvent?.id,
+            startDate: originalEvent?.startDate,
+            startTime: originalEvent?.startTime,
+            endTime: originalEvent?.endTime,
+          }
+        });
 
-      // Trigger the actual update
-      onTaskMove(taskId, newDate, newTime || "");
+        setActiveId(null);
+        setDragTarget(null);
+        onEventMove?.(eventId, newDate, newTime || undefined);
+      } else {
+        // Handle task move
+        const taskId = activeIdStr;
+
+        // Set optimistic move FIRST (before clearing activeId) to prevent flash
+        setOptimisticMoves((prev) => {
+          const next = new Map(prev);
+          next.set(taskId, { dateKey, time: newTime });
+          return next;
+        });
+
+        // NOW clear drag state - task will render at optimistic position immediately
+        setActiveId(null);
+        setDragTarget(null);
+
+        // Trigger the actual update
+        onTaskMove?.(taskId, newDate, newTime || "");
+      }
     },
-    [onTaskMove, dragTarget]
+    [onTaskMove, onEventMove, dragTarget, events]
   );
 
   const handleResizePreview = useCallback((taskId: string, duration: number | null) => {
@@ -745,13 +1129,90 @@ export function TimeWeekCalendar({
     }
   }, []);
 
+  // Drag-to-create handlers
+  const DRAG_CREATE_THRESHOLD = 5;
+
+  const handleDragCreateStart = useCallback((e: React.PointerEvent, dateKey: string) => {
+    // Don't start if DnD is active
+    if (activeId) return;
+    // Don't start if clicking on a task or event
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-task-id]') || target.closest('[data-event-id]')) return;
+
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+
+    const gridRect = gridRef.current?.getBoundingClientRect();
+    if (!gridRect) return;
+
+    // getBoundingClientRect already accounts for scroll position
+    const relativeY = e.clientY - gridRect.top;
+    const { time } = pixelToTime(relativeY);
+
+    setDragCreate({
+      dateKey,
+      startY: relativeY,
+      currentY: relativeY,
+      startTime: time,
+      endTime: time,
+      durationMinutes: 15,
+    });
+  }, [activeId]);
+
+  const handleDragCreateMove = useCallback((e: React.PointerEvent) => {
+    if (!dragCreate) return;
+
+    const gridRect = gridRef.current?.getBoundingClientRect();
+    if (!gridRect) return;
+
+    // getBoundingClientRect already accounts for scroll position
+    const relativeY = e.clientY - gridRect.top;
+    const dragDistance = Math.abs(relativeY - dragCreate.startY);
+
+    if (dragDistance < DRAG_CREATE_THRESHOLD && !isDragCreating) return;
+    if (!isDragCreating) setIsDragCreating(true);
+
+    // Handle reverse drag (up)
+    const startY = Math.min(dragCreate.startY, relativeY);
+    const endY = Math.max(dragCreate.startY, relativeY);
+
+    const { time: startTime } = pixelToTime(startY);
+    const { time: endTime } = pixelToTime(endY);
+
+    const startMins = parseTimeToMinutes(startTime) || 0;
+    const endMins = parseTimeToMinutes(endTime) || 0;
+    const duration = Math.max(15, endMins - startMins);
+
+    setDragCreate({ ...dragCreate, currentY: relativeY, startTime, endTime, durationMinutes: duration });
+  }, [dragCreate, isDragCreating]);
+
+  const handleDragCreateEnd = useCallback((e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+
+    if (dragCreate && isDragCreating && dragCreate.durationMinutes >= 15) {
+      onDragCreate?.({
+        dateKey: dragCreate.dateKey,
+        startTime: dragCreate.startTime,
+        endTime: dragCreate.endTime,
+        duration: dragCreate.durationMinutes,
+      });
+    }
+
+    setDragCreate(null);
+    setIsDragCreating(false);
+  }, [dragCreate, isDragCreating, onDragCreate]);
+
+  const handleDragCreateCancel = useCallback((e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    setDragCreate(null);
+    setIsDragCreating(false);
+  }, []);
+
   const navigate = (direction: "prev" | "next") => {
     if (!currentDate) return;
-    setCurrentDate(
-      direction === "prev"
-        ? subWeeks(currentDate, 1)
-        : addWeeks(currentDate, 1)
-    );
+    const newDate = direction === "prev"
+      ? subWeeks(currentDate, 1)
+      : addWeeks(currentDate, 1);
+    updateCurrentDate(newDate);
   };
 
   if (!currentDate) {
@@ -761,8 +1222,8 @@ export function TimeWeekCalendar({
   }
 
   // Calculate all-day section height based on content
-  const allDayHeight = hasAllDayTasks
-    ? Math.min(Math.max(maxAllDayTasks * 24 + 8, 40), 120) // min 40px, max 120px
+  const allDayHeight = hasAllDayItems
+    ? Math.min(Math.max(maxAllDayItems * 24 + 8, 40), 120) // min 40px, max 120px
     : 0;
 
   return (
@@ -786,7 +1247,7 @@ export function TimeWeekCalendar({
               <ChevronLeft size={14} className="text-[var(--text-quaternary)]" />
             </button>
             <button
-              onClick={() => setCurrentDate(new Date())}
+              onClick={() => updateCurrentDate(new Date())}
               className="text-xs text-[var(--text-primary)] bg-[var(--bg-surface)] hover:bg-[var(--bg-active)] px-3 py-1.5 rounded transition-colors"
             >
               Today
@@ -837,7 +1298,7 @@ export function TimeWeekCalendar({
         </div>
 
         {/* All-day section (if there are any all-day tasks) */}
-        {hasAllDayTasks && (
+        {hasAllDayItems && (
           <div className="flex border-b border-[var(--border-subtle)] shrink-0 bg-[var(--bg-base)]">
             {/* Label */}
             <div className="w-16 shrink-0 border-r border-[var(--border-subtle)] px-1 py-1 text-[10px] text-[var(--text-quaternary)]">
@@ -852,12 +1313,15 @@ export function TimeWeekCalendar({
               {weekDays.map((day) => {
                 const dateKey = format(day, "yyyy-MM-dd");
                 const dayData = tasksByDate.get(dateKey);
+                const eventData = eventsByDate.get(dateKey);
                 return (
                   <AllDayCell
                     key={dateKey}
                     dateKey={dateKey}
                     tasks={dayData?.allDay || []}
+                    events={eventData?.allDay || []}
                     onTaskClick={onTaskClick}
+                    onEventClick={onEventClick}
                   />
                 );
               })}
@@ -885,9 +1349,11 @@ export function TimeWeekCalendar({
             {weekDays.map((day) => {
               const dateKey = format(day, "yyyy-MM-dd");
               const dayData = tasksByDate.get(dateKey);
+              const eventData = eventsByDate.get(dateKey);
               const timedTasks = dayData?.timed || [];
+              const timedEvents = eventData?.timed || [];
               const isCurrentDay = isToday(day);
-              
+
               // Calculate layouts for overlapping tasks
               const taskLayouts = calculateTaskLayouts(timedTasks);
               const layoutMap = new Map(taskLayouts.map(l => [l.task.id, l]));
@@ -897,8 +1363,13 @@ export function TimeWeekCalendar({
                   key={dateKey}
                   className={cn(
                     "flex-1 min-w-0 min-h-full border-r border-[var(--border-subtle)] last:border-r-0 relative",
-                    isCurrentDay && "bg-[var(--bg-surface)]/30"
+                    isCurrentDay && "bg-[var(--bg-surface)]/30",
+                    !activeId && "cursor-crosshair"
                   )}
+                  onPointerDown={(e) => handleDragCreateStart(e, dateKey)}
+                  onPointerMove={handleDragCreateMove}
+                  onPointerUp={handleDragCreateEnd}
+                  onPointerCancel={handleDragCreateCancel}
                 >
                   {/* Hour slots (for drop targets) */}
                   {HOURS.map((hour) => (
@@ -912,22 +1383,51 @@ export function TimeWeekCalendar({
                   {/* Current time indicator - thick solid line for today only */}
                   {isCurrentDay && <CurrentTimeIndicatorLine />}
 
-                  {/* Drop preview overlay - dashed outline showing where task will land */}
-                  {dragTarget && dragTarget.dateKey === dateKey && dragTarget.time && activeTask && (
+                  {/* Drop preview overlay - dashed outline showing where item will land */}
+                  {dragTarget && dragTarget.dateKey === dateKey && dragTarget.time && (activeTask || activeEvent) && (
                     <DropPreview
                       time={dragTarget.time}
-                      duration={activeTask.duration || 30}
+                      duration={activeTask?.duration || (activeEvent ? calculateEventDuration(activeEvent.startTime, activeEvent.endTime) : 30)}
                     />
                   )}
+
+                  {/* Create selection preview - shows during drag-to-create */}
+                  {dragCreate?.dateKey === dateKey && isDragCreating && (
+                    <CreateSelectionPreview
+                      startTime={dragCreate.startTime}
+                      endTime={dragCreate.endTime}
+                      durationMinutes={dragCreate.durationMinutes}
+                    />
+                  )}
+
+                  {/* Positioned timed events */}
+                  {timedEvents.map((event) => {
+                    const top = getTopPosition(event.startTime);
+                    // Don't render the event being dragged
+                    if (`event-${event.id}` === activeId) return null;
+
+                    return (
+                      <TimedEvent
+                        key={event.id}
+                        event={event}
+                        onClick={() => onEventClick?.(event)}
+                        onResize={onEventResize}
+                        onResizePreview={handleResizePreview}
+                        style={{
+                          top: `${top}px`,
+                        }}
+                      />
+                    );
+                  })}
 
                   {/* Positioned timed tasks with overlap handling */}
                   {timedTasks.map((task) => {
                     const top = getTopPosition(task.dueTime);
                     // Don't render the task being dragged
                     if (task.id === activeId) return null;
-                    
+
                     const layout = layoutMap.get(task.id);
-                    
+
                     return (
                       <TimedTask
                         key={task.id}
@@ -953,7 +1453,7 @@ export function TimeWeekCalendar({
         </div>
       </div>
 
-      {/* Drag overlay - follows cursor, matches task card size */}
+      {/* Drag overlay - follows cursor, matches card size */}
       <DragOverlay>
         {activeTask ? (
           <div
@@ -978,6 +1478,30 @@ export function TimeWeekCalendar({
                   <span className="text-[var(--accent-primary)]">{dragTarget.displayTime}</span>
                 ) : (
                   activeTask.dueTime.substring(0, 5)
+                )}
+              </div>
+            )}
+          </div>
+        ) : activeEvent ? (
+          <div
+            className="px-1.5 py-1 rounded text-xs cursor-grabbing overflow-hidden border-l-2 shadow-xl"
+            style={{
+              width: "140px",
+              height: `${getHeightFromDuration(calculateEventDuration(activeEvent.startTime, activeEvent.endTime))}px`,
+              minHeight: "28px",
+              backgroundColor: `${activeEvent.color}30`,
+              borderColor: activeEvent.color,
+            }}
+          >
+            <div className="font-medium truncate text-[11px]" style={{ color: activeEvent.color }}>
+              {activeEvent.name}
+            </div>
+            {activeEvent.startTime && (
+              <div className="text-[10px] opacity-70" style={{ color: activeEvent.color }}>
+                {dragTarget ? (
+                  <span>{dragTarget.displayTime}</span>
+                ) : (
+                  activeEvent.startTime.substring(0, 5)
                 )}
               </div>
             )}

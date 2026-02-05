@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 import { InlineOrgProjectCell } from "./InlineOrgProjectCell";
 import { InlineSelectCell, STATUS_OPTIONS, PRIORITY_OPTIONS } from "./InlineSelectCell";
-import { TagList } from "./TagBadge";
+import { InlineTagCell } from "./InlineTagCell";
 
 type Tag = {
   id: string;
@@ -325,10 +325,14 @@ export function TaskTable({
             </div>
 
             {/* Tags - hidden on smaller screens */}
-            <div className="w-28 shrink-0 hidden xl:block">
-              {task.relationalTags && task.relationalTags.length > 0 && (
-                <TagList tags={task.relationalTags} max={2} size="sm" />
-              )}
+            <div
+              className="w-28 shrink-0 hidden xl:block"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <InlineTagCell
+                taskId={task.id}
+                currentTags={task.relationalTags || []}
+              />
             </div>
 
             {/* Priority - hidden on mobile */}

@@ -450,19 +450,31 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
 
   const handleBulkDelete = useCallback(async () => {
     const taskIds = Array.from(selectedTaskIds);
+    console.log("Attempting to delete tasks:", taskIds);
+
     try {
       const response = await fetch("/api/tasks/bulk", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskIds }),
       });
-      
-      if (!response.ok) throw new Error("Bulk delete failed");
-      
+
+      console.log("Delete response status:", response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Delete failed with error:", errorData);
+        throw new Error(`Bulk delete failed: ${errorData.error || response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log("Delete successful:", result);
+
       router.refresh();
       exitMultiSelectMode();
     } catch (error) {
       console.error("Bulk delete error:", error);
+      alert(`Failed to delete tasks: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }, [selectedTaskIds, router, exitMultiSelectMode]);
 

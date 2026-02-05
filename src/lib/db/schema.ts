@@ -51,9 +51,54 @@ export const tasks = sqliteTable("tasks", {
   prd: text("prd"), // Generated PRD markdown
   prdContext: text("prd_context"), // Original context dump
   prdChat: text("prd_chat"), // JSON: clarification Q&A history
-  parentId: text("parent_id"), // For subtasks - references tasks.id
+  parentId: text("parent_id").references(() => tasks.id, { onDelete: "cascade" }), // For subtasks - cascade delete when parent is deleted
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+// Calendar Events (separate from tasks)
+export const events = sqliteTable("events", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  location: text("location"),
+
+  // Timing
+  startDate: integer("start_date", { mode: "timestamp_ms" }).notNull(),
+  startTime: text("start_time"), // HH:mm format, null for all-day
+  endTime: text("end_time"), // HH:mm format
+  isAllDay: integer("is_all_day", { mode: "boolean" }).default(false),
+
+  // Appearance
+  color: text("color").default("#3b82f6"), // Blue default (different from task lime)
+
+  // Recurrence (RRULE format - RFC 5545)
+  recurrenceRule: text("recurrence_rule"), // e.g., "FREQ=WEEKLY;BYDAY=MO,WE,FR"
+  recurrenceEnd: integer("recurrence_end", { mode: "timestamp_ms" }), // End date for series
+
+  // Metadata
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+// Event Exceptions (for editing single occurrences of recurring events)
+export const eventExceptions = sqliteTable("event_exceptions", {
+  id: text("id").primaryKey(),
+  eventId: text("event_id").notNull().references(() => events.id, { onDelete: "cascade" }),
+
+  // Which occurrence this exception applies to
+  originalDate: integer("original_date", { mode: "timestamp_ms" }).notNull(),
+
+  // Exception type
+  isCancelled: integer("is_cancelled", { mode: "boolean" }).default(false),
+
+  // Modified values (null = use parent event values)
+  modifiedName: text("modified_name"),
+  modifiedStartTime: text("modified_start_time"),
+  modifiedEndTime: text("modified_end_time"),
+  modifiedLocation: text("modified_location"),
+
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
 export const notes = sqliteTable("notes", {
@@ -141,6 +186,17 @@ export const taskTagsRelations = relations(taskTags, ({ one }) => ({
   }),
 }));
 
+export const eventsRelations = relations(events, ({ many }) => ({
+  exceptions: many(eventExceptions),
+}));
+
+export const eventExceptionsRelations = relations(eventExceptions, ({ one }) => ({
+  event: one(events, {
+    fields: [eventExceptions.eventId],
+    references: [events.id],
+  }),
+}));
+
 // Type exports
 export type Organization = typeof organizations.$inferSelect;
 export type NewOrganization = typeof organizations.$inferInsert;
@@ -160,6 +216,10 @@ export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;
 export type TaskTag = typeof taskTags.$inferSelect;
 export type NewTaskTag = typeof taskTags.$inferInsert;
+export type Event = typeof events.$inferSelect;
+export type NewEvent = typeof events.$inferInsert;
+export type EventException = typeof eventExceptions.$inferSelect;
+export type NewEventException = typeof eventExceptions.$inferInsert;
 
 // SuperLandings Leads
 export const leads = sqliteTable("leads", {
