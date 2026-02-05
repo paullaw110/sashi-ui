@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
 
     // Expand recurring events and filter to date range
     const expandedEvents = events.flatMap((event) =>
-      expandRecurringEvents(event, start, end)
+      expandRecurringEvents(event as typeof event & { exceptions?: typeof schema.eventExceptions.$inferSelect[] }, start, end)
     );
 
     // Sort by instance date
@@ -136,13 +136,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const now = new Date();
 
-    // Parse startDate
+    // Parse startDate - use UTC noon to prevent date shifting across timezones
     let parsedStartDate: Date;
     if (body.startDate) {
       if (typeof body.startDate === "string" && body.startDate.includes("T")) {
         parsedStartDate = new Date(body.startDate);
       } else if (typeof body.startDate === "string") {
-        parsedStartDate = new Date(body.startDate + "T12:00:00");
+        parsedStartDate = new Date(body.startDate + "T12:00:00.000Z");
       } else {
         parsedStartDate = new Date(body.startDate);
       }
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
       startTime: body.startTime || null,
       endTime: body.endTime || null,
       isAllDay: body.isAllDay || false,
-      color: body.color || "#3b82f6",
+      color: body.color || "#EFFF83",
       recurrenceRule: body.recurrenceRule || null,
       recurrenceEnd: parsedRecurrenceEnd,
       createdAt: now,

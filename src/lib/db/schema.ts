@@ -27,13 +27,6 @@ export const tags = sqliteTable("tags", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
-// Junction table for task-tag relationships
-export const taskTags = sqliteTable("task_tags", {
-  taskId: text("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
-  tagId: text("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-});
-
 export const tasks = sqliteTable("tasks", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -51,9 +44,16 @@ export const tasks = sqliteTable("tasks", {
   prd: text("prd"), // Generated PRD markdown
   prdContext: text("prd_context"), // Original context dump
   prdChat: text("prd_chat"), // JSON: clarification Q&A history
-  parentId: text("parent_id").references(() => tasks.id, { onDelete: "cascade" }), // For subtasks - cascade delete when parent is deleted
+  parentId: text("parent_id"), // For subtasks - FK to tasks.id defined in relations
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+// Junction table for task-tag relationships
+export const taskTags = sqliteTable("task_tags", {
+  taskId: text("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  tagId: text("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
 // Calendar Events (separate from tasks)
@@ -70,7 +70,7 @@ export const events = sqliteTable("events", {
   isAllDay: integer("is_all_day", { mode: "boolean" }).default(false),
 
   // Appearance
-  color: text("color").default("#3b82f6"), // Blue default (different from task lime)
+  color: text("color").default("#EFFF83"), // Brand lime color
 
   // Recurrence (RRULE format - RFC 5545)
   recurrenceRule: text("recurrence_rule"), // e.g., "FREQ=WEEKLY;BYDAY=MO,WE,FR"

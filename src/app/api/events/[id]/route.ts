@@ -136,7 +136,18 @@ export async function PATCH(
       if (body.name !== undefined) updates.name = body.name;
       if (body.description !== undefined) updates.description = body.description;
       if (body.location !== undefined) updates.location = body.location;
-      if (body.startDate !== undefined) updates.startDate = new Date(body.startDate);
+      if (body.startDate !== undefined) {
+        // Parse date consistently with POST handler to avoid timezone issues
+        // Use UTC noon to prevent date shifting across timezones
+        const dateStr = body.startDate;
+        if (typeof dateStr === "string" && dateStr.includes("T")) {
+          updates.startDate = new Date(dateStr);
+        } else if (typeof dateStr === "string") {
+          updates.startDate = new Date(dateStr + "T12:00:00.000Z");
+        } else {
+          updates.startDate = new Date(dateStr);
+        }
+      }
       if (body.startTime !== undefined) updates.startTime = body.startTime;
       if (body.endTime !== undefined) updates.endTime = body.endTime;
       if (body.isAllDay !== undefined) updates.isAllDay = body.isAllDay;

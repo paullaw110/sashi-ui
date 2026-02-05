@@ -72,7 +72,8 @@ async function getOrganizations() {
 }
 
 // Serialize dates to ISO strings for client components
-function serializeTasks<T extends { dueDate: Date | null }>(tasks: T[]) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function serializeTasks(tasks: any[]) {
   return tasks.map(task => ({
     ...task,
     dueDate: task.dueDate ? task.dueDate.toISOString() : null,

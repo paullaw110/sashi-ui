@@ -105,20 +105,23 @@ export default async function OrganizationPage({
   ]);
   
   // Get all projects for the task modal
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allProjects = await db.query.projects.findMany({
     with: { organization: true },
-  });
-  
+  }) as any;
+
   // Get all organizations for the task modal
-  const allOrganizations = await db.query.organizations.findMany();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allOrganizations = await db.query.organizations.findMany() as any;
   
   // Serialize dates for client component
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const serializedTasks = tasks.map(task => ({
     ...task,
     dueDate: task.dueDate ? task.dueDate.toISOString() : null,
     createdAt: task.createdAt ? task.createdAt.toISOString() : undefined,
     updatedAt: task.updatedAt ? task.updatedAt.toISOString() : undefined,
-  }));
+  })) as any;
   
   const serializedOrg = {
     ...organization,

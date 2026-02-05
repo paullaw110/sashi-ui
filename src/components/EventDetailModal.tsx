@@ -53,7 +53,8 @@ interface EventDetailModalProps {
 }
 
 const EVENT_COLORS = [
-  { value: "#3b82f6", label: "Blue" },
+  { value: "#EFFF83", label: "Lime" },   // Brand color - default
+  { value: "#EFFF83", label: "Blue" },
   { value: "#ef4444", label: "Red" },
   { value: "#f97316", label: "Orange" },
   { value: "#eab308", label: "Yellow" },
@@ -79,7 +80,7 @@ export function EventDetailModal({
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [isAllDay, setIsAllDay] = useState(false);
-  const [color, setColor] = useState("#3b82f6");
+  const [color, setColor] = useState("#EFFF83");
   const [recurrenceRule, setRecurrenceRule] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -113,7 +114,7 @@ export function EventDetailModal({
       setLocation(event.location || "");
       setDescription(event.description || "");
       setIsAllDay(event.isAllDay);
-      setColor(event.color || "#3b82f6");
+      setColor(event.color || "#EFFF83");
       setRecurrenceRule(event.recurrenceRule);
       setLocalEventId(event.id);
       hasCreatedRef.current = true;
@@ -126,7 +127,7 @@ export function EventDetailModal({
       setLocation("");
       setDescription("");
       setIsAllDay(false);
-      setColor("#3b82f6");
+      setColor("#EFFF83");
       setRecurrenceRule(null);
       setLocalEventId(null);
       hasCreatedRef.current = false;

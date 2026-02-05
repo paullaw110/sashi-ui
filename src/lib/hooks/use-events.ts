@@ -132,14 +132,38 @@ export function useUpdateEvent() {
     onMutate: async (newEvent) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["events"] });
-      return {};
+
+      // Get previous data for rollback
+      const allEventQueries = queryClient.getQueriesData<CalendarEvent[]>({ queryKey: ["events"] });
+      const previousEvents = allEventQueries.length > 0 ? allEventQueries[0][1] : undefined;
+
+      // Optimistically update ALL event queries
+      queryClient.setQueriesData<CalendarEvent[]>({ queryKey: ["events"] }, (old) => {
+        if (!old) return old;
+        return old.map((event) => {
+          if (event.id !== newEvent.id) return event;
+          return { ...event, ...newEvent };
+        });
+      });
+
+      return { previousEvents };
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousEvents) {
+        queryClient.setQueriesData<CalendarEvent[]>({ queryKey: ["events"] }, () => context.previousEvents);
+      }
       toast.error("Failed to update event");
     },
-    onSuccess: () => {
-      // Invalidate all event queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["events"] });
+    onSuccess: (data) => {
+      // Update with server response (don't invalidate!)
+      // data is CalendarEvent returned from updateEvent function
+      if (data?.id) {
+        queryClient.setQueriesData<CalendarEvent[]>({ queryKey: ["events"] }, (old) => {
+          if (!old) return old;
+          return old.map((e) => (e.id === data.id ? data : e));
+        });
+      }
     },
   });
 }
@@ -254,10 +278,11 @@ export function useMoveEvent() {
       toast.success(`Moved to ${format(variables.newDate, "MMM d")}`);
 
       // Update ALL event queries with server response
-      if (data?.event) {
+      // data is CalendarEvent returned from updateEvent function
+      if (data?.id) {
         queryClient.setQueriesData<CalendarEvent[]>({ queryKey: ["events"] }, (old) => {
           if (!old) return old;
-          return old.map((e) => (e.id === data.event.id ? data.event : e));
+          return old.map((e) => (e.id === data.id ? data : e));
         });
       }
 

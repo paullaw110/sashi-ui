@@ -217,7 +217,7 @@ CREATE TABLE IF NOT EXISTS events (
   start_time TEXT,
   end_time TEXT,
   is_all_day INTEGER DEFAULT 0,
-  color TEXT DEFAULT '#3b82f6',
+  color TEXT DEFAULT '#EFFF83',
   recurrence_rule TEXT,
   recurrence_end INTEGER,
   created_at INTEGER NOT NULL,
