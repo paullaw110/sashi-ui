@@ -123,10 +123,9 @@ export function InlineSelectCell({
   // Render badge for priority
   const renderPriorityBadge = (option: Option | null) => {
     if (!option) {
+      // Empty state - large clickable area, no dash (matches other empty fields)
       return (
-        <span className="inline-flex items-center justify-center w-full h-7 text-xs text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] transition-colors">
-          —
-        </span>
+        <span className="inline-block w-full h-7" />
       );
     }
     return (
@@ -196,7 +195,7 @@ export function InlineSelectCell({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="hover:opacity-80 transition-opacity cursor-pointer"
+          className="w-full text-left px-2 py-1 rounded hover:bg-[var(--bg-hover)] transition-colors cursor-pointer min-h-[28px]"
           onClick={(e) => e.stopPropagation()}
         >
           {renderTrigger()}
