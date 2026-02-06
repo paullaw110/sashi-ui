@@ -618,7 +618,7 @@ export function TaskDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[600px] h-[80vh] max-h-[80vh] overflow-y-auto flex flex-col" showCloseButton={false}>
         {/* Custom header with More and Close buttons */}
         <div className="absolute top-4 right-4 flex items-center gap-1">
           {/* Saving indicator */}
