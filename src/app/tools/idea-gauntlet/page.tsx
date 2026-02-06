@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Skull, Loader2, Download, RotateCcw } from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
 
 interface GauntletResult {
   clarityCheck: {

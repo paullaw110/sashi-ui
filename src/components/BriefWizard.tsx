@@ -16,18 +16,20 @@ import {
   Loader2,
   Download,
   Save,
+  Lock,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PHASES = [
-  { id: 1, name: "Project Setup", icon: Building2, description: "Basic project info" },
-  { id: 2, name: "Industry Research", icon: Search, description: "Market analysis" },
-  { id: 3, name: "Buyer Persona", icon: Users, description: "Target customer" },
-  { id: 4, name: "Offer Definition", icon: Package, description: "What you sell" },
-  { id: 5, name: "Positioning", icon: Target, description: "Market position" },
-  { id: 6, name: "Copy Generation", icon: FileText, description: "Website copy" },
-  { id: 7, name: "Design Direction", icon: Palette, description: "Visual style" },
-  { id: 8, name: "Build Brief", icon: FileCode, description: "Final output" },
+  { id: 1, name: "Project Setup", icon: Building2, description: "Basic project info", phaseKey: null },
+  { id: 2, name: "Industry Research", icon: Search, description: "Market analysis", phaseKey: "industryResearch" },
+  { id: 3, name: "Buyer Persona", icon: Users, description: "Target customer", phaseKey: "buyerPersona" },
+  { id: 4, name: "Offer Definition", icon: Package, description: "What you sell", phaseKey: "offerDefinition" },
+  { id: 5, name: "Positioning", icon: Target, description: "Market position", phaseKey: "positioning" },
+  { id: 6, name: "Copy Generation", icon: FileText, description: "Website copy", phaseKey: "copyGeneration" },
+  { id: 7, name: "Design Direction", icon: Palette, description: "Visual style", phaseKey: "designDirection" },
+  { id: 8, name: "Build Brief", icon: FileCode, description: "Final output", phaseKey: "buildBrief" },
 ];
 
 interface BriefWizardProps {
@@ -37,6 +39,7 @@ interface BriefWizardProps {
 
 export function BriefWizard({ brief, onSave }: BriefWizardProps) {
   const [currentPhase, setCurrentPhase] = useState(brief?.currentPhase || 1);
+  const [maxUnlockedPhase, setMaxUnlockedPhase] = useState(brief?.currentPhase || 1);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   
@@ -79,8 +82,8 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
     try {
       await onSave({
         name: formData.name || `${formData.projectSetup.businessName} Brief`,
-        currentPhase,
-        status: currentPhase === 8 ? "complete" : "draft",
+        currentPhase: maxUnlockedPhase,
+        status: maxUnlockedPhase === 8 && formData.buildBrief ? "complete" : "draft",
         projectSetup: JSON.stringify(formData.projectSetup),
         industryResearch: JSON.stringify(formData.industryResearch),
         buyerPersona: JSON.stringify(formData.buyerPersona),
@@ -93,7 +96,7 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
     } finally {
       setSaving(false);
     }
-  }, [formData, currentPhase, onSave]);
+  }, [formData, maxUnlockedPhase, onSave]);
 
   const handleGenerate = useCallback(async (phase: string) => {
     setGenerating(true);
@@ -114,10 +117,33 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
           }));
         }
       }
+      return true;
+    } catch {
+      return false;
     } finally {
       setGenerating(false);
     }
   }, [formData]);
+
+  const handleNext = useCallback(async () => {
+    if (currentPhase >= 8) return;
+    
+    const nextPhase = currentPhase + 1;
+    const nextPhaseKey = PHASES[nextPhase - 1].phaseKey;
+    
+    // Save current progress
+    await handleSave();
+    
+    // Auto-generate content for next phase
+    if (nextPhaseKey) {
+      setCurrentPhase(nextPhase);
+      setMaxUnlockedPhase(Math.max(maxUnlockedPhase, nextPhase));
+      await handleGenerate(nextPhaseKey);
+    } else {
+      setCurrentPhase(nextPhase);
+      setMaxUnlockedPhase(Math.max(maxUnlockedPhase, nextPhase));
+    }
+  }, [currentPhase, maxUnlockedPhase, handleSave, handleGenerate]);
 
   const handleExport = useCallback(() => {
     const blob = new Blob([formData.buildBrief], { type: "text/markdown" });
@@ -128,6 +154,8 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
     a.click();
     URL.revokeObjectURL(url);
   }, [formData]);
+
+  const canNavigateTo = (phaseId: number) => phaseId <= maxUnlockedPhase;
 
   const renderPhaseContent = () => {
     switch (currentPhase) {
@@ -157,51 +185,61 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
         );
       case 2:
         return (
-          <div className="space-y-4">
-            <div className="flex justify-end"><GenerateBtn onClick={() => handleGenerate("industryResearch")} loading={generating} /></div>
+          <GeneratedPhaseContent
+            generating={generating}
+            onRegenerate={() => handleGenerate("industryResearch")}
+          >
             <TextArea label="Industry Overview" value={formData.industryResearch.overview} onChange={(v) => updateField("industryResearch", "overview", v)} rows={3} />
             <TextArea label="Buyer Pain Points" value={formData.industryResearch.painPoints} onChange={(v) => updateField("industryResearch", "painPoints", v)} rows={4} />
             <TextArea label="Purchase Triggers" value={formData.industryResearch.triggers} onChange={(v) => updateField("industryResearch", "triggers", v)} rows={3} />
             <TextArea label="Trust Signals" value={formData.industryResearch.trustSignals} onChange={(v) => updateField("industryResearch", "trustSignals", v)} rows={3} />
             <TextArea label="Competitors" value={formData.industryResearch.competitors} onChange={(v) => updateField("industryResearch", "competitors", v)} rows={3} />
-          </div>
+          </GeneratedPhaseContent>
         );
       case 3:
         return (
-          <div className="space-y-4">
-            <div className="flex justify-end"><GenerateBtn onClick={() => handleGenerate("buyerPersona")} loading={generating} /></div>
+          <GeneratedPhaseContent
+            generating={generating}
+            onRegenerate={() => handleGenerate("buyerPersona")}
+          >
             <TextArea label="Demographics" value={formData.buyerPersona.demographics} onChange={(v) => updateField("buyerPersona", "demographics", v)} rows={3} />
             <TextArea label="Psychographics" value={formData.buyerPersona.psychographics} onChange={(v) => updateField("buyerPersona", "psychographics", v)} rows={3} />
             <TextArea label="Goals & Motivations" value={formData.buyerPersona.goals} onChange={(v) => updateField("buyerPersona", "goals", v)} rows={3} />
             <TextArea label="Fears & Objections" value={formData.buyerPersona.fears} onChange={(v) => updateField("buyerPersona", "fears", v)} rows={3} />
             <TextArea label="Decision Factors" value={formData.buyerPersona.decisionFactors} onChange={(v) => updateField("buyerPersona", "decisionFactors", v)} rows={3} />
-          </div>
+          </GeneratedPhaseContent>
         );
       case 4:
         return (
-          <div className="space-y-4">
-            <div className="flex justify-end"><GenerateBtn onClick={() => handleGenerate("offerDefinition")} loading={generating} /></div>
+          <GeneratedPhaseContent
+            generating={generating}
+            onRegenerate={() => handleGenerate("offerDefinition")}
+          >
             <TextArea label="Core Service" value={formData.offerDefinition.coreService} onChange={(v) => updateField("offerDefinition", "coreService", v)} rows={3} />
             <Field label="Pricing Model" value={formData.offerDefinition.pricing} onChange={(v) => updateField("offerDefinition", "pricing", v)} />
             <TextArea label="Key Differentiators" value={formData.offerDefinition.differentiators} onChange={(v) => updateField("offerDefinition", "differentiators", v)} rows={4} />
             <Field label="Guarantee" value={formData.offerDefinition.guarantee} onChange={(v) => updateField("offerDefinition", "guarantee", v)} />
             <Field label="Primary CTA" value={formData.offerDefinition.primaryCta} onChange={(v) => updateField("offerDefinition", "primaryCta", v)} placeholder="e.g., Schedule Free Consultation" />
-          </div>
+          </GeneratedPhaseContent>
         );
       case 5:
         return (
-          <div className="space-y-4">
-            <div className="flex justify-end"><GenerateBtn onClick={() => handleGenerate("positioning")} loading={generating} /></div>
+          <GeneratedPhaseContent
+            generating={generating}
+            onRegenerate={() => handleGenerate("positioning")}
+          >
             <TextArea label="Competitive Advantages" value={formData.positioning.advantages} onChange={(v) => updateField("positioning", "advantages", v)} rows={4} />
             <TextArea label="Unique Selling Points" value={formData.positioning.uniqueSellingPoints} onChange={(v) => updateField("positioning", "uniqueSellingPoints", v)} rows={3} />
             <TextArea label="Positioning Statement" value={formData.positioning.positioningStatement} onChange={(v) => updateField("positioning", "positioningStatement", v)} rows={3} />
             <TextArea label="'Only We...' Statement" value={formData.positioning.onlyWe} onChange={(v) => updateField("positioning", "onlyWe", v)} rows={2} />
-          </div>
+          </GeneratedPhaseContent>
         );
       case 6:
         return (
-          <div className="space-y-4">
-            <div className="flex justify-end"><GenerateBtn onClick={() => handleGenerate("copyGeneration")} loading={generating} /></div>
+          <GeneratedPhaseContent
+            generating={generating}
+            onRegenerate={() => handleGenerate("copyGeneration")}
+          >
             <div className="grid grid-cols-2 gap-4">
               <TextArea label="Hero Headline" value={formData.copyGeneration.heroHeadline} onChange={(v) => updateField("copyGeneration", "heroHeadline", v)} rows={2} />
               <TextArea label="Hero Subhead" value={formData.copyGeneration.heroSubhead} onChange={(v) => updateField("copyGeneration", "heroSubhead", v)} rows={2} />
@@ -212,12 +250,14 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
             <TextArea label="Social Proof" value={formData.copyGeneration.socialProof} onChange={(v) => updateField("copyGeneration", "socialProof", v)} rows={3} />
             <TextArea label="FAQ" value={formData.copyGeneration.faq} onChange={(v) => updateField("copyGeneration", "faq", v)} rows={4} />
             <TextArea label="CTA Variations" value={formData.copyGeneration.ctaVariations} onChange={(v) => updateField("copyGeneration", "ctaVariations", v)} rows={3} />
-          </div>
+          </GeneratedPhaseContent>
         );
       case 7:
         return (
-          <div className="space-y-4">
-            <div className="flex justify-end"><GenerateBtn onClick={() => handleGenerate("designDirection")} loading={generating} /></div>
+          <GeneratedPhaseContent
+            generating={generating}
+            onRegenerate={() => handleGenerate("designDirection")}
+          >
             <div>
               <label className="block text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest mb-2">Style</label>
               <div className="flex flex-wrap gap-2">
@@ -233,7 +273,7 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
             <TextArea label="Typography" value={formData.designDirection.typography} onChange={(v) => updateField("designDirection", "typography", v)} rows={3} />
             <TextArea label="Reference Sites" value={formData.designDirection.references} onChange={(v) => updateField("designDirection", "references", v)} rows={3} />
             <Field label="Mood Keywords" value={formData.designDirection.moodKeywords} onChange={(v) => updateField("designDirection", "moodKeywords", v)} />
-          </div>
+          </GeneratedPhaseContent>
         );
       case 8:
         return (
@@ -241,9 +281,12 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
             <div className="flex justify-between items-center">
               <p className="text-sm text-[var(--text-tertiary)]">Compile all phases into BUILD-BRIEF.md</p>
               <div className="flex gap-2">
-                <GenerateBtn onClick={() => handleGenerate("buildBrief")} loading={generating} label="Compile Brief" />
+                <button onClick={() => handleGenerate("buildBrief")} disabled={generating}
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--accent-muted)] text-[var(--accent)] rounded-lg text-xs disabled:opacity-50">
+                  {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Compile Brief
+                </button>
                 {formData.buildBrief && (
-                  <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-lg text-xs">
+                  <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-lg text-xs border border-[var(--border-subtle)]">
                     <Download size={14} /> Export
                   </button>
                 )}
@@ -270,17 +313,27 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
           <div className="space-y-1">
             {PHASES.map((phase) => {
               const Icon = phase.icon;
-              const isComplete = currentPhase > phase.id;
+              const isComplete = maxUnlockedPhase > phase.id;
               const isCurrent = currentPhase === phase.id;
+              const isLocked = phase.id > maxUnlockedPhase;
               return (
-                <button key={phase.id} onClick={() => setCurrentPhase(phase.id)}
+                <button 
+                  key={phase.id} 
+                  onClick={() => canNavigateTo(phase.id) && setCurrentPhase(phase.id)}
+                  disabled={isLocked}
                   className={cn("w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
-                    isCurrent ? "bg-[var(--accent-muted)] text-[var(--accent)]" : isComplete ? "text-[var(--text-secondary)]" : "text-[var(--text-quaternary)]",
-                    "hover:bg-[var(--bg-hover)]"
+                    isCurrent ? "bg-[var(--accent-muted)] text-[var(--accent)]" : 
+                    isComplete ? "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]" : 
+                    isLocked ? "text-[var(--text-quaternary)] opacity-50 cursor-not-allowed" : 
+                    "text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)]"
                   )}>
                   <div className={cn("w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px]",
-                    isComplete ? "bg-[var(--accent)] text-[var(--bg-base)]" : isCurrent ? "bg-[var(--accent-muted)]" : "bg-[var(--bg-hover)]"
-                  )}>{isComplete ? <Check size={12} /> : phase.id}</div>
+                    isComplete ? "bg-[var(--accent)] text-[var(--bg-base)]" : 
+                    isCurrent ? "bg-[var(--accent-muted)]" : 
+                    "bg-[var(--bg-hover)]"
+                  )}>
+                    {isLocked ? <Lock size={10} /> : isComplete ? <Check size={12} /> : phase.id}
+                  </div>
                   <div className="min-w-0">
                     <div className="text-xs font-medium truncate">{phase.name}</div>
                   </div>
@@ -295,29 +348,88 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
       <div className="flex-1">
         <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl">
           <div className="px-6 py-4 border-b border-[var(--border-subtle)]">
-            <h2 className="font-display text-lg text-[var(--text-primary)]">{PHASES[currentPhase - 1].name}</h2>
-            <p className="text-xs text-[var(--text-tertiary)] mt-1">{PHASES[currentPhase - 1].description}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-display text-lg text-[var(--text-primary)]">{PHASES[currentPhase - 1].name}</h2>
+                <p className="text-xs text-[var(--text-tertiary)] mt-1">{PHASES[currentPhase - 1].description}</p>
+              </div>
+              <div className="text-xs text-[var(--text-quaternary)]">
+                Step {currentPhase} of {PHASES.length}
+              </div>
+            </div>
           </div>
           <div className="p-6">{renderPhaseContent()}</div>
           <div className="px-6 py-4 border-t border-[var(--border-subtle)] flex items-center justify-between">
-            <button onClick={() => setCurrentPhase(Math.max(1, currentPhase - 1))} disabled={currentPhase === 1}
-              className={cn("px-4 py-2 rounded-lg text-xs border border-[var(--border-subtle)]", currentPhase === 1 ? "text-[var(--text-tertiary)] opacity-50" : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]")}>
+            <button 
+              onClick={() => setCurrentPhase(Math.max(1, currentPhase - 1))} 
+              disabled={currentPhase === 1}
+              className={cn("px-4 py-2 rounded-lg text-xs border border-[var(--border-subtle)]", 
+                currentPhase === 1 ? "text-[var(--text-tertiary)] opacity-50 cursor-not-allowed" : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+              )}>
               Previous
             </button>
             <div className="flex gap-3">
-              <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-lg text-xs border border-[var(--border-subtle)]">
+              <button 
+                onClick={handleSave} 
+                disabled={saving} 
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-lg text-xs border border-[var(--border-subtle)]"
+              >
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
               </button>
-              <button onClick={() => { handleSave(); setCurrentPhase(Math.min(8, currentPhase + 1)); }} disabled={currentPhase === 8}
+              <button 
+                onClick={handleNext} 
+                disabled={currentPhase === 8 || generating}
                 className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-xs",
-                  currentPhase === 8 ? "bg-[var(--bg-hover)] text-[var(--text-tertiary)] border border-[var(--border-subtle)] opacity-50" : "bg-[var(--accent)] text-[var(--bg-base)]"
-                )}>
-                Next <ChevronRight size={14} />
+                  currentPhase === 8 ? "bg-[var(--bg-hover)] text-[var(--text-tertiary)] border border-[var(--border-subtle)] opacity-50 cursor-not-allowed" : "bg-[var(--accent)] text-[var(--bg-base)]"
+                )}
+              >
+                {generating ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" /> Generating...
+                  </>
+                ) : (
+                  <>
+                    {currentPhase === 1 ? "Start" : "Approve & Continue"} <ChevronRight size={14} />
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function GeneratedPhaseContent({ 
+  children, 
+  generating, 
+  onRegenerate 
+}: { 
+  children: React.ReactNode; 
+  generating: boolean;
+  onRegenerate: () => void;
+}) {
+  if (generating) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <Loader2 size={32} className="animate-spin text-[var(--accent)]" />
+        <p className="text-sm text-[var(--text-tertiary)]">Generating content...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button 
+          onClick={onRegenerate}
+          className="flex items-center gap-2 px-3 py-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] text-xs transition-colors"
+        >
+          <RefreshCw size={12} /> Regenerate
+        </button>
+      </div>
+      {children}
     </div>
   );
 }
@@ -339,13 +451,5 @@ function TextArea({ label, value, onChange, rows = 4, placeholder }: { label: st
       <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} placeholder={placeholder}
         className="w-full px-4 py-3 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] text-sm placeholder:text-[var(--text-quaternary)] focus:outline-none focus:border-[var(--border-strong)] resize-none" />
     </div>
-  );
-}
-
-function GenerateBtn({ onClick, loading, label = "Generate" }: { onClick: () => void; loading: boolean; label?: string }) {
-  return (
-    <button onClick={onClick} disabled={loading} className="flex items-center gap-2 px-4 py-2 bg-[var(--accent-muted)] text-[var(--accent)] rounded-lg text-xs disabled:opacity-50">
-      {loading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} {label}
-    </button>
   );
 }
