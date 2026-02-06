@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, CheckSquare, Square } from "lucide-react";
+import { List, Calendar, Plus, Circle, CheckCircle2, Clock, AlertCircle, Search, X, CheckSquare, Square, LayoutGrid } from "lucide-react";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { TaskSearchFilterBar } from "./TaskSearchFilterBar";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import { MobileTaskList } from "./MobileTaskList";
 import { MobileDayCalendar } from "./MobileDayCalendar";
 import { MobileTaskDetail } from "./MobileTaskDetail";
 import { MobileFilters } from "./MobileFilters";
+import { KanbanBoard } from "./KanbanBoard";
 
 type Task = {
   id: string;
@@ -151,7 +152,7 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
   const updateTask = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
   
-  const [view, setView] = useState<"list" | "calendar">("calendar");
+  const [view, setView] = useState<"list" | "calendar" | "board">("calendar");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -666,10 +667,22 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
               <List size={14} />
               List
             </button>
+            <button
+              onClick={() => setView("board")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors",
+                view === "board"
+                  ? "bg-[var(--bg-hover)] text-[var(--text-primary)]"
+                  : "text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)]"
+              )}
+            >
+              <LayoutGrid size={14} />
+              Board
+            </button>
           </div>
 
           {/* Multi-Select Toggle */}
-          {view === "list" && (
+          {(view === "list" || view === "board") && (
             <button
               onClick={toggleMultiSelectMode}
               className={cn(
@@ -823,6 +836,16 @@ export function TasksView({ tasks: serverTasks, projects, organizations = [] }: 
               {filteredTasks.length} task{filteredTasks.length !== 1 && "s"}
             </span>
           </div>
+        </div>
+      ) : view === "board" ? (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <KanbanBoard
+            tasks={filteredTasks}
+            onStatusChange={handleStatusChange}
+            onTaskClick={handleTaskClick}
+            projects={projects}
+            organizations={organizations}
+          />
         </div>
       ) : (
         <div className="flex-1 min-h-0">
