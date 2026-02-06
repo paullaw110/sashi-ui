@@ -63,6 +63,7 @@ import { RichEditor } from "./RichEditor";
 import { TagInput } from "./TagInput";
 import { PRDCreator } from "./PRDCreator";
 import { SubtaskList } from "./SubtaskList";
+import { TaskComments } from "./TaskComments";
 import { toast } from "sonner";
 
 type Subtask = {
@@ -1131,6 +1132,19 @@ export function TaskDetailModal({
             />
           </div>
         </div>
+
+        {/* Comments Section */}
+        {(task?.id || localTaskId) && (
+          <>
+            <div className="border-t border-[var(--border-default)] my-4" />
+            <div>
+              <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3">Comments</h3>
+              <div className="max-h-[300px] overflow-hidden flex flex-col">
+                <TaskComments taskId={localTaskId || task?.id || ""} />
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Create button for new tasks without a name yet */}
         {isCreating && !hasCreatedRef.current && (
