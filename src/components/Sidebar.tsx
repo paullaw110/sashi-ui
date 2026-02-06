@@ -7,7 +7,7 @@ import {
   LayoutDashboard, 
   Inbox, 
   Calendar, 
-  ListTodo,
+  Radar,
   FileText,
   CheckSquare,
   Settings,
@@ -31,7 +31,7 @@ const NAV_ITEMS = [
   { href: "/notes", icon: FileText, label: "Notes" },
   { href: "/playground", icon: Code2, label: "Code Playground" },
   { href: "/calendar", icon: Calendar, label: "Calendar" },
-  { href: "/queue", icon: ListTodo, label: "Queue" },
+  { href: "/mission-control", icon: Radar, label: "Mission Control" },
   { href: "/library", icon: BookOpen, label: "Library" },
   { href: "/leads", icon: Target, label: "Leads" },
 ];
