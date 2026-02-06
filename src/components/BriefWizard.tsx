@@ -174,8 +174,8 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
               <div className="flex gap-2">
                 {["new", "redesign", "landing"].map((t) => (
                   <button key={t} onClick={() => updateField("projectSetup", "projectType", t)}
-                    className={cn("px-4 py-2 rounded-lg text-xs transition-colors capitalize",
-                      formData.projectSetup.projectType === t ? "bg-[var(--accent)] text-[var(--bg-base)]" : "bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-subtle)]"
+                    className={cn("px-4 py-2 rounded-lg text-xs transition-colors capitalize font-medium",
+                      formData.projectSetup.projectType === t ? "bg-[var(--accent-primary)] text-black" : "bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-subtle)]"
                     )}>{t === "new" ? "New Site" : t === "redesign" ? "Redesign" : "Landing Page"}</button>
                 ))}
               </div>
@@ -379,8 +379,8 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
               <button 
                 onClick={handleNext} 
                 disabled={currentPhase === 8 || generating}
-                className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-xs",
-                  currentPhase === 8 ? "bg-[var(--bg-hover)] text-[var(--text-tertiary)] border border-[var(--border-subtle)] opacity-50 cursor-not-allowed" : "bg-[var(--accent)] text-[var(--bg-base)]"
+                className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium",
+                  currentPhase === 8 ? "bg-[var(--bg-hover)] text-[var(--text-tertiary)] border border-[var(--border-subtle)] opacity-50 cursor-not-allowed" : "bg-[var(--accent-primary)] text-black"
                 )}
               >
                 {generating ? (
