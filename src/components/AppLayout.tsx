@@ -13,9 +13,10 @@ interface AppLayoutProps {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
+  action?: React.ReactNode;
 }
 
-export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
+export function AppLayout({ children, title, subtitle, action }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile overlay state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Desktop collapse state
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -122,14 +123,17 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             ? 'pt-14' 
             : 'ml-[256px] pt-0'
       }`}>
-        {(title || subtitle) && (
-          <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-4 lg:pb-6 shrink-0">
-            {title && (
-              <h1 className="font-display text-display text-[var(--text-primary)] tracking-tight">{title}</h1>
-            )}
-            {subtitle && (
-              <p className="text-xs text-[var(--text-quaternary)] mt-1">{subtitle}</p>
-            )}
+        {(title || subtitle || action) && (
+          <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-4 lg:pb-6 shrink-0 flex items-start justify-between">
+            <div>
+              {title && (
+                <h1 className="font-display text-display text-[var(--text-primary)] tracking-tight">{title}</h1>
+              )}
+              {subtitle && (
+                <p className="text-xs text-[var(--text-quaternary)] mt-1">{subtitle}</p>
+              )}
+            </div>
+            {action && <div className="shrink-0">{action}</div>}
           </div>
         )}
         <div className="px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8 flex-1 min-h-0 flex flex-col overflow-y-auto">

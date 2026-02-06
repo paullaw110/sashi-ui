@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { AppLayout } from "@/components/AppLayout";
 import { AgentCard } from "@/components/AgentCard";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { Plus } from "lucide-react";
@@ -66,40 +67,42 @@ export default function MissionControlClient() {
   });
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-        <h1 className="text-xl font-semibold text-zinc-100">Mission Control</h1>
+    <AppLayout 
+      title="Mission Control" 
+      subtitle="Squad status and activity"
+      action={
         <Button size="sm" className="bg-lime-400/90 hover:bg-lime-400 text-black font-medium">
           <Plus className="w-4 h-4 mr-1" />
           New Task
         </Button>
-      </div>
+      }
+    >
+      <div className="flex flex-col h-full">
+        {/* Agent Cards */}
+        <div className="p-4 border-b border-zinc-800">
+          {agentsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-28 rounded-lg bg-zinc-900 animate-pulse"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {agents.map((agent) => (
+                <AgentCard key={agent.id} agent={agent} />
+              ))}
+            </div>
+          )}
+        </div>
 
-      {/* Agent Cards */}
-      <div className="p-4 border-b border-zinc-800">
-        {agentsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-28 rounded-lg bg-zinc-900 animate-pulse"
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {agents.map((agent) => (
-              <AgentCard key={agent.id} agent={agent} />
-            ))}
-          </div>
-        )}
+        {/* Activity Feed */}
+        <div className="flex-1 overflow-hidden">
+          <ActivityFeed items={activity} isLoading={activityLoading} />
+        </div>
       </div>
-
-      {/* Activity Feed */}
-      <div className="flex-1 overflow-hidden">
-        <ActivityFeed items={activity} isLoading={activityLoading} />
-      </div>
-    </div>
+    </AppLayout>
   );
 }
