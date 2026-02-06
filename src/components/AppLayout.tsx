@@ -8,6 +8,7 @@ import { CommandPalette } from "./CommandPalette";
 import { TauriEventListener } from "./TauriEventListener";
 import { SyncIndicator } from "./SyncIndicator";
 import { UpdateChecker } from "./UpdateChecker";
+import { NotificationsPanel } from "./NotificationsPanel";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -110,8 +111,9 @@ export function AppLayout({ children, title, subtitle, action }: AppLayoutProps)
           <span className="font-display text-base text-[var(--text-primary)]">Sashi</span>
         </div>
         
-        {/* Sync indicator - shows in Tauri app */}
-        <div className="ml-auto">
+        {/* Header actions */}
+        <div className="ml-auto flex items-center gap-1">
+          <NotificationsPanel />
           <SyncIndicator />
         </div>
       </header>
