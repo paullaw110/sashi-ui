@@ -7,6 +7,7 @@ import { Organization, Project as SchemaProject } from "@/lib/db/schema";
 import { InlineOrgProjectCell } from "./InlineOrgProjectCell";
 import { InlineSelectCell, STATUS_OPTIONS, PRIORITY_OPTIONS } from "./InlineSelectCell";
 import { InlineTagCell } from "./InlineTagCell";
+import { AssigneeDropdown } from "./AssigneeDropdown";
 
 type Tag = {
   id: string;
@@ -14,11 +15,19 @@ type Tag = {
   color?: string | null;
 };
 
+type Agent = {
+  id: string;
+  name: string;
+  avatar: string;
+  role: string;
+};
+
 type Task = {
   id: string;
   name: string;
   projectId: string | null;
   organizationId: string | null;
+  assignedAgentId?: string | null;
   priority: string | null;
   status: string;
   dueDate: string | null;
@@ -29,6 +38,7 @@ type Task = {
   subtaskDoneCount?: number;
   project?: SchemaProject | null;
   organization?: Organization | null;
+  assignedAgent?: Agent | null;
 };
 
 interface TaskTableProps {
@@ -247,6 +257,7 @@ export function TaskTable({
         <div className="w-28 hidden xl:block">Tags</div>
         <div className="w-24 sm:w-28 hidden sm:block">Priority</div>
         <div className="w-24 sm:w-28 hidden sm:block">Status</div>
+        <div className="w-20 hidden lg:block">Assignee</div>
         {!hideDueColumn && <div className="w-16 sm:w-20 text-right">Due</div>}
       </div>
 
@@ -361,6 +372,19 @@ export function TaskTable({
                 options={STATUS_OPTIONS}
                 onUpdate={handleInlineUpdate}
                 allowClear={false}
+              />
+            </div>
+
+            {/* Assignee - hidden on mobile/tablet */}
+            <div
+              className="w-20 shrink-0 hidden lg:block"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <AssigneeDropdown
+                taskId={task.id}
+                currentAgentId={task.assignedAgentId || null}
+                currentAgent={task.assignedAgent}
+                compact
               />
             </div>
 

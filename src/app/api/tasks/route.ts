@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
         with: {
           project: true,
           organization: true,
+          assignedAgent: true,
           taskTags: {
             with: {
               tag: true,
@@ -54,6 +55,7 @@ export async function GET(request: NextRequest) {
         with: {
           project: true,
           organization: true,
+          assignedAgent: true,
           taskTags: {
             with: {
               tag: true,
@@ -72,6 +74,7 @@ export async function GET(request: NextRequest) {
         with: {
           project: true,
           organization: true,
+          assignedAgent: true,
           taskTags: {
             with: {
               tag: true,

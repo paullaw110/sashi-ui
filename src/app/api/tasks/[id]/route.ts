@@ -15,6 +15,7 @@ export async function GET(
       with: {
         project: true,
         organization: true,
+        assignedAgent: true,
         taskTags: {
           with: {
             tag: true,
@@ -65,6 +66,7 @@ export async function PATCH(
     if (body.name !== undefined) updates.name = body.name;
     if (body.organizationId !== undefined) updates.organizationId = body.organizationId;
     if (body.projectId !== undefined) updates.projectId = body.projectId;
+    if (body.assignedAgentId !== undefined) updates.assignedAgentId = body.assignedAgentId;
     if (body.priority !== undefined) updates.priority = body.priority;
     if (body.status !== undefined) updates.status = body.status;
     if (body.dueDate !== undefined) {

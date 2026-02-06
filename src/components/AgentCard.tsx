@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { ListTodo, Play } from "lucide-react";
 
 interface Agent {
   id: string;
@@ -19,13 +20,16 @@ interface Agent {
     id: string;
     name: string;
   } | null;
+  assignedTaskCount?: number;
+  inProgressTaskCount?: number;
 }
 
 interface AgentCardProps {
   agent: Agent;
+  onClick?: () => void;
 }
 
-export function AgentCard({ agent }: AgentCardProps) {
+export function AgentCard({ agent, onClick }: AgentCardProps) {
   const statusColors = {
     active: "bg-lime-400",
     idle: "bg-zinc-500",
@@ -40,8 +44,10 @@ export function AgentCard({ agent }: AgentCardProps) {
 
   return (
     <div
+      onClick={onClick}
       className={cn(
         "relative rounded-lg border p-4 transition-all",
+        onClick && "cursor-pointer hover:border-zinc-700",
         agent.status === "active"
           ? "border-lime-500/30 bg-lime-500/5"
           : agent.status === "blocked"
@@ -68,6 +74,22 @@ export function AgentCard({ agent }: AgentCardProps) {
           <p className="text-xs text-zinc-500">{agent.role}</p>
         </div>
       </div>
+
+      {/* Workload stats */}
+      {(agent.assignedTaskCount !== undefined && agent.assignedTaskCount > 0) && (
+        <div className="mt-3 flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+            <ListTodo className="w-3.5 h-3.5" />
+            <span>{agent.assignedTaskCount} tasks</span>
+          </div>
+          {agent.inProgressTaskCount !== undefined && agent.inProgressTaskCount > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-lime-400">
+              <Play className="w-3 h-3" />
+              <span>{agent.inProgressTaskCount} active</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Current task or last active */}
       {agent.status === "active" && agent.currentTask ? (

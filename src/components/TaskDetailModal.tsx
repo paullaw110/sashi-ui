@@ -19,6 +19,7 @@ import {
   Tags,
   FileText,
   Sparkles,
+  UserCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -77,11 +78,20 @@ type Tag = {
   color?: string | null;
 };
 
+type Agent = {
+  id: string;
+  name: string;
+  avatar: string;
+  role: string;
+};
+
 type Task = {
   id: string;
   name: string;
   projectId: string | null;
   organizationId: string | null;
+  assignedAgentId?: string | null;
+  assignedAgent?: Agent | null;
   priority: string | null;
   status: string;
   dueDate: string | null;
@@ -188,6 +198,11 @@ export function TaskDetailModal({
   // Subtasks state
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
 
+  // Assignee state
+  const [assignedAgentId, setAssignedAgentId] = useState<string | null>(null);
+  const [assignedAgent, setAssignedAgent] = useState<Agent | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+
   // Sync with props when they change
   useEffect(() => {
     setOrganizations(initialOrganizations);
@@ -236,10 +251,24 @@ export function TaskDetailModal({
     }
   }, []);
 
-  // Fetch tags and subtasks when modal opens
+  // Fetch agents for assignment dropdown
+  const fetchAgents = useCallback(async () => {
+    try {
+      const res = await fetch("/api/agents");
+      if (res.ok) {
+        const data = await res.json();
+        setAgents(data || []);
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  // Fetch tags, subtasks, and agents when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchAllTags();
+      fetchAgents();
       if (task?.id) {
         fetchTaskTags(task.id);
         fetchSubtasks(task.id);
@@ -248,7 +277,7 @@ export function TaskDetailModal({
         setSubtasks([]);
       }
     }
-  }, [isOpen, task?.id, fetchAllTags, fetchTaskTags, fetchSubtasks]);
+  }, [isOpen, task?.id, fetchAllTags, fetchTaskTags, fetchSubtasks, fetchAgents]);
 
   // Initialize form when task changes
   useEffect(() => {
@@ -260,6 +289,8 @@ export function TaskDetailModal({
       setDueTime(task.dueTime || "");
       setOrganizationId(task.organizationId);
       setProjectId(task.projectId);
+      setAssignedAgentId(task.assignedAgentId || null);
+      setAssignedAgent(task.assignedAgent || null);
       setDescription(task.description || "");
       setPrd(task.prd || null);
       setLocalTaskId(task.id);
@@ -272,6 +303,8 @@ export function TaskDetailModal({
       setPriority(null);
       setDueDate(defaultDate || undefined);
       setDueTime(defaultTime || "");
+      setAssignedAgentId(null);
+      setAssignedAgent(null);
       setOrganizationId(null);
       setProjectId(null);
       setDescription("");
@@ -356,6 +389,15 @@ export function TaskDetailModal({
       autoSave({ priority: newPriority });
     }
   }, [autoSave]);
+
+  const handleAssigneeChange = useCallback((newAgentId: string | null) => {
+    setAssignedAgentId(newAgentId);
+    const agent = newAgentId ? agents.find((a) => a.id === newAgentId) || null : null;
+    setAssignedAgent(agent);
+    if (hasCreatedRef.current) {
+      autoSave({ assignedAgentId: newAgentId });
+    }
+  }, [agents, autoSave]);
 
   const handleDateChange = useCallback((newDate: Date | undefined) => {
     setDueDate(newDate);
@@ -898,6 +940,39 @@ export function TaskDetailModal({
                 {PRIORITIES.map((p) => (
                   <SelectItem key={p.value} value={p.value}>
                     <span className={p.color}>{p.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </PropertyRow>
+
+          {/* Assignee */}
+          <PropertyRow icon={UserCircle} label="Assignee" isEmpty={!assignedAgentId}>
+            <Select
+              value={assignedAgentId || "none"}
+              onValueChange={(v) => handleAssigneeChange(v === "none" ? null : v)}
+            >
+              <SelectTrigger className="h-8 w-auto border-none bg-transparent hover:bg-[var(--bg-surface)] px-2">
+                <SelectValue placeholder="Unassigned">
+                  {assignedAgent && (
+                    <span className="flex items-center gap-2">
+                      <span>{assignedAgent.avatar}</span>
+                      <span>{assignedAgent.name}</span>
+                    </span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <span className="text-[var(--text-quaternary)]">Unassigned</span>
+                </SelectItem>
+                {agents.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    <span className="flex items-center gap-2">
+                      <span>{agent.avatar}</span>
+                      <span>{agent.name}</span>
+                      <span className="text-xs text-[var(--text-quaternary)]">{agent.role}</span>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

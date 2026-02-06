@@ -32,6 +32,7 @@ export const tasks = sqliteTable("tasks", {
   name: text("name").notNull(),
   projectId: text("project_id").references(() => projects.id),
   organizationId: text("organization_id").references(() => organizations.id),
+  assignedAgentId: text("assigned_agent_id"), // Agent assigned to this task (FK added in relations)
   priority: text("priority"), // critical, high, medium, low
   status: text("status").notNull().default("not_started"), // not_started, in_progress, waiting, done
   dueDate: integer("due_date", { mode: "timestamp_ms" }),
@@ -159,6 +160,10 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
   organization: one(organizations, {
     fields: [tasks.organizationId],
     references: [organizations.id],
+  }),
+  assignedAgent: one(agents, {
+    fields: [tasks.assignedAgentId],
+    references: [agents.id],
   }),
   taskTags: many(taskTags),
   parent: one(tasks, {
@@ -333,6 +338,7 @@ export const agentsRelations = relations(agents, ({ one, many }) => ({
     fields: [agents.currentTaskId],
     references: [tasks.id],
   }),
+  assignedTasks: many(tasks),
   comments: many(taskComments),
   activities: many(activityFeed),
   notifications: many(notifications, { relationName: "mentionedAgent" }),
@@ -405,3 +411,25 @@ export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
 export type TaskSubscription = typeof taskSubscriptions.$inferSelect;
 export type NewTaskSubscription = typeof taskSubscriptions.$inferInsert;
+
+// SuperLandings Briefs
+export const briefs = sqliteTable("briefs", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  status: text("status").notNull().default("draft"), // draft, complete
+  currentPhase: integer("current_phase").notNull().default(1), // 1-8
+  leadId: text("lead_id"),
+  projectSetup: text("project_setup"), // JSON
+  industryResearch: text("industry_research"), // JSON
+  buyerPersona: text("buyer_persona"), // JSON
+  offerDefinition: text("offer_definition"), // JSON
+  positioning: text("positioning"), // JSON
+  copyGeneration: text("copy_generation"), // JSON
+  designDirection: text("design_direction"), // JSON
+  buildBrief: text("build_brief"), // Final compiled markdown
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export type Brief = typeof briefs.$inferSelect;
+export type NewBrief = typeof briefs.$inferInsert;

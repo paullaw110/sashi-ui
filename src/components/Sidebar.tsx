@@ -20,6 +20,7 @@ import {
   Building2,
   ChevronDown,
   ChevronRight,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusIndicator } from "./StatusIndicator";
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { href: "/mission-control", icon: Radar, label: "Mission Control" },
   { href: "/library", icon: BookOpen, label: "Library" },
   { href: "/leads", icon: Target, label: "Leads" },
+  { href: "/tools", icon: Wrench, label: "Tools" },
 ];
 
 type Organization = {

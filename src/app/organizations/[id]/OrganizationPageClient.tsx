@@ -412,6 +412,7 @@ export function OrganizationPageClient({
                   dueDate: t.dueDate ? new Date(t.dueDate).toISOString() : null,
                   dueTime: t.dueTime,
                   tags: t.tags,
+                  assignedAgentId: (t as any).assignedAgentId || null,
                   project: t.project as any,
                   organization: {
                     id: organization.id,
