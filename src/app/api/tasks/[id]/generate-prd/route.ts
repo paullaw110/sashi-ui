@@ -15,14 +15,28 @@ export async function POST(
     const body = await request.json();
     const { context, answers } = body;
 
-    // Get the task
+    // Get the task with org and project context
     const task = await db.query.tasks.findFirst({
       where: eq(schema.tasks.id, taskId),
+      with: {
+        organization: true,
+        project: true,
+      },
     });
 
     if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
+
+    // Build context string with org/project info
+    const orgContext = task.organization 
+      ? `Organization: ${task.organization.name}${task.organization.description ? ` - ${task.organization.description}` : ''}`
+      : null;
+    const projectContext = task.project
+      ? `Project: ${task.project.name}${task.project.type ? ` (${task.project.type})` : ''}${(task.project as any).techStack ? ` | Tech: ${(task.project as any).techStack}` : ''}`
+      : null;
+    const githubContext = (task as any).githubUrl ? `GitHub: ${(task as any).githubUrl}` : null;
+    const figmaContext = (task as any).figmaUrl ? `Figma: ${(task as any).figmaUrl}` : null;
 
     // If this is initial context submission
     if (context && !answers) {
@@ -50,6 +64,7 @@ export async function POST(
 
       // Send message to Sashi via Slack
       const message = `🎯 **PRD Request** for task: "${task.name}" (ID: ${taskId})
+${orgContext ? `\n${orgContext}` : ''}${projectContext ? `\n${projectContext}` : ''}${githubContext ? `\n${githubContext}` : ''}${figmaContext ? `\n${figmaContext}` : ''}
 
 **Context dump:**
 ${context}
@@ -112,6 +127,7 @@ Use the API: PATCH /api/tasks/${taskId} with { prdChat: JSON.stringify(...) }`;
 
       // Send follow-up message to Sashi
       const message = `📝 **PRD Answers** for task: "${task.name}" (ID: ${taskId})
+${orgContext ? `\n${orgContext}` : ''}${projectContext ? `\n${projectContext}` : ''}
 
 **Original context:**
 ${chatState.context}

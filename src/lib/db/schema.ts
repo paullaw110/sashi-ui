@@ -15,6 +15,7 @@ export const projects = sqliteTable("projects", {
   color: text("color"),
   icon: text("icon"), // emoji like "🚀" or "📊"
   type: text("type"), // client, personal, work
+  techStack: text("tech_stack"), // e.g., "Next.js, React, Tailwind, Turso"
   organizationId: text("organization_id").references(() => organizations.id),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
@@ -46,6 +47,8 @@ export const tasks = sqliteTable("tasks", {
   prdContext: text("prd_context"), // Original context dump
   prdChat: text("prd_chat"), // JSON: clarification Q&A history
   parentId: text("parent_id"), // For subtasks - FK to tasks.id defined in relations
+  githubUrl: text("github_url"), // GitHub repo or issue URL for context
+  figmaUrl: text("figma_url"), // Figma design link for context
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 });

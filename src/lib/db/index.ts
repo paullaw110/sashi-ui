@@ -370,6 +370,23 @@ async function initDb() {
       {
         name: "Create task_tags tag index",
         sql: "CREATE INDEX IF NOT EXISTS idx_task_tags_tag ON task_tags(tag_id)"
+      },
+      // Context fields for better PRD generation
+      {
+        name: "Add github_url to tasks",
+        sql: "ALTER TABLE tasks ADD COLUMN github_url TEXT DEFAULT NULL"
+      },
+      {
+        name: "Add figma_url to tasks",
+        sql: "ALTER TABLE tasks ADD COLUMN figma_url TEXT DEFAULT NULL"
+      },
+      {
+        name: "Add tech_stack to projects",
+        sql: "ALTER TABLE projects ADD COLUMN tech_stack TEXT DEFAULT NULL"
+      },
+      {
+        name: "Add assigned_agent_id to tasks",
+        sql: "ALTER TABLE tasks ADD COLUMN assigned_agent_id TEXT DEFAULT NULL"
       }
     ];
     
