@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { AgentCard } from "@/components/AgentCard";
 import { ActivityFeed } from "@/components/ActivityFeed";
@@ -46,6 +47,8 @@ interface ActivityItem {
 }
 
 export default function MissionControlClient() {
+  const router = useRouter();
+  
   const { data: agents = [], isLoading: agentsLoading } = useQuery<Agent[]>({
     queryKey: ["agents"],
     queryFn: async () => {
@@ -71,7 +74,11 @@ export default function MissionControlClient() {
       title="Mission Control" 
       subtitle="Squad status and activity"
       action={
-        <Button size="sm" className="bg-lime-400/90 hover:bg-lime-400 text-black font-medium">
+        <Button 
+          size="sm" 
+          className="bg-[var(--accent-primary)] hover:bg-[var(--accent-muted)] text-black font-medium"
+          onClick={() => router.push("/tasks")}
+        >
           <Plus className="w-4 h-4 mr-1" />
           New Task
         </Button>
