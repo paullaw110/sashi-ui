@@ -151,16 +151,11 @@ ${result.verdict.nextSteps.map(step => `- ${step}`).join("\n")}
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Skull className="w-8 h-8 text-red-400" />
-          <h1 className="text-3xl font-bold">Idea Gauntlet</h1>
-        </div>
-        <p className="text-[var(--text-secondary)]">
-          Stress test your idea. No sugarcoating. Either it survives or it dies.
-        </p>
-      </div>
+    <AppLayout 
+      title="Idea Gauntlet" 
+      subtitle="Stress test your idea. No sugarcoating."
+    >
+      <div className="max-w-4xl">
 
       {!result ? (
         <div className="space-y-6">
@@ -293,7 +288,8 @@ ${result.verdict.nextSteps.map(step => `- ${step}`).join("\n")}
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AppLayout>
   );
 }
 
