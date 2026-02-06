@@ -124,7 +124,9 @@ export function InlineSelectCell({
   const renderPriorityBadge = (option: Option | null) => {
     if (!option) {
       return (
-        <span className="inline-block w-full h-7" />
+        <span className="inline-flex items-center justify-center w-full h-7 text-xs text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] transition-colors">
+          —
+        </span>
       );
     }
     return (
