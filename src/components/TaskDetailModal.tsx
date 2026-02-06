@@ -768,8 +768,9 @@ export function TaskDetailModal({
               if (!open) setOrgSearch("");
             }}>
               <PopoverTrigger asChild>
-                <button className="text-sm hover:bg-[var(--bg-surface)] px-2 py-1 rounded -ml-2 transition-colors text-left">
-                  {selectedOrg?.name || "Empty"}
+                <button className="text-sm hover:bg-[var(--bg-surface)] px-2 py-1 rounded -ml-2 transition-colors text-left flex items-center gap-1.5">
+                  {selectedOrg?.icon && <span>{selectedOrg.icon}</span>}
+                  <span>{selectedOrg?.name || "Empty"}</span>
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-[250px] p-0 bg-[var(--bg-surface)] border-[var(--border-strong)]" align="start">
@@ -791,9 +792,10 @@ export function TaskDetailModal({
                             setOrgSearch("");
                             setOrgOpen(false);
                           }}
-                          className="cursor-pointer"
+                          className="cursor-pointer flex items-center gap-2"
                         >
-                          {org.name}
+                          {org.icon && <span>{org.icon}</span>}
+                          <span>{org.name}</span>
                         </CommandItem>
                       ))}
                     </CommandGroup>
