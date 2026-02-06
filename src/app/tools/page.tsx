@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/AppLayout";
 import Link from "next/link";
-import { FileText, Palette, Mail, Skull, ArrowRight } from "lucide-react";
+import { Palette, Mail, Skull, ArrowRight } from "lucide-react";
 
 const TOOLS = [
   {
@@ -9,14 +9,6 @@ const TOOLS = [
     description: "Stress test your ideas. No sugarcoating. Either it survives or it dies.",
     icon: Skull,
     href: "/tools/idea-gauntlet",
-    status: "active",
-  },
-  {
-    id: "brief-generator",
-    name: "Brief Generator",
-    description: "Create comprehensive website briefs using the 8-phase SuperLandings workflow",
-    icon: FileText,
-    href: "/tools/brief-generator",
     status: "active",
   },
   {

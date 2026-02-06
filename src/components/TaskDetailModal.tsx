@@ -61,7 +61,6 @@ import {
 } from "@/components/ui/command";
 import { RichEditor } from "./RichEditor";
 import { TagInput } from "./TagInput";
-import { PRDCreator } from "./PRDCreator";
 import { SubtaskList } from "./SubtaskList";
 import { TaskComments } from "./TaskComments";
 import { toast } from "sonner";
@@ -194,7 +193,6 @@ export function TaskDetailModal({
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   // PRD state
-  const [showPrdCreator, setShowPrdCreator] = useState(false);
   const [prd, setPrd] = useState<string | null>(null);
 
   // Subtasks state
@@ -297,7 +295,6 @@ export function TaskDetailModal({
       setPrd(task.prd || null);
       setLocalTaskId(task.id);
       hasCreatedRef.current = true;
-      setShowPrdCreator(false);
     } else {
       // Reset for new task
       setName("");
@@ -313,7 +310,6 @@ export function TaskDetailModal({
       setPrd(null);
       setLocalTaskId(null);
       hasCreatedRef.current = false;
-      setShowPrdCreator(false);
     }
   }, [task, isOpen, defaultDate, defaultTime]);
 
@@ -1023,88 +1019,46 @@ export function TaskDetailModal({
         {/* Divider */}
         <div className="border-t border-[var(--border-default)] my-4" />
 
-        {/* PRD Section */}
-        {(task?.id || localTaskId) && (
+        {/* PRD Section - Display only (generate via chat) */}
+        {prd && (
           <div className="mb-4">
-            {showPrdCreator ? (
-              <div>
-                <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
-                  {prd ? "Edit PRD" : "Create PRD"}
-                </h3>
-                <PRDCreator
-                  taskId={localTaskId || task?.id || ""}
-                  taskName={name}
-                  existingPrd={prd}
-                  onClose={() => setShowPrdCreator(false)}
-                  onPrdSaved={(newPrd) => {
-                    setPrd(newPrd);
-                    router.refresh();
-                  }}
-                  onSubtasksCreated={() => {
-                    router.refresh();
-                  }}
-                />
-              </div>
-            ) : prd ? (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-2">
-                    <FileText size={14} />
-                    PRD
-                  </h3>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowPrdCreator(true)}
-                    >
-                      <Sparkles size={12} className="mr-1" />
-                      Regenerate
-                    </Button>
-                  </div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-2">
+                <FileText size={14} />
+                PRD
+              </h3>
+            </div>
+            <details className="group">
+              <summary className="cursor-pointer list-none">
+                <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] p-3">
+                  <p className="text-sm text-[var(--text-tertiary)] line-clamp-3">
+                    {prd.split("\n").slice(0, 3).join(" ").substring(0, 200)}...
+                  </p>
+                  <span className="text-xs text-[var(--accent-primary)] mt-2 inline-block group-open:hidden">
+                    Click to expand
+                  </span>
                 </div>
-                <details className="group">
-                  <summary className="cursor-pointer list-none">
-                    <div className="bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] p-3">
-                      <p className="text-sm text-[var(--text-tertiary)] line-clamp-3">
-                        {prd.split("\n").slice(0, 3).join(" ").substring(0, 200)}...
-                      </p>
-                      <span className="text-xs text-[var(--accent-primary)] mt-2 inline-block group-open:hidden">
-                        Click to expand
-                      </span>
-                    </div>
-                  </summary>
-                  <div className="mt-2 bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] p-4 max-h-[400px] overflow-y-auto">
-                    <article className="prose prose-invert prose-sm max-w-none">
-                      {prd.split("\n").map((line, i) => {
-                        if (line.startsWith("## ")) {
-                          return <h2 key={i} className="text-base font-semibold mt-4 mb-2 text-[var(--text-primary)]">{line.replace("## ", "")}</h2>;
-                        }
-                        if (line.startsWith("**") && line.endsWith("**")) {
-                          return <p key={i} className="font-medium text-[var(--text-secondary)]">{line.replace(/\*\*/g, "")}</p>;
-                        }
-                        if (line.startsWith("- ")) {
-                          return <li key={i} className="text-sm text-[var(--text-tertiary)] ml-4">{line.replace("- ", "")}</li>;
-                        }
-                        if (line.trim()) {
-                          return <p key={i} className="text-sm text-[var(--text-tertiary)] my-1">{line}</p>;
-                        }
-                        return null;
-                      })}
-                    </article>
-                  </div>
-                </details>
+              </summary>
+              <div className="mt-2 bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] p-4 max-h-[400px] overflow-y-auto">
+                <article className="prose prose-invert prose-sm max-w-none">
+                  {prd.split("\n").map((line, i) => {
+                    if (line.startsWith("## ")) {
+                      return <h2 key={i} className="text-base font-semibold mt-4 mb-2 text-[var(--text-primary)]">{line.replace("## ", "")}</h2>;
+                    }
+                    if (line.startsWith("**") && line.endsWith("**")) {
+                      return <p key={i} className="font-medium text-[var(--text-secondary)]">{line.replace(/\*\*/g, "")}</p>;
+                    }
+                    if (line.startsWith("- ")) {
+                      return <li key={i} className="text-sm text-[var(--text-tertiary)] ml-4">{line.replace("- ", "")}</li>;
+                    }
+                    if (line.trim()) {
+                      return <p key={i} className="text-sm text-[var(--text-tertiary)] my-1">{line}</p>;
+                    }
+                    return null;
+                  })}
+                </article>
               </div>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full justify-center gap-2"
-                onClick={() => setShowPrdCreator(true)}
-              >
-                <Sparkles size={14} />
-                Generate PRD with AI
-              </Button>
-            )}
+            </details>
           </div>
         )}
 
