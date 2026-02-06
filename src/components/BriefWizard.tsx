@@ -43,7 +43,7 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
   const [formData, setFormData] = useState({
     name: brief?.name || "",
     projectSetup: brief?.projectSetup ? JSON.parse(brief.projectSetup) : {
-      businessName: "", industry: "", location: "", websiteUrl: "", projectType: "new",
+      businessName: "", industry: "", location: "", websiteUrl: "", projectType: "new", notes: "",
     },
     industryResearch: brief?.industryResearch ? JSON.parse(brief.industryResearch) : {
       overview: "", painPoints: "", triggers: "", trustSignals: "", competitors: "",
@@ -147,11 +147,12 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
                 {["new", "redesign", "landing"].map((t) => (
                   <button key={t} onClick={() => updateField("projectSetup", "projectType", t)}
                     className={cn("px-4 py-2 rounded-lg text-xs transition-colors capitalize",
-                      formData.projectSetup.projectType === t ? "bg-[var(--accent)] text-[var(--bg-base)]" : "bg-[var(--bg-hover)] text-[var(--text-tertiary)]"
+                      formData.projectSetup.projectType === t ? "bg-[var(--accent)] text-[var(--bg-base)]" : "bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-subtle)]"
                     )}>{t === "new" ? "New Site" : t === "redesign" ? "Redesign" : "Landing Page"}</button>
                 ))}
               </div>
             </div>
+            <TextArea label="Project Notes" value={formData.projectSetup.notes} onChange={(v) => updateField("projectSetup", "notes", v)} rows={5} placeholder="Paste any context, docs, or notes about this project..." />
           </div>
         );
       case 2:
@@ -223,7 +224,7 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
                 {["modern", "classic", "bold", "minimal", "warm", "professional"].map((s) => (
                   <button key={s} onClick={() => updateField("designDirection", "style", s)}
                     className={cn("px-4 py-2 rounded-lg text-xs capitalize transition-colors",
-                      formData.designDirection.style === s ? "bg-[var(--accent)] text-[var(--bg-base)]" : "bg-[var(--bg-hover)] text-[var(--text-tertiary)]"
+                      formData.designDirection.style === s ? "bg-[var(--accent)] text-[var(--bg-base)]" : "bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-subtle)]"
                     )}>{s}</button>
                 ))}
               </div>
@@ -300,16 +301,16 @@ export function BriefWizard({ brief, onSave }: BriefWizardProps) {
           <div className="p-6">{renderPhaseContent()}</div>
           <div className="px-6 py-4 border-t border-[var(--border-subtle)] flex items-center justify-between">
             <button onClick={() => setCurrentPhase(Math.max(1, currentPhase - 1))} disabled={currentPhase === 1}
-              className={cn("px-4 py-2 rounded-lg text-xs", currentPhase === 1 ? "text-[var(--text-quaternary)]" : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]")}>
+              className={cn("px-4 py-2 rounded-lg text-xs border border-[var(--border-subtle)]", currentPhase === 1 ? "text-[var(--text-tertiary)] opacity-50" : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]")}>
               Previous
             </button>
             <div className="flex gap-3">
-              <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-lg text-xs">
+              <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-hover)] text-[var(--text-secondary)] rounded-lg text-xs border border-[var(--border-subtle)]">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
               </button>
               <button onClick={() => { handleSave(); setCurrentPhase(Math.min(8, currentPhase + 1)); }} disabled={currentPhase === 8}
                 className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-xs",
-                  currentPhase === 8 ? "bg-[var(--bg-hover)] text-[var(--text-quaternary)]" : "bg-[var(--accent)] text-[var(--bg-base)]"
+                  currentPhase === 8 ? "bg-[var(--bg-hover)] text-[var(--text-tertiary)] border border-[var(--border-subtle)] opacity-50" : "bg-[var(--accent)] text-[var(--bg-base)]"
                 )}>
                 Next <ChevronRight size={14} />
               </button>
@@ -331,11 +332,11 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
   );
 }
 
-function TextArea({ label, value, onChange, rows = 4 }: { label: string; value: string; onChange: (v: string) => void; rows?: number }) {
+function TextArea({ label, value, onChange, rows = 4, placeholder }: { label: string; value: string; onChange: (v: string) => void; rows?: number; placeholder?: string }) {
   return (
     <div>
       <label className="block text-[10px] text-[var(--text-quaternary)] uppercase tracking-widest mb-2">{label}</label>
-      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows}
+      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} placeholder={placeholder}
         className="w-full px-4 py-3 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] text-sm placeholder:text-[var(--text-quaternary)] focus:outline-none focus:border-[var(--border-strong)] resize-none" />
     </div>
   );

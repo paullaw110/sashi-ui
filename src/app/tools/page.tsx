@@ -1,8 +1,16 @@
 import { AppLayout } from "@/components/AppLayout";
 import Link from "next/link";
-import { FileText, Palette, Mail, ArrowRight } from "lucide-react";
+import { FileText, Palette, Mail, Skull, ArrowRight } from "lucide-react";
 
 const TOOLS = [
+  {
+    id: "idea-gauntlet",
+    name: "Idea Gauntlet",
+    description: "Stress test your ideas. No sugarcoating. Either it survives or it dies.",
+    icon: Skull,
+    href: "/tools/idea-gauntlet",
+    status: "active",
+  },
   {
     id: "brief-generator",
     name: "Brief Generator",
