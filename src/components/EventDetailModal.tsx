@@ -53,8 +53,8 @@ interface EventDetailModalProps {
 }
 
 const EVENT_COLORS = [
-  { value: "#EFFF83", label: "Lime" },   // Brand color - default
-  { value: "#EFFF83", label: "Blue" },
+  { value: "#EFFF83", label: "Volt" },   // Brand color - default
+  { value: "#3b82f6", label: "Blue" },
   { value: "#ef4444", label: "Red" },
   { value: "#f97316", label: "Orange" },
   { value: "#eab308", label: "Yellow" },
