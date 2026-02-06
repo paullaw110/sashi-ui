@@ -444,12 +444,12 @@ export function EventDetailModal({
 
           {/* All Day Toggle */}
           <PropertyRow icon={Clock} label="All day">
-            <div className="flex items-center gap-2 -ml-2 px-2 py-1">
+            <div className="flex items-center justify-start gap-2">
               <Switch
                 checked={isAllDay}
                 onCheckedChange={handleAllDayChange}
               />
-              <span className="text-sm text-[var(--text-tertiary)]">
+              <span className="text-sm text-[var(--text-secondary)]">
                 {isAllDay ? "Yes" : "No"}
               </span>
             </div>

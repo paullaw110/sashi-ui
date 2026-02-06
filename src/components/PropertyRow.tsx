@@ -26,8 +26,8 @@ export function PropertyRow({
       )}
     >
       <div className="flex items-center gap-2 w-32 shrink-0 pt-1">
-        <Icon size={14} className="text-[#525252]" />
-        <span className="text-xs text-[#737373]">{label}</span>
+        <Icon size={14} className="text-[var(--text-tertiary)]" />
+        <span className="text-xs text-[var(--text-tertiary)]">{label}</span>
       </div>
       <div className={cn("flex-1 min-w-0", isEmpty && "text-[#404040]")}>
         {children}
