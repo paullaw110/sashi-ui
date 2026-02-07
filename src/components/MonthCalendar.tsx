@@ -50,6 +50,15 @@ interface MonthCalendarProps {
   onAddTask?: (date: Date) => void;
 }
 
+// Format HH:MM time string to 12-hour format
+function formatTime12h(time: string | null): string {
+  if (!time) return "";
+  const [hours, minutes] = time.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const hour12 = hours % 12 || 12;
+  return minutes === 0 ? `${hour12} ${period}` : `${hour12}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
 // Get status indicator icon
 function getStatusIndicator(status: string) {
   switch (status) {
@@ -191,7 +200,7 @@ const TaskItem = memo(function TaskItem({
         <span className="truncate flex-1 font-medium">{task.name}</span>
         {task.dueTime && (
           <span className="text-xs text-[var(--text-tertiary)]">
-            {task.dueTime.substring(0, 5)}
+            {formatTime12h(task.dueTime)}
           </span>
         )}
       </div>

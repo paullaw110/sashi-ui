@@ -41,6 +41,15 @@ type Project = {
   color: string | null;
 };
 
+// Format HH:MM time string to 12-hour format
+function formatTime12h(time: string | null): string {
+  if (!time) return "";
+  const [hours, minutes] = time.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const hour12 = hours % 12 || 12;
+  return minutes === 0 ? `${hour12} ${period}` : `${hour12}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
 interface TaskSidePanelProps {
   task: Task | null;
   projects: Project[];
@@ -274,7 +283,7 @@ export function TaskSidePanel({
                   {task.dueTime && (
                     <div className="flex items-center justify-between py-3 border-b">
                       <span className="text-xs text-muted-foreground uppercase tracking-wider">Time</span>
-                      <span className="text-sm text-muted-foreground">{task.dueTime}</span>
+                      <span className="text-sm text-muted-foreground">{formatTime12h(task.dueTime)}</span>
                     </div>
                   )}
                 </div>

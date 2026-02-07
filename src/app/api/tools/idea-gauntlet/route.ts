@@ -1,5 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { ideaGauntletRuns } from "@/lib/db/schema";
+import { desc } from "drizzle-orm";
+import { nanoid } from "nanoid";
 
+// GET: Fetch all gauntlet runs (history)
+export async function GET() {
+  try {
+    const runs = await db
+      .select({
+        id: ideaGauntletRuns.id,
+        idea: ideaGauntletRuns.idea,
+        verdict: ideaGauntletRuns.verdict,
+        confidence: ideaGauntletRuns.confidence,
+        createdAt: ideaGauntletRuns.createdAt,
+      })
+      .from(ideaGauntletRuns)
+      .orderBy(desc(ideaGauntletRuns.createdAt));
+
+    return NextResponse.json({ runs });
+  } catch (error) {
+    console.error("Error fetching gauntlet runs:", error);
+    return NextResponse.json({ error: "Failed to fetch history" }, { status: 500 });
+  }
+}
+
+// POST: Run the gauntlet and save result
 export async function POST(request: NextRequest) {
   try {
     const { idea } = await request.json();
@@ -9,7 +35,22 @@ export async function POST(request: NextRequest) {
     }
 
     const result = analyzeIdea(idea);
-    return NextResponse.json(result);
+    
+    // Save to database
+    const id = nanoid();
+    const now = new Date();
+    
+    await db.insert(ideaGauntletRuns).values({
+      id,
+      idea,
+      result: JSON.stringify(result),
+      verdict: result.verdict.decision,
+      confidence: result.verdict.confidence,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return NextResponse.json({ ...result, id });
   } catch (error) {
     console.error("Error analyzing idea:", error);
     return NextResponse.json({ error: "Failed to analyze idea" }, { status: 500 });

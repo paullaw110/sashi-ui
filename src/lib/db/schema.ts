@@ -436,3 +436,17 @@ export const briefs = sqliteTable("briefs", {
 
 export type Brief = typeof briefs.$inferSelect;
 export type NewBrief = typeof briefs.$inferInsert;
+
+// Idea Gauntlet Runs - History of idea evaluations
+export const ideaGauntletRuns = sqliteTable("idea_gauntlet_runs", {
+  id: text("id").primaryKey(),
+  idea: text("idea").notNull(),
+  result: text("result").notNull(), // Full GauntletResult JSON
+  verdict: text("verdict").notNull(), // 'GO' | 'PAUSE' | 'KILL'
+  confidence: integer("confidence").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export type IdeaGauntletRun = typeof ideaGauntletRuns.$inferSelect;
+export type NewIdeaGauntletRun = typeof ideaGauntletRuns.$inferInsert;

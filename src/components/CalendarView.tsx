@@ -787,7 +787,7 @@ function TaskSidePanel({
                   {task.dueTime && (
                     <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
                       <span className="text-[11px] text-[#525252] uppercase tracking-wider">Time</span>
-                      <span className="text-sm text-[#a3a3a3]">{task.dueTime}</span>
+                      <span className="text-sm text-[#a3a3a3]">{formatTime12h(task.dueTime)}</span>
                     </div>
                   )}
                 </div>

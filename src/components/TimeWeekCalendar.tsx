@@ -199,6 +199,15 @@ function minutesToTimeString(minutes: number): string {
   return `${displayH}:${m.toString().padStart(2, "0")} ${period}`;
 }
 
+// Format HH:MM time string to 12-hour format
+function formatTime12h(time: string | null): string {
+  if (!time) return "";
+  const [hours, minutes] = time.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const hour12 = hours % 12 || 12;
+  return minutes === 0 ? `${hour12} ${period}` : `${hour12}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
 // Convert pixel position to time (snapped to 15 min)
 function pixelToTime(pixelY: number): { time: string; displayTime: string } {
   const rawMinutes = (pixelY / HOUR_HEIGHT) * 60;
@@ -352,7 +361,7 @@ function TimedTask({
       </div>
       {task.dueTime && (
         <div className="text-[10px] text-[var(--text-tertiary)]">
-          {task.dueTime.substring(0, 5)}
+          {formatTime12h(task.dueTime)}
           {isResizing && (
             <span className="text-[var(--accent-primary)] ml-1">→ {endTimeDisplay}</span>
           )}
@@ -521,7 +530,7 @@ function TimedEvent({
       </div>
       {event.startTime && (
         <div className="text-[10px] opacity-70" style={{ color: event.color }}>
-          {event.startTime.substring(0, 5)} – {endTimeDisplay}
+          {formatTime12h(event.startTime)} – {endTimeDisplay}
         </div>
       )}
       {event.location && (
@@ -1477,7 +1486,7 @@ export function TimeWeekCalendar({
                 {dragTarget ? (
                   <span className="text-[var(--accent-primary)]">{dragTarget.displayTime}</span>
                 ) : (
-                  activeTask.dueTime.substring(0, 5)
+                  formatTime12h(activeTask.dueTime)
                 )}
               </div>
             )}
@@ -1501,7 +1510,7 @@ export function TimeWeekCalendar({
                 {dragTarget ? (
                   <span>{dragTarget.displayTime}</span>
                 ) : (
-                  activeEvent.startTime.substring(0, 5)
+                  formatTime12h(activeEvent.startTime)
                 )}
               </div>
             )}

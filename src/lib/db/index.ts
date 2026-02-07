@@ -239,6 +239,20 @@ CREATE TABLE IF NOT EXISTS event_exceptions (
 CREATE INDEX IF NOT EXISTS idx_events_start_date ON events(start_date);
 CREATE INDEX IF NOT EXISTS idx_event_exceptions_event ON event_exceptions(event_id);
 CREATE INDEX IF NOT EXISTS idx_event_exceptions_date ON event_exceptions(original_date);
+
+-- Idea Gauntlet: History of idea evaluations
+CREATE TABLE IF NOT EXISTS idea_gauntlet_runs (
+  id TEXT PRIMARY KEY,
+  idea TEXT NOT NULL,
+  result TEXT NOT NULL,
+  verdict TEXT NOT NULL,
+  confidence INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_idea_gauntlet_runs_created ON idea_gauntlet_runs(created_at);
+CREATE INDEX IF NOT EXISTS idx_idea_gauntlet_runs_verdict ON idea_gauntlet_runs(verdict);
 `;
 
 // Database connection validation and initialization

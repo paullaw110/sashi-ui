@@ -59,6 +59,15 @@ function getStatusDisplayText(status: string) {
   }
 }
 
+// Format HH:MM time string to 12-hour format
+function formatTime12h(time: string | null): string {
+  if (!time) return "";
+  const [hours, minutes] = time.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const hour12 = hours % 12 || 12;
+  return minutes === 0 ? `${hour12} ${period}` : `${hour12}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
+
 // Selection box component for marquee selection
 function SelectionBox({
   start,
@@ -154,7 +163,7 @@ function TaskItem({
           <span className="truncate font-medium">{task.name}</span>
           {task.dueTime && (
             <span className="text-xs text-[var(--text-tertiary)] ml-auto">
-              {task.dueTime.substring(0, 5)}
+              {formatTime12h(task.dueTime)}
             </span>
           )}
         </div>
