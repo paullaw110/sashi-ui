@@ -167,7 +167,7 @@ ${result.verdict.nextSteps.map(step => `- ${step}`).join("\n")}
               value={idea}
               onChange={(e) => setIdea(e.target.value)}
               placeholder="e.g., A subscription service that sends personalized vitamin packs based on your health data and goals..."
-              className="w-full h-40 px-4 py-3 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-quaternary)] focus:outline-none focus:border-[var(--accent)] resize-none"
+              className="w-full h-40 px-4 py-3 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-quaternary)] focus:outline-none focus:border-[var(--accent-primary)] resize-none"
             />
           </div>
 
@@ -180,7 +180,7 @@ ${result.verdict.nextSteps.map(step => `- ${step}`).join("\n")}
           <button
             onClick={runGauntlet}
             disabled={!idea.trim() || loading}
-            className="flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-[var(--bg-base)] rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-3 bg-[var(--accent-primary)] text-[#0D0D0D] rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
