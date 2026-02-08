@@ -70,8 +70,8 @@ export function useTasks(initialData?: Task[]) {
     queryKey: ["tasks"],
     queryFn: fetchTasks,
     initialData,
-    // Don't refetch immediately if we have initial data - trust it
-    staleTime: initialData ? 1000 * 30 : 0,
+    // Always fetch fresh data - no stale cache
+    staleTime: 0,
   });
 }
 

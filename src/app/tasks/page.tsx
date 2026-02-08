@@ -1,4 +1,5 @@
 export const metadata = { title: "Tasks" };
+export const dynamic = "force-dynamic";
 
 import { db, schema } from "@/lib/db";
 import { AppLayout } from "@/components/AppLayout";

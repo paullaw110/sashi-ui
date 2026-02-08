@@ -1,4 +1,5 @@
 export const metadata = { title: "Calendar" };
+export const dynamic = "force-dynamic";
 
 import { db, schema } from "@/lib/db";
 import { CalendarView } from "@/components/CalendarView";

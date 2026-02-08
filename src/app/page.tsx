@@ -5,6 +5,7 @@ import { eq, and, gte, lte } from "drizzle-orm";
 import { startOfWeek, endOfWeek } from "date-fns";
 
 export const metadata = { title: "Dashboard" };
+export const dynamic = "force-dynamic";
 
 // Custom sort order for status (ascending)
 const STATUS_ORDER: Record<string, number> = {
