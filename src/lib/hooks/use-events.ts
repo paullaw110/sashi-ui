@@ -109,13 +109,20 @@ export function useCreateEvent() {
     onSuccess: (data) => {
       toast.success("Event created");
 
-      // Add new event to ALL event queries instead of invalidating
+      // Add new event to ALL event queries with expanded fields
       if (data?.event) {
+        const expandedEvent = {
+          ...data.event,
+          instanceDate: new Date(data.event.startDate).getTime(),
+          isRecurringInstance: false,
+        };
         queryClient.setQueriesData<CalendarEvent[]>({ queryKey: ["events"] }, (old) => {
-          if (!old) return [data.event];
-          return [...old, data.event];
+          if (!old) return [expandedEvent];
+          return [...old, expandedEvent];
         });
       }
+      // Also invalidate to ensure fresh data from server
+      queryClient.invalidateQueries({ queryKey: ["events"] });
     },
     onError: () => {
       toast.error("Failed to create event");
